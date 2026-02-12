@@ -1361,8 +1361,8 @@ function LecturerLogbookView({ logbooks, students }) {
     if (!searchTerm) return true;
     const term = searchTerm.toLowerCase();
     return (
-      log.name.toLowerCase().includes(term) ||
-      log.nim.toLowerCase().includes(term) ||
+      (log.name && log.name.toLowerCase().includes(term)) ||
+      (log.nim && log.nim.toLowerCase().includes(term)) ||
       (log.activity && log.activity.toLowerCase().includes(term)) ||
       (log.output && log.output.toLowerCase().includes(term)) ||
       (log.date && log.date.includes(term)) ||
