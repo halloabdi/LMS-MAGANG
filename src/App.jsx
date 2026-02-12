@@ -329,7 +329,7 @@ const TextModal = ({ title, content, onClose }) => {
 };
 
 // --- CONFIGURATION ---
-const GAS_URL = "https://script.google.com/macros/s/AKfycbxLRPkeeHZVpESIk_tQQCW3FiGkIFCnQHO2y5Esv63ie7zic_oAj07U5rkqfjb8msuE/exec";
+const GAS_URL = "https://script.google.com/macros/s/AKfycbxZoX0udNsBA-uwhyP1fQM_BKOVyWu5IJLHfbh9DKR_V-65HlLjzS8ZzWYrJPit8gcv/exec";
 
 // --- INITIAL DATA ---
 const INITIAL_LOGBOOKS = [];
@@ -1010,32 +1010,45 @@ function StudentLogbookForm({ user, logbooks, setLogbooks, showToast }) {
     showToast('info', 'Mencari Lokasi...', 'Sedang memaksa update posisi GPS...');
     setAddress("Memperbarui lokasi...");
 
-    navigator.geolocation.getCurrentPosition(
-      async (pos) => {
-        const { latitude, longitude, accuracy } = pos.coords;
-        setLat(latitude);
-        setLng(longitude);
-        setAccuracy(accuracy);
+    const success = async (pos) => {
+      const { latitude, longitude, accuracy } = pos.coords;
+      setLat(latitude);
+      setLng(longitude);
+      setAccuracy(accuracy);
 
-        try {
-          const res = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${latitude}&lon=${longitude}`);
-          const data = await res.json();
-          setAddress(data.display_name || `${latitude.toFixed(6)}, ${longitude.toFixed(6)}`);
-        } catch {
-          setAddress(`${latitude.toFixed(6)}, ${longitude.toFixed(6)}`);
-        }
-        showToast('success', 'Lokasi Terkini', `Akurasi: ±${Math.round(accuracy)}m`);
-      },
-      (err) => {
+      try {
+        const res = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${latitude}&lon=${longitude}`);
+        const data = await res.json();
+        setAddress(data.display_name || `${latitude.toFixed(6)}, ${longitude.toFixed(6)}`);
+      } catch {
+        setAddress(`${latitude.toFixed(6)}, ${longitude.toFixed(6)}`);
+      }
+      showToast('success', 'Lokasi Terkini', `Akurasi: ±${Math.round(accuracy)}m`);
+    };
+
+    const error = (err) => {
+      // If High Accuracy failed, try Low Accuracy
+      if (err.code === 3 || err.message.includes("Timeout")) {
+        console.warn("High accuracy timed out, trying low accuracy...");
+        navigator.geolocation.getCurrentPosition(success, (err2) => {
+          let msg = err2.message;
+          if (err2.code === 1) msg = "Izin lokasi ditolak!";
+          else if (err2.code === 2) msg = "GPS mati / tidak tersedia.";
+          else if (err2.code === 3) msg = "Timeout! Sinyal GPS lemah.";
+          showToast('error', 'Gagal', msg);
+          setAddress("Gagal: " + msg);
+        }, { enableHighAccuracy: false, timeout: 20000, maximumAge: 0 });
+      } else {
         let msg = err.message;
         if (err.code === 1) msg = "Izin lokasi ditolak!";
         else if (err.code === 2) msg = "GPS mati / tidak tersedia.";
-        else if (err.code === 3) msg = "Timeout! Coba lagi di area terbuka.";
         showToast('error', 'Gagal', msg);
         setAddress("Gagal: " + msg);
-      },
-      { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
-    );
+      }
+    };
+
+    // Try High Accuracy First (20s timeout)
+    navigator.geolocation.getCurrentPosition(success, error, { enableHighAccuracy: true, timeout: 20000, maximumAge: 0 });
   };
 
   const startCamera = async () => { setCameraActive(true); try { const stream = await navigator.mediaDevices.getUserMedia({ video: true }); if (videoRef.current) videoRef.current.srcObject = stream; } catch { showToast('error', 'Kamera Error', 'Akses kamera ditolak/gagal'); setCameraActive(false); } };
