@@ -329,7 +329,7 @@ const TextModal = ({ title, content, onClose }) => {
 };
 
 // --- CONFIGURATION ---
-const GAS_URL = "https://script.google.com/macros/s/AKfycbwz1Mc66nOsxUHSxbJOsEZkZaBAtf348WPl7xO1ZeQo8GfPuJSDEoCDzeG3oqTCAWcP/exec";
+const GAS_URL = "https://script.google.com/macros/s/AKfycbzdsLlCNOK9IjFAY2WEQwR3NZsEaO7FkGWnz0r4z6w_GmyjBMu1K8yCozZP82DYQQRM/exec";
 
 // --- INITIAL DATA ---
 const INITIAL_LOGBOOKS = [];
@@ -473,8 +473,8 @@ const LeafletMap = ({ lat, lng, setLat, setLng, setAddress, readOnly = false, ma
       shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-shadow.png',
     });
 
-    const initialLat = lat || -7.9666;
-    const initialLng = lng || 112.6326;
+    const initialLat = parseFloat(lat) || -7.9666;
+    const initialLng = parseFloat(lng) || 112.6326;
 
     const map = L.map(mapRef.current).setView([initialLat, initialLng], 13);
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { attribution: '&copy; OpenStreetMap' }).addTo(map);
@@ -495,7 +495,9 @@ const LeafletMap = ({ lat, lng, setLat, setLng, setAddress, readOnly = false, ma
 
     // Handle single marker mode (Logbook Form)
     if (!readOnly && lat && lng) {
-      markerRef.current = L.marker([lat, lng]).addTo(map);
+      const validLat = parseFloat(lat);
+      const validLng = parseFloat(lng);
+      markerRef.current = L.marker([validLat, validLng]).addTo(map);
       map.on('click', async (e) => {
         const { lat, lng } = e.latlng;
         if (setLat && setLng) {
