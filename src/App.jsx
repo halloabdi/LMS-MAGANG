@@ -1482,19 +1482,52 @@ function LecturerLogbookView({ logbooks, students }) {
   const [detailModal, setDetailModal] = useState({ show: false, title: '', content: '' });
   const [searchTerm, setSearchTerm] = useState('');
   const [sortOrder, setSortOrder] = useState('newest');
+  const [dateFilter, setDateFilter] = useState('today'); // Default: Hari Ini
 
   // Filter & Sort Logic
   const filteredLogbooks = logbooks.filter(log => {
-    if (!searchTerm) return true;
-    const term = searchTerm.toLowerCase();
-    return (
-      (log.name && log.name.toLowerCase().includes(term)) ||
-      (log.nim && log.nim.toLowerCase().includes(term)) ||
-      (log.activity && log.activity.toLowerCase().includes(term)) ||
-      (log.output && log.output.toLowerCase().includes(term)) ||
-      (log.date && log.date.includes(term)) ||
-      (log.time && log.time.includes(term))
-    );
+    // 1. Filter Search Term
+    let matchesSearch = true;
+    if (searchTerm) {
+      const term = searchTerm.toLowerCase();
+      matchesSearch = (
+        (log.name && log.name.toLowerCase().includes(term)) ||
+        (log.nim && log.nim.toLowerCase().includes(term)) ||
+        (log.activity && log.activity.toLowerCase().includes(term)) ||
+        (log.output && log.output.toLowerCase().includes(term)) ||
+        (log.date && log.date.includes(term)) ||
+        (log.time && log.time.includes(term))
+      );
+    }
+
+    // 2. Filter Date Range
+    let matchesDate = true;
+    if (dateFilter !== 'all') {
+      const logDate = new Date(log.date);
+      const today = new Date();
+      // Reset time parts for accurate date comparison
+      today.setHours(0, 0, 0, 0);
+
+      // Handle potential invalid date
+      if (isNaN(logDate.getTime())) {
+        matchesDate = false; // Invalid date in log, exclude or include? Let's exclude.
+      } else {
+        logDate.setHours(0, 0, 0, 0);
+
+        const diffTime = Math.abs(today - logDate);
+        const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+
+        if (dateFilter === 'today') {
+          matchesDate = diffDays === 0;
+        } else if (dateFilter === '3days') {
+          matchesDate = diffDays <= 3;
+        } else if (dateFilter === '7days') {
+          matchesDate = diffDays <= 7;
+        }
+      }
+    }
+
+    return matchesSearch && matchesDate;
   }).sort((a, b) => {
     // Helper to parse date/time safely
     const getTime = (item) => new Date(`${item.date}T${item.time}`).getTime() || 0;
@@ -1555,16 +1588,27 @@ function LecturerLogbookView({ logbooks, students }) {
           </div>
 
           <select
+            value={dateFilter}
+            onChange={(e) => setDateFilter(e.target.value)}
+            className="px-4 py-2.5 rounded-xl border border-slate-200 focus:ring-4 focus:ring-cyan-100 focus:border-cyan-400 outline-none bg-white cursor-pointer hover:bg-slate-50 transition-all font-medium text-slate-600"
+          >
+            <option value="today">📅 Hari Ini</option>
+            <option value="3days">📅 3 Hari Terakhir</option>
+            <option value="7days">📅 7 Hari Terakhir</option>
+            <option value="all">📅 Semua Waktu</option>
+          </select>
+
+          <select
             value={sortOrder}
             onChange={(e) => setSortOrder(e.target.value)}
             className="px-4 py-2.5 rounded-xl border border-slate-200 focus:ring-4 focus:ring-cyan-100 focus:border-cyan-400 outline-none bg-white cursor-pointer hover:bg-slate-50 transition-all font-medium text-slate-600"
           >
-            <option value="newest">📅 Timestamp Terbaru</option>
-            <option value="oldest">📅 Timestamp Terlama</option>
+            <option value="newest">⏰ Timestamp Terbaru</option>
+            <option value="oldest">⏰ Timestamp Terlama</option>
             <option value="date_newest">📆 Tanggal Terbaru</option>
             <option value="date_oldest">📆 Tanggal Terlama</option>
-            <option value="time_newest">⏰ Jam Terbaru</option>
-            <option value="time_oldest">⏰ Jam Terlama</option>
+            <option value="time_newest">⌚ Jam Terbaru</option>
+            <option value="time_oldest">⌚ Jam Terlama</option>
           </select>
         </div>
       </div>
