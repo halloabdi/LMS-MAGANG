@@ -1,10 +1,10 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
-import { 
-  MapPin, Camera, Upload, FileText, LogOut, 
-  LayoutDashboard, CheckCircle, XCircle, 
+import {
+  MapPin, Camera, Upload, FileText, LogOut,
+  LayoutDashboard, CheckCircle, XCircle,
   Map as MapIcon, Eye, Menu, X, Bold, Italic, Underline,
-  Superscript, Subscript, ChevronRight, ChevronLeft, ChevronDown, 
-  User, Settings, Edit3, Save, Image as ImageIcon, Calendar, Clock, 
+  Superscript, Subscript, ChevronRight, ChevronLeft, ChevronDown,
+  User, Settings, Edit3, Save, Image as ImageIcon, Calendar, Clock,
   AlertCircle, ListOrdered, Lightbulb, Check, AlertTriangle
 } from 'lucide-react';
 
@@ -55,10 +55,10 @@ const ToastMessage = ({ id, type, title, message, onClose }) => {
   };
 
   const styles = {
-    success: { border: 'border-green-400', iconBg: 'bg-green-400', icon: <Check size={18} className="text-white"/> },
-    info: { border: 'border-blue-400', iconBg: 'bg-blue-400', icon: <Lightbulb size={18} className="text-white"/> },
-    warning: { border: 'border-amber-400', iconBg: 'bg-amber-400', icon: <AlertTriangle size={18} className="text-white"/> },
-    error: { border: 'border-red-400', iconBg: 'bg-red-400', icon: <X size={18} className="text-white"/> }
+    success: { border: 'border-green-400', iconBg: 'bg-green-400', icon: <Check size={18} className="text-white" /> },
+    info: { border: 'border-blue-400', iconBg: 'bg-blue-400', icon: <Lightbulb size={18} className="text-white" /> },
+    warning: { border: 'border-amber-400', iconBg: 'bg-amber-400', icon: <AlertTriangle size={18} className="text-white" /> },
+    error: { border: 'border-red-400', iconBg: 'bg-red-400', icon: <X size={18} className="text-white" /> }
   };
 
   const currentStyle = styles[type] || styles.info;
@@ -108,7 +108,7 @@ const CustomStatusSelect = ({ value, onChange }) => {
     { label: 'Hadir', color: 'text-green-600 font-bold' },
     { label: 'Sakit', color: 'text-red-600 font-bold' },
     { label: 'Izin', color: 'text-yellow-600 font-bold' },
-    { label: 'Libur', color: 'text-slate-900 font-bold' } 
+    { label: 'Libur', color: 'text-slate-900 font-bold' }
   ];
 
   const selectedOption = options.find(opt => opt.label === value) || options[0];
@@ -123,14 +123,14 @@ const CustomStatusSelect = ({ value, onChange }) => {
 
   return (
     <div className="relative" ref={containerRef}>
-      <button 
+      <button
         onClick={() => setIsOpen(!isOpen)}
         className="w-full flex items-center justify-between px-4 py-3 bg-white/50 backdrop-blur-md border border-slate-200 rounded-xl text-left hover:border-cyan-400 focus:ring-2 focus:ring-cyan-200 transition-all group shadow-sm"
       >
         <span className={`text-lg ${selectedOption.color}`}>{selectedOption.label}</span>
-        <ChevronDown size={20} className={`text-slate-400 transition-transform duration-300 ${isOpen ? 'rotate-180' : ''}`}/>
+        <ChevronDown size={20} className={`text-slate-400 transition-transform duration-300 ${isOpen ? 'rotate-180' : ''}`} />
       </button>
-      
+
       {isOpen && (
         <div className="absolute top-full left-0 right-0 mt-2 bg-white/90 backdrop-blur-xl border border-white/50 rounded-2xl shadow-2xl z-50 overflow-hidden animate-in fade-in zoom-in-95 duration-200 p-1">
           {options.map((opt) => (
@@ -193,9 +193,9 @@ const CustomDatePicker = ({ value, onChange }) => {
     return (
       <div className="p-4 w-72">
         <div className="flex justify-between items-center mb-4">
-          <button onClick={(e) => {e.preventDefault(); changeMonth(-1)}} className="p-1 hover:bg-slate-200 rounded-full transition"><ChevronLeft size={20}/></button>
+          <button onClick={(e) => { e.preventDefault(); changeMonth(-1) }} className="p-1 hover:bg-slate-200 rounded-full transition"><ChevronLeft size={20} /></button>
           <span className="font-bold text-slate-700">{monthNames[month]} {year}</span>
-          <button onClick={(e) => {e.preventDefault(); changeMonth(1)}} className="p-1 hover:bg-slate-200 rounded-full transition"><ChevronRight size={20}/></button>
+          <button onClick={(e) => { e.preventDefault(); changeMonth(1) }} className="p-1 hover:bg-slate-200 rounded-full transition"><ChevronRight size={20} /></button>
         </div>
         <div className="grid grid-cols-7 gap-1 mb-2">
           {daysShort.map(d => <div key={d} className="text-center text-xs font-bold text-slate-400">{d}</div>)}
@@ -205,7 +205,7 @@ const CustomDatePicker = ({ value, onChange }) => {
           {days.map(d => (
             <button
               key={d}
-              onClick={(e) => {e.preventDefault(); handleDayClick(d)}}
+              onClick={(e) => { e.preventDefault(); handleDayClick(d) }}
               className={`w-8 h-8 rounded-full text-sm flex items-center justify-center transition-all duration-200 ${isSelected(d) ? 'bg-gradient-to-r from-cyan-500 to-blue-600 text-white shadow-md' : 'text-slate-700 hover:bg-cyan-50 hover:text-cyan-600'}`}
             >
               {d}
@@ -220,12 +220,12 @@ const CustomDatePicker = ({ value, onChange }) => {
 
   return (
     <div className="relative" ref={containerRef}>
-      <button 
-        onClick={(e) => {e.preventDefault(); setShow(!show)}}
+      <button
+        onClick={(e) => { e.preventDefault(); setShow(!show) }}
         className="w-full flex items-center justify-between px-4 py-3 bg-white/50 backdrop-blur-sm border border-slate-200 rounded-xl text-left hover:border-cyan-400 focus:ring-2 focus:ring-cyan-200 transition-all group shadow-sm"
       >
         <span className="font-bold text-slate-700">{displayDate}</span>
-        <Calendar size={18} className="text-slate-400 group-hover:text-cyan-500 transition-colors"/>
+        <Calendar size={18} className="text-slate-400 group-hover:text-cyan-500 transition-colors" />
       </button>
       {show && (
         <div className="absolute top-full left-0 mt-2 bg-white/90 backdrop-blur-xl border border-white/50 rounded-2xl shadow-2xl z-50 animate-in fade-in zoom-in-95 duration-200">
@@ -250,30 +250,30 @@ const CustomTimePicker = ({ value, onChange }) => {
   }, []);
 
   const hours = Array.from({ length: 24 }, (_, i) => i.toString().padStart(2, '0'));
-  const minutes = Array.from({ length: 12 }, (_, i) => (i * 5).toString().padStart(2, '0')); 
+  const minutes = Array.from({ length: 12 }, (_, i) => (i * 5).toString().padStart(2, '0'));
 
   const [selectedH, selectedM] = value.split(':');
   const updateTime = (h, m) => { onChange(`${h}:${m}`); };
 
   return (
     <div className="relative" ref={containerRef}>
-      <button 
-        onClick={(e) => {e.preventDefault(); setShow(!show)}}
+      <button
+        onClick={(e) => { e.preventDefault(); setShow(!show) }}
         className="w-full flex items-center justify-between px-4 py-3 bg-white/50 backdrop-blur-sm border border-slate-200 rounded-xl text-left hover:border-cyan-400 focus:ring-2 focus:ring-cyan-200 transition-all group shadow-sm"
       >
         <span className="font-bold text-slate-700 font-mono text-lg">{value}</span>
-        <Clock size={18} className="text-slate-400 group-hover:text-cyan-500 transition-colors"/>
+        <Clock size={18} className="text-slate-400 group-hover:text-cyan-500 transition-colors" />
       </button>
       {show && (
         <div className="absolute top-full left-0 mt-2 w-64 bg-white/90 backdrop-blur-xl border border-white/50 rounded-2xl shadow-2xl z-50 p-4 flex gap-2 h-64 animate-in fade-in zoom-in-95 duration-200">
           <div className="flex-1 flex flex-col gap-1 overflow-y-auto no-scrollbar">
             <div className="text-center text-xs font-bold text-slate-400 mb-2 sticky top-0 bg-white/90 backdrop-blur py-1">JAM</div>
-            {hours.map(h => (<button key={h} onClick={(e) => {e.preventDefault(); updateTime(h, selectedM);}} className={`py-2 rounded-lg text-sm font-mono transition-colors ${h === selectedH ? 'bg-blue-500 text-white shadow-md' : 'hover:bg-slate-100 text-slate-600'}`}>{h}</button>))}
+            {hours.map(h => (<button key={h} onClick={(e) => { e.preventDefault(); updateTime(h, selectedM); }} className={`py-2 rounded-lg text-sm font-mono transition-colors ${h === selectedH ? 'bg-blue-500 text-white shadow-md' : 'hover:bg-slate-100 text-slate-600'}`}>{h}</button>))}
           </div>
           <div className="w-[1px] bg-slate-200 my-2"></div>
           <div className="flex-1 flex flex-col gap-1 overflow-y-auto no-scrollbar">
             <div className="text-center text-xs font-bold text-slate-400 mb-2 sticky top-0 bg-white/90 backdrop-blur py-1">MENIT</div>
-            {minutes.map(m => (<button key={m} onClick={(e) => {e.preventDefault(); updateTime(selectedH, m); setShow(false);}} className={`py-2 rounded-lg text-sm font-mono transition-colors ${m === selectedM ? 'bg-cyan-500 text-white shadow-md' : 'hover:bg-slate-100 text-slate-600'}`}>{m}</button>))}
+            {minutes.map(m => (<button key={m} onClick={(e) => { e.preventDefault(); updateTime(selectedH, m); setShow(false); }} className={`py-2 rounded-lg text-sm font-mono transition-colors ${m === selectedM ? 'bg-cyan-500 text-white shadow-md' : 'hover:bg-slate-100 text-slate-600'}`}>{m}</button>))}
           </div>
         </div>
       )}
@@ -285,19 +285,19 @@ const CustomTimePicker = ({ value, onChange }) => {
 const ImageModal = ({ src, onClose }) => {
   if (!src) return null;
   return (
-    <div 
-      className="fixed inset-0 z-[1000] bg-slate-900/80 backdrop-blur-md flex flex-col items-center justify-center p-6 animate-in fade-in duration-300" 
+    <div
+      className="fixed inset-0 z-[1000] bg-slate-900/80 backdrop-blur-md flex flex-col items-center justify-center p-6 animate-in fade-in duration-300"
       onClick={onClose}
     >
       <div className="relative max-w-4xl w-full flex flex-col items-center gap-6" onClick={(e) => e.stopPropagation()}>
-        <img 
-          src={src} 
-          alt="Full Preview" 
-          className="max-w-full max-h-[75vh] rounded-2xl shadow-2xl object-contain border-4 border-white/20 bg-slate-800/50" 
+        <img
+          src={src}
+          alt="Full Preview"
+          className="max-w-full max-h-[75vh] rounded-2xl shadow-2xl object-contain border-4 border-white/20 bg-slate-800/50"
         />
-        <Button 
-          variant="danger" 
-          onClick={onClose} 
+        <Button
+          variant="danger"
+          onClick={onClose}
           className="px-10 py-3 font-bold text-lg rounded-full shadow-xl hover:scale-105 transition-transform"
         >
           Tutup
@@ -307,77 +307,70 @@ const ImageModal = ({ src, onClose }) => {
   );
 };
 
-// --- MOCK DATA ---
-const STUDENTS_RAW = [
-  { id: 'AG2023043', email: 'testing43@gmail.com', username: '0409231695', name: 'Mohammad Rafa Zaky Pradana', class: 'AGRINAK B', status: 'Aktif', phone: '081234567890', password: 'siswa123', photoUrl: '', internship_place: 'PWMP RUMINANSIA KECIL', internship_addr: 'Politeknik Pembangunan Pertanian Malang', supervisor_internal: '1. Dr. Ir. Novita Dewi Kristanti, S.Pt., M.Si., IPU ### 2. drh. Nurdianti, M.Si' },
-  { id: 'AG2023044', email: 'hub.halloabdi@gmail.com', username: '0409231696', name: 'Muhammad Abdi Firmansyah', class: 'AGRINAK B', status: 'Aktif', phone: '081298765432', password: 'siswa123', photoUrl: 'https://images.unsplash.com/photo-1599566150163-29194dcaad36?auto=format&fit=crop&q=80&w=200&h=200', internship_place: 'Dinas Peternakan Kabupaten Bangkalan', internship_addr: 'Jl. Halim Perdana Kusuma, Kec. Bangkalan, Kabupaten Bangkalan, Jawa Timur', supervisor_internal: '1. Muhammad Saikhu, SP., M.Agr ### 2. Dr. Dewi Ratih Ayu Daning, S.Pt., M.S' },
-  { id: 'AG2023045', email: 'testing45@gmail.com', username: '0409231697', name: 'Nafisah Maharani Cahyanda Putri', class: 'AGRINAK B', status: 'Aktif', phone: '081345678901', password: 'siswa123', photoUrl: '', internship_place: 'HR FARM (Komoditas Sapi)', internship_addr: 'Kec. Jabung, Kabupaten Malang, Jawa Timur', supervisor_internal: '1. Dr. Ir. Novita Dewi Kristanti, S.Pt., M.Si., IPU ### 2. Dr. Ir. Siswoyo, MP' },
-];
+// --- NEW TEXT MODAL ---
+const TextModal = ({ title, content, onClose }) => {
+  if (!content) return null;
+  return (
+    <div className="fixed inset-0 z-[1000] bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4 animate-in fade-in duration-200" onClick={onClose}>
+      <div className="bg-white w-full max-w-2xl rounded-2xl shadow-2xl overflow-hidden flex flex-col max-h-[80vh] animate-in zoom-in-95" onClick={e => e.stopPropagation()}>
+        <div className="p-4 border-b border-slate-100 flex justify-between items-center bg-slate-50/50">
+          <h3 className="font-bold text-lg text-slate-800">{title}</h3>
+          <button onClick={onClose} className="p-2 hover:bg-slate-200 rounded-full transition-colors"><X size={20} /></button>
+        </div>
+        <div className="p-6 overflow-y-auto text-slate-600 leading-relaxed">
+          <div dangerouslySetInnerHTML={{ __html: content }} className="prose prose-slate max-w-none" />
+        </div>
+        <div className="p-4 border-t border-slate-100 bg-slate-50 flex justify-end">
+          <Button onClick={onClose}>Tutup</Button>
+        </div>
+      </div>
+    </div>
+  );
+};
 
-let STUDENTS_DATA = STUDENTS_RAW.map(s => ({
-  ...s,
-  lat: -7.9 + (Math.random() * 0.1),
-  lng: 112.6 + (Math.random() * 0.1),
-  lastLogbook: null
-}));
+// --- CONFIGURATION ---
+const GAS_URL = "https://script.google.com/macros/s/AKfycbyz0KHa3Hlx4ajvK01BMPbOtRWqwzjqucoVw_KZ1SAUSk8IPZvHyOf3Vaq8IPIFW9_y/exec";
 
-let LECTURERS_DATA = [
-  { id: 'DAG2023001', username: '111223344556677888', email: 'dosen1@gmail.com', phone: '1234567890', name: 'Ir. Dosen, M.Si,. IPM', jabatan: 'Staf', password: 'dosen123', photoUrl: '' },
-  { id: 'DAG2023002', username: '196905111996021001', email: 'dosen2@gmail.com', phone: '1122334455', name: 'Dr. Dewi Ratih Ayu Daning, S.Pt., M.Sc.', jabatan: 'Kaprodi', password: 'dosen123', photoUrl: '' },
-];
-
-const INITIAL_LOGBOOKS = [
-  {
-    id: 1,
-    studentId: 'AG2023043',
-    name: 'Mohammad Rafa Zaky Pradana',
-    nim: '0409231695',
-    date: '2026-02-12',
-    time: '07:30',
-    status: 'Hadir',
-    lat: -7.953,
-    lng: 112.631,
-    address: 'Jl. Raya Tlogomas No. 246, Malang',
-    activity: '<ol><li>Melakukan sanitasi kandang sapi perah pagi hari.</li><li>Mencatat kondisi kesehatan ternak secara berkala.</li></ol>',
-    output: '<ol><li>Kandang bersih.</li><li>Sapi siap diperah dengan higienis.</li><li>Buku catatan kesehatan terisi penuh.</li></ol>',
-    selfieUrl: 'https://images.unsplash.com/photo-1599566150163-29194dcaad36?auto=format&fit=crop&q=80&w=300&h=300',
-    docUrl: 'https://images.unsplash.com/photo-1516245834210-c4c142787335?auto=format&fit=crop&q=80&w=300&h=300' 
-  },
-  {
-    id: 2,
-    studentId: 'AG2023044',
-    name: 'Muhammad Abdi Firmansyah',
-    nim: '0409231696',
-    date: '2026-02-12',
-    time: '08:15',
-    status: 'Izin',
-    lat: -7.123,
-    lng: 112.754,
-    address: 'Jl. Halim Perdana Kusuma, Bangkalan',
-    activity: 'Mengurus administrasi surat menyurat di dinas untuk keperluan magang.',
-    output: 'Berkas administrasi dan surat pengantar selesai ditandatangani.',
-    selfieUrl: 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&q=80&w=300&h=300',
-    docUrl: null
-  },
-  {
-    id: 3,
-    studentId: 'AG2023045',
-    name: 'Nafisah Maharani',
-    nim: '0409231697',
-    date: '2026-02-12',
-    time: '08:00',
-    status: 'Sakit',
-    lat: -7.901,
-    lng: 112.602,
-    address: 'Rumah Sakit Umum Malang, Jawa Timur',
-    activity: 'Istirahat total karena gejala demam tinggi sejak semalam.',
-    output: 'Surat keterangan dokter terlampir untuk absen magang.',
-    selfieUrl: 'https://images.unsplash.com/photo-1438761681033-6461ffad8d80?auto=format&fit=crop&q=80&w=300&h=300',
-    docUrl: 'https://images.unsplash.com/photo-1586281380349-632531db7ed4?auto=format&fit=crop&q=80&w=300&h=300' 
+// --- UTILITY: API CALL ---
+const callAPI = async (action, payload = {}) => {
+  if (GAS_URL.includes("MASUKKAN_URL")) {
+    console.warn("URL GAS belum disetting!");
+    // Return mock error or keep loading
+    throw new Error("URL Backend Belum Dikonfigurasi. Hubungi Admin.");
   }
-];
 
-const INITIAL_REPORTS = []; 
+  try {
+    const response = await fetch(GAS_URL, {
+      method: "POST",
+      body: JSON.stringify({ action, ...payload })
+    });
+    const result = await response.json();
+    if (result.status === "error") throw new Error(result.message);
+    return result.data;
+  } catch (err) {
+    console.error("API Error:", err);
+    throw err;
+  }
+};
+
+const fetchDashboardData = async (role, userId) => {
+  // Use GET request for data retrieval to avoid CORS preflight issues sometimes, 
+  // or just use POST for everything if GAS is set up that way. 
+  // Here we use the doGet endpoint via simple fetch distinct from callAPI if needed, 
+  // but callAPI (POST) is often more stable for GAS Web Apps unless published as 'Anonymous'.
+  // Let's stick to POST for consistency if the GAS handles it, OR use the URL param method.
+
+  // Actually, standard fetch to GAS Web App endpoint works best with POST for data mutations,
+  // and GET for retrieval. Let's use a helper for GET.
+
+  if (GAS_URL.includes("MASUKKAN_URL")) return null;
+
+  const url = `${GAS_URL}?action=getDashboardData&userId=${userId}&role=${role}`;
+  const res = await fetch(url);
+  const json = await res.json();
+  if (json.status === 'error') throw new Error(json.message);
+  return json.data;
+};
 
 // --- UTILITY COMPONENTS ---
 
@@ -410,10 +403,10 @@ const Card = ({ children, className = '', title }) => (
 const Input = ({ label, type = "text", value, onChange, placeholder, ...props }) => (
   <div className="mb-4">
     <label className="block text-sm font-semibold text-slate-500 mb-2 ml-1">{label}</label>
-    <input 
-      type={type} 
-      value={value} 
-      onChange={onChange} 
+    <input
+      type={type}
+      value={value}
+      onChange={onChange}
       className="w-full px-5 py-3 rounded-xl border border-slate-200 focus:ring-4 focus:ring-cyan-100 focus:border-cyan-400 outline-none transition-all bg-slate-50 focus:bg-white text-slate-700 placeholder:text-slate-400"
       placeholder={placeholder}
       {...props}
@@ -441,16 +434,16 @@ const LeafletMap = ({ lat, lng, setLat, setLng, setAddress, readOnly = false, ma
     }
 
     return () => {
-       if (mapInstanceRef.current) {
-         mapInstanceRef.current.remove();
-         mapInstanceRef.current = null;
-       }
+      if (mapInstanceRef.current) {
+        mapInstanceRef.current.remove();
+        mapInstanceRef.current = null;
+      }
     };
   }, []);
 
   const initMap = () => {
     if (mapInstanceRef.current || !window.L || !mapRef.current) return;
-    
+
     const L = window.L;
 
     // FIX FOR MISSING PINS: Explicitly set the default icon path
@@ -460,38 +453,38 @@ const LeafletMap = ({ lat, lng, setLat, setLng, setAddress, readOnly = false, ma
       iconUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-icon.png',
       shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-shadow.png',
     });
-    
-    const initialLat = lat || -7.9666; 
+
+    const initialLat = lat || -7.9666;
     const initialLng = lng || 112.6326;
-    
+
     const map = L.map(mapRef.current).setView([initialLat, initialLng], 13);
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { attribution: '&copy; OpenStreetMap' }).addTo(map);
     mapInstanceRef.current = map;
 
     // FORCE RELAYOUT AFTER A SHORT DELAY
     setTimeout(() => {
-        if (mapInstanceRef.current) {
-            mapInstanceRef.current.invalidateSize();
-            if (markers.length > 0) renderMarkers(L, mapInstanceRef.current);
-        }
+      if (mapInstanceRef.current) {
+        mapInstanceRef.current.invalidateSize();
+        if (markers.length > 0) renderMarkers(L, mapInstanceRef.current);
+      }
     }, 250);
 
     // Handle single marker mode (Logbook Form)
     if (!readOnly && lat && lng) {
-        markerRef.current = L.marker([lat, lng]).addTo(map);
-        map.on('click', async (e) => {
-            const { lat, lng } = e.latlng;
-            if(setLat && setLng) {
-                setLat(lat); setLng(lng);
-                if (markerRef.current) markerRef.current.setLatLng([lat, lng]);
-                else markerRef.current = L.marker([lat, lng]).addTo(map);
-                try {
-                  const res = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}`);
-                  const data = await res.json();
-                  if (data && data.display_name && setAddress) setAddress(data.display_name);
-                } catch (err) { console.error("Geocoding failed", err); }
-            }
-        });
+      markerRef.current = L.marker([lat, lng]).addTo(map);
+      map.on('click', async (e) => {
+        const { lat, lng } = e.latlng;
+        if (setLat && setLng) {
+          setLat(lat); setLng(lng);
+          if (markerRef.current) markerRef.current.setLatLng([lat, lng]);
+          else markerRef.current = L.marker([lat, lng]).addTo(map);
+          try {
+            const res = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}`);
+            const data = await res.json();
+            if (data && data.display_name && setAddress) setAddress(data.display_name);
+          } catch (err) { console.error("Geocoding failed", err); }
+        }
+      });
     }
 
     // Handle multiple markers mode (Overview & Lecturer Logbook)
@@ -499,33 +492,33 @@ const LeafletMap = ({ lat, lng, setLat, setLng, setAddress, readOnly = false, ma
   };
 
   const renderMarkers = (L, map) => {
-      markersGroupRef.current.forEach(m => map.removeLayer(m));
-      markersGroupRef.current = [];
+    markersGroupRef.current.forEach(m => map.removeLayer(m));
+    markersGroupRef.current = [];
 
-      if (markers && markers.length > 0) {
-          const bounds = L.latLngBounds();
-          markers.forEach(m => {
-              if(m.lat && m.lng) {
-                  const marker = L.marker([m.lat, m.lng])
-                      .bindPopup(`<div class="text-sm"><b class="font-bold">${m.name}</b><br/>Status: ${m.status}</div>`)
-                      .addTo(map);
-                  markersGroupRef.current.push(marker);
-                  bounds.extend([m.lat, m.lng]);
-              }
-          });
-          if(markers.length > 0) {
-              map.fitBounds(bounds, { padding: [30, 30], maxZoom: 15 });
-          }
+    if (markers && markers.length > 0) {
+      const bounds = L.latLngBounds();
+      markers.forEach(m => {
+        if (m.lat && m.lng) {
+          const marker = L.marker([m.lat, m.lng])
+            .bindPopup(`<div class="text-sm"><b class="font-bold">${m.name}</b><br/>Status: ${m.status}</div>`)
+            .addTo(map);
+          markersGroupRef.current.push(marker);
+          bounds.extend([m.lat, m.lng]);
+        }
+      });
+      if (markers.length > 0) {
+        map.fitBounds(bounds, { padding: [30, 30], maxZoom: 15 });
       }
+    }
   };
 
   useEffect(() => {
-      if(mapInstanceRef.current && window.L && markers.length > 0) {
-          renderMarkers(window.L, mapInstanceRef.current);
-      } else if (mapInstanceRef.current && window.L && lat && lng && !readOnly) {
-          if(markerRef.current) markerRef.current.setLatLng([lat, lng]);
-          mapInstanceRef.current.setView([lat, lng], 15);
-      }
+    if (mapInstanceRef.current && window.L && markers.length > 0) {
+      renderMarkers(window.L, mapInstanceRef.current);
+    } else if (mapInstanceRef.current && window.L && lat && lng && !readOnly) {
+      if (markerRef.current) markerRef.current.setLatLng([lat, lng]);
+      mapInstanceRef.current.setView([lat, lng], 15);
+    }
   }, [lat, lng, markers]);
 
   return <div ref={mapRef} className="w-full h-full z-0 rounded-xl" style={{ minHeight: '100%' }} />;
@@ -534,19 +527,19 @@ const LeafletMap = ({ lat, lng, setLat, setLng, setAddress, readOnly = false, ma
 // --- RICH TEXT EDITOR COMPONENT ---
 const RichEditor = ({ value, onChange, placeholder }) => {
   const editorRef = useRef(null);
-  
-  const execCmd = (command) => { 
-    document.execCommand(command, false, null); 
-    editorRef.current.focus(); 
+
+  const execCmd = (command) => {
+    document.execCommand(command, false, null);
+    editorRef.current.focus();
   };
 
-  const handleInput = () => { 
-    if (editorRef.current) onChange(editorRef.current.innerHTML); 
+  const handleInput = () => {
+    if (editorRef.current) onChange(editorRef.current.innerHTML);
   };
 
-  useEffect(() => { 
+  useEffect(() => {
     if (editorRef.current && editorRef.current.innerHTML !== value) {
-      if (value === '') editorRef.current.innerHTML = ''; 
+      if (value === '') editorRef.current.innerHTML = '';
     }
   }, [value]);
 
@@ -562,14 +555,14 @@ const RichEditor = ({ value, onChange, placeholder }) => {
         <ToolButton onClick={() => execCmd('superscript')} icon={Superscript} title="Superscript" />
         <ToolButton onClick={() => execCmd('subscript')} icon={Subscript} title="Subscript" />
       </div>
-      <div 
-        ref={editorRef} 
-        contentEditable 
+      <div
+        ref={editorRef}
+        contentEditable
         className="w-full p-4 outline-none min-h-[120px] max-h-[300px] overflow-y-auto text-sm text-slate-700 leading-relaxed list-inside"
-        onInput={handleInput} 
-        suppressContentEditableWarning={true} 
-        data-placeholder={placeholder} 
-        style={{whiteSpace: 'pre-wrap'}}
+        onInput={handleInput}
+        suppressContentEditableWarning={true}
+        data-placeholder={placeholder}
+        style={{ whiteSpace: 'pre-wrap' }}
       />
       {!value && <div className="absolute pointer-events-none text-slate-400 text-sm p-4 mt-[-120px]" onClick={() => editorRef.current.focus()}>{placeholder}</div>}
     </div>
@@ -583,16 +576,59 @@ const ToolButton = ({ onClick, icon: Icon, title }) => (
 // --- PROFILE COMPONENT ---
 function ProfileSettings({ user, onUpdate, onCancel, showToast }) {
   const [formData, setFormData] = useState({
-    name: user.name, username: user.username, email: user.email, phone: user.phone || '', password: user.password, photoUrl: user.photoUrl || ''
+    name: user.name, username: user.username, email: user.email, phone: user.phone || '', password: user.password, photoUrl: user.photoUrl || '',
+    bio: user.bio || ''
   });
+  const [loading, setLoading] = useState(false);
   const [preview, setPreview] = useState(user.photoUrl || '');
+  const [photoFile, setPhotoFile] = useState(null);
+
   const handleChange = (e) => { setFormData({ ...formData, [e.target.name]: e.target.value }); };
-  const handleFileChange = (e) => { const file = e.target.files[0]; if (file) { const url = URL.createObjectURL(file); setPreview(url); setFormData({ ...formData, photoUrl: url }); } };
-  
-  const handleSubmit = (e) => { 
-      e.preventDefault(); 
-      onUpdate(formData); 
-      showToast('success', 'Profil Diperbarui', 'Data profil Anda telah berhasil disimpan.');
+
+  const handleFileChange = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      const url = URL.createObjectURL(file);
+      setPreview(url);
+      setPhotoFile(file);
+    }
+  };
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setLoading(true);
+
+    try {
+      let photoBase64 = null;
+      if (photoFile) {
+        const reader = new FileReader();
+        photoBase64 = await new Promise((resolve) => {
+          reader.onload = () => resolve(reader.result.split(',')[1]);
+          reader.readAsDataURL(photoFile);
+        });
+      }
+
+      const payload = {
+        ...formData,
+        id: user.id, // Current User ID
+        role: user.role, // Current Role
+        photoBase64: photoBase64,
+        mimeType: photoFile ? photoFile.type : null,
+        // Include link_folder if available in user object to help backend place file
+        link_folder: user.link_folder
+      };
+
+      const result = await callAPI('updateProfile', payload);
+
+      // Update Local State in Parent
+      onUpdate({ ...formData, photoUrl: result.photoUrl || formData.photoUrl });
+      showToast('success', 'Profil Diperbarui', 'Data profil berhasil disimpan ke database.');
+    } catch (err) {
+      console.error(err);
+      showToast('error', 'Gagal Memperbarui Profil', err.message);
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -614,13 +650,23 @@ function ProfileSettings({ user, onUpdate, onCancel, showToast }) {
             <Input label="Alamat Email" name="email" type="email" value={formData.email} onChange={handleChange} />
             <Input label="Nomor Telepon" name="phone" type="tel" value={formData.phone} onChange={handleChange} placeholder="08123456789" />
             <Input label="Password" name="password" type="password" value={formData.password} onChange={handleChange} />
+            <div className="md:col-span-2">
+              <label className="block text-sm font-semibold text-slate-500 mb-2 ml-1">Bio / Uraian Singkat</label>
+              <textarea
+                name="bio"
+                value={formData.bio}
+                onChange={handleChange}
+                className="w-full px-5 py-3 rounded-xl border border-slate-200 focus:ring-4 focus:ring-cyan-100 focus:border-cyan-400 outline-none transition-all bg-slate-50 focus:bg-white text-slate-700 placeholder:text-slate-400 min-h-[100px]"
+                placeholder="Ceritakan sedikit tentang Anda..."
+              />
+            </div>
           </div>
           <div className="border-t border-slate-100 pt-6 mt-6">
             <h4 className="font-bold text-slate-700 mb-2">Informasi Akademik</h4>
-            {user.role === 'student' && (<div className="bg-slate-50 p-4 rounded-xl space-y-3 text-sm border border-slate-100"><div><span className="font-bold text-slate-500">Tempat Magang:</span><br/>{user.internship_place}</div><div><span className="font-bold text-slate-500">Dosen Pembimbing:</span><br/><FormatText text={user.supervisor_internal} /></div></div>)}
-            {user.role === 'lecturer' && (<div className="bg-slate-50 p-4 rounded-xl space-y-3 text-sm border border-slate-100"><div><span className="font-bold text-slate-500">Jabatan:</span> {user.jabatan}</div><div><span className="font-bold text-slate-500">Status:</span> Aktif</div></div>)}
+            {user.role === 'student' && (<div className="bg-slate-50 p-4 rounded-xl space-y-3 text-sm border border-slate-100"><div><span className="font-bold text-slate-500">Tempat Magang:</span><br />{user.internship_place}</div><div><span className="font-bold text-slate-500">Dosen Pembimbing:</span><br /><FormatText text={user.supervisor_internal} /></div></div>)}
+            {user.role === 'lecturer' && (<div className="bg-slate-50 p-4 rounded-xl space-y-3 text-sm border border-slate-100"><div><span className="font-bold text-slate-500">Jabatan:</span> {user.jabatan}</div><div><span className="font-bold text-slate-500">Kelas Ampuan:</span> {user.classId || '-'}</div><div><span className="font-bold text-slate-500">Status:</span> Aktif</div></div>)}
           </div>
-          <div className="flex justify-end gap-3 pt-4"><Button type="button" variant="secondary" onClick={onCancel}>Batal</Button><Button type="submit" variant="primary">Simpan Perubahan</Button></div>
+          <div className="flex justify-end gap-3 pt-4"><Button type="button" variant="secondary" onClick={onCancel} disabled={loading}>Batal</Button><Button type="submit" variant="primary" disabled={loading}>{loading ? 'Menyimpan...' : 'Simpan Perubahan'}</Button></div>
         </form>
       </Card>
     </div>
@@ -655,89 +701,70 @@ export default function App() {
         if (new Date().getTime() < expires) {
           setUser(userData);
           setView(userData.role === 'student' ? 'student-dashboard' : 'lecturer-dashboard');
+
+          if (GAS_URL.includes("MASUKKAN_URL")) {
+            showToast('warning', 'Konfigurasi Diperlukan', 'Silahkan edit file App.jsx dan masukkan URL Google Apps Script yang sudah dideploy.');
+          }
         } else {
           localStorage.removeItem('app_session'); // Expired
         }
       } catch (e) {
-         localStorage.removeItem('app_session');
+        localStorage.removeItem('app_session');
       }
     }
   }, []);
 
-  const handleLogin = (identifier, password) => {
+  const handleLogin = async (identifier, password) => {
     if (!identifier || !password) {
-        showToast('warning', 'Peringatan!', 'Harap isi ID/Email dan Password.');
-        return;
+      showToast('warning', 'Peringatan!', 'Harap isi ID/Email dan Password.');
+      return;
     }
 
-    const isEmail = identifier.includes('@');
-    const foundUser = STUDENTS_DATA.find(s => s.username === identifier || s.email === identifier) || 
-                      LECTURERS_DATA.find(l => l.username === identifier || l.email === identifier);
+    showToast('info', 'Sedang Masuk...', 'Memverifikasi data akun...');
 
-    if (!foundUser) {
-        if (isEmail) {
-            showToast('error', 'Login Gagal!', 'Email yang dimasukkan Salah! Silahkan Coba Lagi atau Hubungi Admin.');
-        } else if (identifier.length > 5) {
-            // Asumsi input bukan email, tapi ada isinya -> Username
-            showToast('error', 'Login Gagal!', 'User yang dimasukkan Salah! Silahkan Coba Lagi atau Hubungi Admin.');
-        } else {
-            showToast('error', 'Login Gagal!', 'Data Tersebut Tidak Tersedia dalam Database. Silahkan Hubungi Admin.');
-        }
-        return;
+    try {
+      const userData = await callAPI('login', { identifier, password });
+
+      const role = userData.role;
+      setUser(userData);
+      setView(role === 'student' ? 'student-dashboard' : 'lecturer-dashboard');
+
+      // Save to LocalStorage
+      const expires = new Date().getTime() + (180 * 24 * 60 * 60 * 1000);
+      localStorage.setItem('app_session', JSON.stringify({ userData, expires }));
+
+      showToast('success', 'Berhasil Login!', `Selamat datang kembali, ${userData.name}.`);
+
+    } catch (err) {
+      showToast('error', 'Login Gagal', err.message);
     }
-
-    if (foundUser.password !== password) {
-        showToast('error', 'Login Gagal!', 'Password Salah, Silahkan Coba Lagi atau Hubungi Admin.');
-        return;
-    }
-
-    // Success Logic
-    const isStudent = STUDENTS_DATA.some(s => s.id === foundUser.id);
-    const role = isStudent ? 'student' : 'lecturer';
-    const finalUserData = { ...foundUser, role };
-    
-    setUser(finalUserData);
-    setView(role === 'student' ? 'student-dashboard' : 'lecturer-dashboard');
-    
-    // Save to LocalStorage (Expires in 6 months = 180 days)
-    const expires = new Date().getTime() + (180 * 24 * 60 * 60 * 1000);
-    localStorage.setItem('app_session', JSON.stringify({ userData: finalUserData, expires }));
-
-    showToast('success', 'Berhasil Login!', `Selamat datang kembali, ${foundUser.name}.`);
   };
 
-  const handleLogout = () => { 
-      setUser(null); 
-      setView('login'); 
-      localStorage.removeItem('app_session');
-      showToast('info', 'Berhasil Keluar', 'Anda telah keluar dari sistem.');
+  const handleLogout = () => {
+    setUser(null);
+    setView('login');
+    localStorage.removeItem('app_session');
+    showToast('info', 'Berhasil Keluar', 'Anda telah keluar dari sistem.');
   };
 
   const handleProfileUpdate = (updatedData) => {
-    const newUser = { ...user, ...updatedData }; 
+    const newUser = { ...user, ...updatedData };
     setUser(newUser);
-    
-    if (user.role === 'student') { 
-        const idx = STUDENTS_DATA.findIndex(s => s.id === user.id); 
-        if (idx !== -1) STUDENTS_DATA[idx] = { ...STUDENTS_DATA[idx], ...updatedData }; 
-    } else { 
-        const idx = LECTURERS_DATA.findIndex(l => l.id === user.id); 
-        if (idx !== -1) LECTURERS_DATA[idx] = { ...LECTURERS_DATA[idx], ...updatedData }; 
-    }
 
     // Update session storage
     const savedSession = localStorage.getItem('app_session');
     if (savedSession) {
-        const parsed = JSON.parse(savedSession);
-        parsed.userData = newUser;
-        localStorage.setItem('app_session', JSON.stringify(parsed));
+      const parsed = JSON.parse(savedSession);
+      parsed.userData = newUser;
+      localStorage.setItem('app_session', JSON.stringify(parsed));
     }
+    // Note: Actually sending update to backend would need another API endpoint
   };
 
   return (
     <div className="min-h-screen bg-white text-slate-800 font-sans selection:bg-cyan-200 selection:text-cyan-900 relative">
       <GlobalStyles />
-      
+
       {/* GLOBAL TOAST CONTAINER */}
       <div className="fixed top-4 right-4 z-[9999] flex flex-col items-end pointer-events-none">
         {toasts.map(t => (
@@ -748,8 +775,9 @@ export default function App() {
       </div>
 
       {view === 'login' && <LoginPage onLogin={handleLogin} />}
+      {view === 'login' && <LoginPage onLogin={handleLogin} />}
       {view === 'student-dashboard' && user && <StudentDashboard user={user} onLogout={handleLogout} logbooks={logbooks} setLogbooks={setLogbooks} reports={reports} setReports={setReports} onUpdateProfile={handleProfileUpdate} showToast={showToast} />}
-      {view === 'lecturer-dashboard' && user && <LecturerDashboard user={user} onLogout={handleLogout} students={STUDENTS_DATA} logbooks={logbooks} reports={reports} onUpdateProfile={handleProfileUpdate} showToast={showToast} />}
+      {view === 'lecturer-dashboard' && user && <LecturerDashboard user={user} onLogout={handleLogout} logbooks={logbooks} setLogbooks={setLogbooks} reports={reports} onUpdateProfile={handleProfileUpdate} showToast={showToast} />}
     </div>
   );
 }
@@ -795,8 +823,8 @@ function StudentDashboard({ user, onLogout, logbooks, setLogbooks, reports, setR
       {/* Sidebar Desktop */}
       <aside className="hidden md:flex flex-col w-72 bg-white/80 backdrop-blur-xl border-r border-slate-200/60 shadow-lg z-20">
         <div className="p-8">
-            <h2 className="text-2xl font-black bg-gradient-to-r from-cyan-600 to-blue-600 bg-clip-text text-transparent">Panel Mahasiswa</h2>
-            <p className="text-slate-400 text-sm font-medium mt-1 truncate">{user.name}</p>
+          <h2 className="text-2xl font-black bg-gradient-to-r from-cyan-600 to-blue-600 bg-clip-text text-transparent">Panel Mahasiswa</h2>
+          <p className="text-slate-400 text-sm font-medium mt-1 truncate">{user.name}</p>
         </div>
         <nav className="flex-1 py-2">
           <NavItem id="overview" label="Overview" icon={LayoutDashboard} />
@@ -804,11 +832,11 @@ function StudentDashboard({ user, onLogout, logbooks, setLogbooks, reports, setR
           <NavItem id="report" label="Kerjakan Laporan" icon={FileText} />
         </nav>
         <div className="p-4 border-t border-slate-100 space-y-2">
-          <button 
-             onClick={() => setActiveTab('profile')} 
-             className={`w-full flex items-center gap-3 px-5 py-3.5 rounded-xl transition-all duration-300 font-medium ${activeTab === 'profile' ? 'bg-gradient-to-r from-cyan-500 to-blue-600 text-white shadow-lg shadow-cyan-500/20' : 'text-slate-600 hover:bg-slate-50 hover:text-slate-700'}`}
+          <button
+            onClick={() => setActiveTab('profile')}
+            className={`w-full flex items-center gap-3 px-5 py-3.5 rounded-xl transition-all duration-300 font-medium ${activeTab === 'profile' ? 'bg-gradient-to-r from-cyan-500 to-blue-600 text-white shadow-lg shadow-cyan-500/20' : 'text-slate-600 hover:bg-slate-50 hover:text-slate-700'}`}
           >
-             <User size={20} className={activeTab === 'profile' ? 'text-white' : 'text-slate-400'}/> Profil Saya
+            <User size={20} className={activeTab === 'profile' ? 'text-white' : 'text-slate-400'} /> Profil Saya
           </button>
           <Button variant="danger" onClick={onLogout} className="w-full justify-center rounded-xl"><LogOut size={18} /> Keluar</Button>
         </div>
@@ -852,7 +880,7 @@ function StudentOverview({ user, logbooks, reports }) {
     <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
         <div><h1 className="text-3xl font-bold text-slate-800 tracking-tight">Selamat Datang!</h1><p className="text-slate-500">Ringkasan aktivitas magang Anda.</p></div>
-        <span className="px-4 py-2 bg-white rounded-full shadow-sm border border-slate-100 text-sm font-medium text-slate-600">{new Date().toLocaleDateString('id-ID', {weekday:'long', day:'numeric', month:'long', year:'numeric'})}</span>
+        <span className="px-4 py-2 bg-white rounded-full shadow-sm border border-slate-100 text-sm font-medium text-slate-600">{new Date().toLocaleDateString('id-ID', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })}</span>
       </div>
       <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
         <Card title="Statistik Kinerja">
@@ -879,108 +907,147 @@ function StudentOverview({ user, logbooks, reports }) {
 }
 
 function StudentLogbookForm({ user, logbooks, setLogbooks, showToast }) {
-  const [lat, setLat] = useState(null); const [lng, setLng] = useState(null); const [address, setAddress] = useState('Menunggu GPS...'); const [accuracy, setAccuracy] = useState(null); 
-  
+  const [lat, setLat] = useState(null); const [lng, setLng] = useState(null); const [address, setAddress] = useState('Menunggu GPS...'); const [accuracy, setAccuracy] = useState(null);
+
   const [status, setStatus] = useState('Hadir');
   const [date, setDate] = useState(new Date().toISOString().split('T')[0]);
-  const [time, setTime] = useState(new Date().toLocaleTimeString('en-GB', {hour: '2-digit', minute:'2-digit'}));
+  const [time, setTime] = useState(new Date().toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' }));
 
-  const [activityHTML, setActivityHTML] = useState(''); const [outputHTML, setOutputHTML] = useState(''); 
-  const [selfie, setSelfie] = useState(null); 
+  const [activityHTML, setActivityHTML] = useState(''); const [outputHTML, setOutputHTML] = useState('');
+  const [selfie, setSelfie] = useState(null);
   const [doc, setDoc] = useState(null);
-  const [docMode, setDocMode] = useState(null); 
+  const [docMode, setDocMode] = useState(null);
   const [cameraActive, setCameraActive] = useState(false); const videoRef = useRef(null); const canvasRef = useRef(null);
   const [docCameraActive, setDocCameraActive] = useState(false); const docVideoRef = useRef(null); const docCanvasRef = useRef(null);
 
   const [previewImage, setPreviewImage] = useState(null);
+  const lastGeoUpdateRef = useRef(0);
 
-  const getLocation = () => { 
-      if (!navigator.geolocation) {
-          showToast('error', 'GPS Error', 'Browser Anda tidak mendukung lokasi.');
-          return setAddress("GPS tidak didukung"); 
+  useEffect(() => {
+    if (!navigator.geolocation) {
+      setAddress("GPS tidak didukung browser ini");
+      return;
+    }
+
+    setAddress("Mencari sinyal GPS...");
+
+    // REAL-TIME WATCH POSITION
+    const watchId = navigator.geolocation.watchPosition(
+      async (pos) => {
+        const { latitude, longitude, accuracy } = pos.coords;
+        setLat(latitude);
+        setLng(longitude);
+        setAccuracy(accuracy);
+
+        // Throttle Reverse Geocoding (Max once every 5 seconds or if first time)
+        const now = Date.now();
+        if (now - lastGeoUpdateRef.current > 5000) {
+          lastGeoUpdateRef.current = now;
+          try {
+            const res = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${latitude}&lon=${longitude}`);
+            const data = await res.json();
+            setAddress(data.display_name || "Alamat tidak ditemukan");
+          } catch {
+            // Keep old address or show coords if failed
+            if (address === 'Mencari sinyal GPS...') setAddress(`${latitude.toFixed(6)}, ${longitude.toFixed(6)}`);
+          }
+        }
+      },
+      (err) => {
+        showToast('error', 'GPS Error', err.message);
+        setAddress("Gagal: " + err.message);
+      },
+      {
+        enableHighAccuracy: true,
+        maximumAge: 0,
+        timeout: 10000
       }
-      setAddress("Mencari sinyal GPS..."); 
-      navigator.geolocation.getCurrentPosition(
-          async (pos) => { 
-              const { latitude, longitude, accuracy } = pos.coords; 
-              setLat(latitude); setLng(longitude); setAccuracy(accuracy); 
-              showToast('success', 'GPS Ditemukan', 'Lokasi Anda berhasil dideteksi.');
-              try { 
-                  const res = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${latitude}&lon=${longitude}`); 
-                  const data = await res.json(); 
-                  setAddress(data.display_name || "Alamat tidak ditemukan"); 
-              } catch { 
-                  setAddress(`${latitude}, ${longitude}`); 
-              } 
-          }, 
-          (err) => {
-              setAddress("Gagal: " + err.message);
-              showToast('error', 'GPS Gagal', err.message);
-          }, 
-          { enableHighAccuracy: true }
-      ); 
+    );
+
+    return () => navigator.geolocation.clearWatch(watchId);
+  }, []);
+
+  // Manual refresh kept for user reassurance
+  const getLocation = () => {
+    // Reset wrapper manually if needed, but watchPosition handles it.
+    showToast('info', 'GPS Real-time', 'Sedang memantau lokasi secara langsung...');
   };
-  
-  useEffect(() => { getLocation(); }, []);
-  
+
   const startCamera = async () => { setCameraActive(true); try { const stream = await navigator.mediaDevices.getUserMedia({ video: true }); if (videoRef.current) videoRef.current.srcObject = stream; } catch { showToast('error', 'Kamera Error', 'Akses kamera ditolak/gagal'); setCameraActive(false); } };
   const takePhoto = () => { const video = videoRef.current; const canvas = canvasRef.current; if (video && canvas) { canvas.width = video.videoWidth; canvas.height = video.videoHeight; canvas.getContext('2d').drawImage(video, 0, 0); setSelfie(canvas.toDataURL('image/png')); video.srcObject.getTracks().forEach(t => t.stop()); setCameraActive(false); showToast('success', 'Foto Tersimpan', 'Foto selfie berhasil diambil.'); } };
-  
+
   const startDocCamera = async () => { setDocCameraActive(true); try { const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment" } }); if (docVideoRef.current) docVideoRef.current.srcObject = stream; } catch { showToast('error', 'Kamera Error', 'Gagal akses kamera belakang'); setDocCameraActive(false); } };
   const takeDocPhoto = () => { const video = docVideoRef.current; const canvas = docCanvasRef.current; if (video && canvas) { canvas.width = video.videoWidth; canvas.height = video.videoHeight; canvas.getContext('2d').drawImage(video, 0, 0); const fileData = canvas.toDataURL('image/jpeg'); fetch(fileData).then(res => res.blob()).then(blob => { const file = new File([blob], "doc_camera.jpg", { type: "image/jpeg" }); setDoc(file); showToast('success', 'Dokumen Tersimpan', 'Foto dokumen berhasil diambil.'); }); video.srcObject.getTracks().forEach(t => t.stop()); setDocCameraActive(false); setDocMode(null); } };
 
   const formatHTMLToDBString = (htmlString) => {
     if (!htmlString) return '';
     return htmlString
-        .replace(/<div><br><\/div>/gi, ' ### ')
-        .replace(/<div>/gi, ' ### ')
-        .replace(/<\/div>/gi, '')
-        .replace(/<p><br><\/p>/gi, ' ### ')
-        .replace(/<p>/gi, ' ### ')
-        .replace(/<\/p>/gi, '')
-        .replace(/<br\s*[\/]?>/gi, ' ### ')
-        .replace(/( ### )+/g, ' ### ') 
-        .replace(/^ ### | ### $/g, '') 
-        .trim();
+      .replace(/<div><br><\/div>/gi, ' ### ')
+      .replace(/<div>/gi, ' ### ')
+      .replace(/<\/div>/gi, '')
+      .replace(/<p><br><\/p>/gi, ' ### ')
+      .replace(/<p>/gi, ' ### ')
+      .replace(/<\/p>/gi, '')
+      .replace(/<br\s*[\/]?>/gi, ' ### ')
+      .replace(/( ### )+/g, ' ### ')
+      .replace(/^ ### | ### $/g, '')
+      .trim();
   };
 
-  const handleSubmit = () => { 
-      if (!lat || !selfie || activityHTML.length < 5 || outputHTML.length < 5) { 
-          showToast('warning', 'Data Belum Lengkap', 'Mohon lengkapi: Lokasi, Selfie, Kegiatan, dan Output.'); 
-          return; 
-      } 
-      
-      const newLog = { 
-          id: Date.now(), 
-          studentId: user.id, 
-          name: user.name, 
-          nim: user.username, 
-          date: date, 
-          time: time, 
-          status, 
-          lat, 
-          lng, 
-          address, 
-          activity: formatHTMLToDBString(activityHTML), 
-          output: formatHTMLToDBString(outputHTML),     
-          selfieUrl: selfie, 
-          docUrl: doc ? URL.createObjectURL(doc) : null 
-      }; 
-      
-      setLogbooks([...logbooks, newLog]); 
-      showToast('success', 'Berhasil Dikirim', 'Logbook harian Anda berhasil disimpan!');
-      setActivityHTML(''); 
-      setOutputHTML(''); 
-      setSelfie(null); 
-      setDoc(null); 
-      setDocMode(null); 
+  const handleSubmit = async () => {
+    if (!lat || !selfie || activityHTML.length < 5 || outputHTML.length < 5) {
+      showToast('warning', 'Data Belum Lengkap', 'Mohon lengkapi: Lokasi, Selfie, Kegiatan, dan Output.');
+      return;
+    }
+
+    showToast('info', 'Mengirim Data...', 'Mohon tunggu sebentar.');
+
+    const newLog = {
+      id: Date.now(),
+      studentId: user.id,
+      name: user.name,
+      nim: user.username,
+      date: date,
+      time: time,
+      status,
+      lat,
+      lng,
+      address,
+      activity: formatHTMLToDBString(activityHTML),
+      output: formatHTMLToDBString(outputHTML),
+      selfieBase64: selfie, // Kirim base64
+      docBase64: doc ? await new Promise((r) => { const reader = new FileReader(); reader.onload = () => r(reader.result); reader.readAsDataURL(doc); }) : null
+    };
+
+    try {
+      const result = await callAPI('submitLogbook', {
+        username: user.username,
+        link_spreadsheet: user.link_spreadsheet,
+        folder_url: user.link_folder,
+        logEntry: newLog
+      });
+
+      // Update local state for immediate feedback using the URLs returned from backend
+      const savedLog = { ...newLog, selfieUrl: result.selfieUrl, docUrl: result.docUrl, selfieBase64: null, docBase64: null };
+      setLogbooks([...logbooks, savedLog]);
+
+      showToast('success', 'Berhasil Dikirim', 'Logbook harian Anda berhasil disimpan ke Spreadsheet!');
+
+      setActivityHTML('');
+      setOutputHTML('');
+      setSelfie(null);
+      setDoc(null);
+      setDocMode(null);
+    } catch (err) {
+      showToast('error', 'Gagal Mengirim', err.message);
+    }
   };
 
   const handleDocClick = () => {
     if (doc && doc.type.startsWith('image/')) {
-        setPreviewImage(URL.createObjectURL(doc));
+      setPreviewImage(URL.createObjectURL(doc));
     } else if (doc) {
-        showToast('info', 'Format File', 'Dokumen yang diunggah bukan format gambar.');
+      showToast('info', 'Format File', 'Dokumen yang diunggah bukan format gambar.');
     }
   };
 
@@ -989,79 +1056,79 @@ function StudentLogbookForm({ user, logbooks, setLogbooks, showToast }) {
       {previewImage && <ImageModal src={previewImage} onClose={() => setPreviewImage(null)} />}
       <Card title="Formulir Logbook Harian">
         <div className="space-y-8">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div className="bg-slate-50 p-1 rounded-2xl border border-slate-200 flex flex-col h-full">
-                     <div className="bg-white rounded-xl overflow-hidden h-64 relative z-0 flex-1"><LeafletMap lat={lat} lng={lng} setLat={setLat} setLng={setLng} setAddress={setAddress} /><div className="absolute top-2 right-2 z-[400]"><button onClick={getLocation} className="bg-white p-2 rounded-lg shadow text-xs font-bold text-cyan-600 hover:bg-cyan-50">↻ Refresh GPS</button></div></div>
-                     <div className="p-4"><div className="flex items-start gap-3"><MapPin className="text-cyan-600 mt-1 shrink-0" size={20} /><div><p className="font-bold text-slate-700 text-sm leading-snug">{address}</p><p className="text-xs text-slate-500 mt-1 font-mono">{lat ? `${lat.toFixed(6)}, ${lng.toFixed(6)}` : "Mencari kordinat..."}</p>{accuracy && <p className="text-[10px] text-green-600">Akurasi GPS: ±{Math.round(accuracy)} meter</p>}</div></div></div>
-                </div>
-                <div className="bg-slate-50 border border-slate-200 rounded-2xl p-6 text-center flex flex-col justify-center h-full">
-                    <h4 className="font-bold text-slate-700 mb-4 flex items-center justify-center gap-2"><Camera size={18}/> Foto Selfie (Wajib)</h4>
-                    {selfie ? (
-                        <div className="relative inline-block group cursor-pointer" onClick={() => setPreviewImage(selfie)}>
-                            <img src={selfie} className="w-full max-h-64 object-cover rounded-xl shadow-md mx-auto hover:opacity-90 transition-opacity" alt="Selfie" />
-                            <div className="absolute inset-0 bg-black/30 opacity-0 group-hover:opacity-100 transition-opacity rounded-xl flex items-center justify-center text-white font-bold"><Eye size={24} className="mr-2"/> Lihat Full</div>
-                            <button onClick={(e) => { e.stopPropagation(); setSelfie(null); }} className="absolute top-2 right-2 bg-red-500 text-white p-1.5 rounded-full shadow hover:bg-red-600 transition"><X size={14}/></button>
-                        </div>
-                    ) : cameraActive ? (
-                        <div className="space-y-3">
-                            <video ref={videoRef} autoPlay playsInline className="w-full h-48 bg-black rounded-xl object-cover mx-auto" />
-                            <canvas ref={canvasRef} className="hidden" />
-                            <Button onClick={takePhoto} className="w-full">Ambil Foto</Button>
-                        </div>
-                    ) : (
-                        <Button onClick={startCamera} variant="secondary" className="w-full py-12 border-dashed border-2 flex flex-col gap-2 h-full"><div className="w-16 h-16 bg-slate-100 rounded-full flex items-center justify-center mx-auto mb-2"><Camera size={32} className="text-slate-400" /></div><span className="text-slate-500 font-medium">Buka Kamera Depan</span></Button>
-                    )}
-                </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="bg-slate-50 p-1 rounded-2xl border border-slate-200 flex flex-col h-full">
+              <div className="bg-white rounded-xl overflow-hidden h-64 relative z-0 flex-1"><LeafletMap lat={lat} lng={lng} setLat={setLat} setLng={setLng} setAddress={setAddress} /><div className="absolute top-2 right-2 z-[400]"><button onClick={getLocation} className="bg-white p-2 rounded-lg shadow text-xs font-bold text-cyan-600 hover:bg-cyan-50">↻ Refresh GPS</button></div></div>
+              <div className="p-4"><div className="flex items-start gap-3"><MapPin className="text-cyan-600 mt-1 shrink-0" size={20} /><div><p className="font-bold text-slate-700 text-sm leading-snug">{address}</p><p className="text-xs text-slate-500 mt-1 font-mono">{lat ? `${lat.toFixed(6)}, ${lng.toFixed(6)}` : "Mencari kordinat..."}</p>{accuracy && <p className="text-[10px] text-green-600">Akurasi GPS: ±{Math.round(accuracy)} meter</p>}</div></div></div>
             </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <div className="p-4 bg-slate-50 rounded-xl border border-slate-200 relative z-30">
-                    <label className="text-xs font-bold text-slate-400 uppercase block mb-2">Tanggal</label>
-                    <CustomDatePicker value={date} onChange={setDate} />
+            <div className="bg-slate-50 border border-slate-200 rounded-2xl p-6 text-center flex flex-col justify-center h-full">
+              <h4 className="font-bold text-slate-700 mb-4 flex items-center justify-center gap-2"><Camera size={18} /> Foto Selfie (Wajib)</h4>
+              {selfie ? (
+                <div className="relative inline-block group cursor-pointer" onClick={() => setPreviewImage(selfie)}>
+                  <img src={selfie} className="w-full max-h-64 object-cover rounded-xl shadow-md mx-auto hover:opacity-90 transition-opacity" alt="Selfie" />
+                  <div className="absolute inset-0 bg-black/30 opacity-0 group-hover:opacity-100 transition-opacity rounded-xl flex items-center justify-center text-white font-bold"><Eye size={24} className="mr-2" /> Lihat Full</div>
+                  <button onClick={(e) => { e.stopPropagation(); setSelfie(null); }} className="absolute top-2 right-2 bg-red-500 text-white p-1.5 rounded-full shadow hover:bg-red-600 transition"><X size={14} /></button>
                 </div>
-                <div className="p-4 bg-slate-50 rounded-xl border border-slate-200 relative z-30">
-                    <label className="text-xs font-bold text-slate-400 uppercase block mb-2">Jam</label>
-                    <CustomTimePicker value={time} onChange={setTime} />
+              ) : cameraActive ? (
+                <div className="space-y-3">
+                  <video ref={videoRef} autoPlay playsInline className="w-full h-48 bg-black rounded-xl object-cover mx-auto" />
+                  <canvas ref={canvasRef} className="hidden" />
+                  <Button onClick={takePhoto} className="w-full">Ambil Foto</Button>
                 </div>
-                <div className="p-4 bg-slate-50 rounded-xl border border-slate-200 relative z-20">
-                    <label className="text-xs font-bold text-slate-400 uppercase block mb-2">Status</label>
-                    <CustomStatusSelect value={status} onChange={setStatus} />
-                </div>
+              ) : (
+                <Button onClick={startCamera} variant="secondary" className="w-full py-12 border-dashed border-2 flex flex-col gap-2 h-full"><div className="w-16 h-16 bg-slate-100 rounded-full flex items-center justify-center mx-auto mb-2"><Camera size={32} className="text-slate-400" /></div><span className="text-slate-500 font-medium">Buka Kamera Depan</span></Button>
+              )}
             </div>
+          </div>
 
-            <div className="relative z-10"><label className="block text-sm font-bold text-slate-700 mb-2">Kegiatan yang Dilakukan</label><RichEditor value={activityHTML} onChange={setActivityHTML} placeholder="Ketik di sini... (Bisa ditebalkan, miring, garis bawah, dan poin angka)" /></div>
-            <div className="relative z-10"><label className="block text-sm font-bold text-slate-700 mb-2">Output yang Dihasilkan</label><RichEditor value={outputHTML} onChange={setOutputHTML} placeholder="Hasil kerja yang dicapai..." /></div>
-            <div className="relative z-10"><label className="block text-sm font-bold text-slate-700 mb-2">Dokumentasi Tambahan</label>
-                {doc ? (
-                    <div 
-                       className="flex items-center gap-3 p-4 border border-green-200 bg-green-50 rounded-xl cursor-pointer hover:bg-green-100 transition-colors" 
-                       onClick={handleDocClick}
-                    >
-                        <div className="p-2 bg-white rounded-lg shadow-sm"><CheckCircle className="text-green-500" size={24}/></div>
-                        <div className="flex-1">
-                           <p className="font-bold text-green-700 text-sm">Dokumen Terlampir (Klik untuk lihat)</p>
-                           <p className="text-xs text-green-600 truncate">{doc.name}</p>
-                        </div>
-                        <button onClick={(e) => { e.stopPropagation(); setDoc(null); }} className="p-2 text-red-400 hover:text-red-600 hover:bg-red-50 rounded-lg"><X size={20}/></button>
-                    </div>
-                ) : !docMode ? (
-                     <button onClick={() => setDocMode('selecting')} className="w-full py-6 border-2 border-dashed border-slate-300 rounded-xl flex items-center justify-center gap-3 text-slate-500 hover:bg-slate-50 hover:border-cyan-400 hover:text-cyan-600 transition-all"><Upload size={20} /><span className="font-medium">Tambah Dokumentasi (Foto/File)</span></button>
-                ) : (
-                    <div className="bg-slate-50 border border-slate-200 rounded-xl p-4 animate-in fade-in slide-in-from-top-2">
-                        <div className="flex justify-between items-center mb-4"><h5 className="font-bold text-slate-700">Pilih Metode Upload</h5><button onClick={() => {setDocMode(null); setDocCameraActive(false);}} className="text-slate-400 hover:text-red-500"><X size={18}/></button></div>
-                        {docMode === 'selecting' && (
-                            <div className="grid grid-cols-2 gap-4">
-                                <button onClick={() => setDocMode('camera')} className="flex flex-col items-center gap-2 p-6 bg-white border border-slate-200 rounded-xl shadow-sm hover:ring-2 hover:ring-cyan-400 transition-all"><div className="w-12 h-12 bg-blue-50 text-blue-500 rounded-full flex items-center justify-center"><Camera size={24}/></div><span className="font-bold text-slate-700 text-sm">Buka Kamera</span></button>
-                                <label className="flex flex-col items-center gap-2 p-6 bg-white border border-slate-200 rounded-xl shadow-sm hover:ring-2 hover:ring-cyan-400 transition-all cursor-pointer"><div className="w-12 h-12 bg-purple-50 text-purple-500 rounded-full flex items-center justify-center"><ImageIcon size={24}/></div><span className="font-bold text-slate-700 text-sm">Pilih Galeri/File</span><input type="file" className="hidden" accept="image/*" onChange={(e) => {setDoc(e.target.files[0]); setDocMode(null);}} /></label>
-                            </div>
-                        )}
-                        {docMode === 'camera' && (
-                            <div className="text-center space-y-3">{docCameraActive ? (<><video ref={docVideoRef} autoPlay playsInline className="w-full max-h-64 bg-black rounded-lg object-cover" /><canvas ref={docCanvasRef} className="hidden" /><Button onClick={takeDocPhoto} className="w-full">Ambil Foto Dokumen</Button></>) : (<div className="py-8"><Button onClick={startDocCamera} className="w-full">Mulai Kamera Belakang</Button></div>)}</div>
-                        )}
-                    </div>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div className="p-4 bg-slate-50 rounded-xl border border-slate-200 relative z-30">
+              <label className="text-xs font-bold text-slate-400 uppercase block mb-2">Tanggal</label>
+              <CustomDatePicker value={date} onChange={setDate} />
+            </div>
+            <div className="p-4 bg-slate-50 rounded-xl border border-slate-200 relative z-30">
+              <label className="text-xs font-bold text-slate-400 uppercase block mb-2">Jam</label>
+              <CustomTimePicker value={time} onChange={setTime} />
+            </div>
+            <div className="p-4 bg-slate-50 rounded-xl border border-slate-200 relative z-20">
+              <label className="text-xs font-bold text-slate-400 uppercase block mb-2">Status</label>
+              <CustomStatusSelect value={status} onChange={setStatus} />
+            </div>
+          </div>
+
+          <div className="relative z-10"><label className="block text-sm font-bold text-slate-700 mb-2">Kegiatan yang Dilakukan</label><RichEditor value={activityHTML} onChange={setActivityHTML} placeholder="Ketik di sini... (Bisa ditebalkan, miring, garis bawah, dan poin angka)" /></div>
+          <div className="relative z-10"><label className="block text-sm font-bold text-slate-700 mb-2">Output yang Dihasilkan</label><RichEditor value={outputHTML} onChange={setOutputHTML} placeholder="Hasil kerja yang dicapai..." /></div>
+          <div className="relative z-10"><label className="block text-sm font-bold text-slate-700 mb-2">Dokumentasi Tambahan</label>
+            {doc ? (
+              <div
+                className="flex items-center gap-3 p-4 border border-green-200 bg-green-50 rounded-xl cursor-pointer hover:bg-green-100 transition-colors"
+                onClick={handleDocClick}
+              >
+                <div className="p-2 bg-white rounded-lg shadow-sm"><CheckCircle className="text-green-500" size={24} /></div>
+                <div className="flex-1">
+                  <p className="font-bold text-green-700 text-sm">Dokumen Terlampir (Klik untuk lihat)</p>
+                  <p className="text-xs text-green-600 truncate">{doc.name}</p>
+                </div>
+                <button onClick={(e) => { e.stopPropagation(); setDoc(null); }} className="p-2 text-red-400 hover:text-red-600 hover:bg-red-50 rounded-lg"><X size={20} /></button>
+              </div>
+            ) : !docMode ? (
+              <button onClick={() => setDocMode('selecting')} className="w-full py-6 border-2 border-dashed border-slate-300 rounded-xl flex items-center justify-center gap-3 text-slate-500 hover:bg-slate-50 hover:border-cyan-400 hover:text-cyan-600 transition-all"><Upload size={20} /><span className="font-medium">Tambah Dokumentasi (Foto/File)</span></button>
+            ) : (
+              <div className="bg-slate-50 border border-slate-200 rounded-xl p-4 animate-in fade-in slide-in-from-top-2">
+                <div className="flex justify-between items-center mb-4"><h5 className="font-bold text-slate-700">Pilih Metode Upload</h5><button onClick={() => { setDocMode(null); setDocCameraActive(false); }} className="text-slate-400 hover:text-red-500"><X size={18} /></button></div>
+                {docMode === 'selecting' && (
+                  <div className="grid grid-cols-2 gap-4">
+                    <button onClick={() => setDocMode('camera')} className="flex flex-col items-center gap-2 p-6 bg-white border border-slate-200 rounded-xl shadow-sm hover:ring-2 hover:ring-cyan-400 transition-all"><div className="w-12 h-12 bg-blue-50 text-blue-500 rounded-full flex items-center justify-center"><Camera size={24} /></div><span className="font-bold text-slate-700 text-sm">Buka Kamera</span></button>
+                    <label className="flex flex-col items-center gap-2 p-6 bg-white border border-slate-200 rounded-xl shadow-sm hover:ring-2 hover:ring-cyan-400 transition-all cursor-pointer"><div className="w-12 h-12 bg-purple-50 text-purple-500 rounded-full flex items-center justify-center"><ImageIcon size={24} /></div><span className="font-bold text-slate-700 text-sm">Pilih Galeri/File</span><input type="file" className="hidden" accept="image/*" onChange={(e) => { setDoc(e.target.files[0]); setDocMode(null); }} /></label>
+                  </div>
                 )}
-            </div>
-            <Button onClick={handleSubmit} className="w-full py-4 text-lg mt-4 shadow-xl shadow-cyan-500/20 relative z-10">Kirim Logbook</Button>
+                {docMode === 'camera' && (
+                  <div className="text-center space-y-3">{docCameraActive ? (<><video ref={docVideoRef} autoPlay playsInline className="w-full max-h-64 bg-black rounded-lg object-cover" /><canvas ref={docCanvasRef} className="hidden" /><Button onClick={takeDocPhoto} className="w-full">Ambil Foto Dokumen</Button></>) : (<div className="py-8"><Button onClick={startDocCamera} className="w-full">Mulai Kamera Belakang</Button></div>)}</div>
+                )}
+              </div>
+            )}
+          </div>
+          <Button onClick={handleSubmit} className="w-full py-4 text-lg mt-4 shadow-xl shadow-cyan-500/20 relative z-10">Kirim Logbook</Button>
         </div>
       </Card>
     </div>
@@ -1070,32 +1137,69 @@ function StudentLogbookForm({ user, logbooks, setLogbooks, showToast }) {
 
 function StudentReportForm({ user, reports, setReports, showToast }) {
   const [title, setTitle] = useState(''); const [file, setFile] = useState(null); const [overview, setOverview] = useState(''); const [isGenerating, setIsGenerating] = useState(false);
-  
-  const handleAI = () => { 
-      if(!file) return showToast('warning', 'Peringatan', 'Pilih file laporan terlebih dahulu!'); 
-      setIsGenerating(true); 
-      setTimeout(() => { 
-          setOverview(`[AI Summary]\nBerdasarkan dokumen ${file.name}, laporan ini menunjukkan kemajuan signifikan.`); 
-          setIsGenerating(false); 
-          showToast('success', 'AI Selesai', 'Ringkasan laporan berhasil dibuat.');
-      }, 2000); 
+
+  const handleAI = () => {
+    if (!file) return showToast('warning', 'Peringatan', 'Pilih file laporan terlebih dahulu!');
+    setIsGenerating(true);
+    setTimeout(() => {
+      setOverview(`[AI Summary]\nBerdasarkan dokumen ${file.name}, laporan ini menunjukkan kemajuan signifikan.`);
+      setIsGenerating(false);
+      showToast('success', 'AI Selesai', 'Ringkasan laporan berhasil dibuat.');
+    }, 2000);
   };
-  
-  const submit = () => { 
-      if(!title || !file) return showToast('error', 'Gagal Dikirim', 'Lengkapi judul dan dokumen laporan!'); 
-      setReports([...reports, { id: Date.now(), studentId: user.id, name: user.name, title, overview, fileUrl: '#', submittedAt: new Date().toISOString().split('T')[0], graded: false }]); 
-      showToast('success', 'Laporan Terkirim', 'Laporan Anda berhasil dikirim ke Dosen.'); 
-      setTitle(''); setFile(null); setOverview(''); 
+
+  const submit = async () => {
+    if (!title || !file) return showToast('error', 'Gagal Dikirim', 'Lengkapi judul dan dokumen laporan!');
+
+    showToast('info', 'Mengirim Laporan...', 'Sedang mengupload dokumen...');
+
+    try {
+      const fileBase64 = await new Promise((resolve) => {
+        const reader = new FileReader();
+        reader.onload = () => resolve(reader.result);
+        reader.readAsDataURL(file);
+      });
+
+      const reportData = {
+        title,
+        overview,
+        fileName: file.name,
+        fileBase64
+      };
+
+      const result = await callAPI('submitReport', {
+        username: user.username,
+        link_spreadsheet: user.link_spreadsheet,
+        folder_url: user.link_folder,
+        reportData
+      });
+
+      setReports([...reports, {
+        id: Date.now(),
+        studentId: user.id,
+        name: user.name,
+        title,
+        overview,
+        fileUrl: result.reportFileUrl,
+        submittedAt: new Date().toISOString().split('T')[0],
+        graded: false
+      }]);
+
+      showToast('success', 'Laporan Terkirim', 'Laporan Anda berhasil dikirim ke Spreadsheet Dosen.');
+      setTitle(''); setFile(null); setOverview('');
+    } catch (err) {
+      showToast('error', 'Gagal Upload', err.message);
+    }
   };
 
   return (
     <div className="max-w-2xl mx-auto animate-in fade-in zoom-in duration-500">
       <Card title="Upload Laporan Akhir">
         <div className="space-y-6">
-            <Input label="Judul Laporan" value={title} onChange={e => setTitle(e.target.value)} placeholder="Contoh: Laporan Akhir Magang" />
-            <div className="group border-2 border-dashed border-slate-200 rounded-2xl p-10 text-center hover:border-cyan-400 hover:bg-cyan-50/30 transition-all cursor-pointer relative"><input type="file" className="absolute inset-0 opacity-0 cursor-pointer" onChange={e => setFile(e.target.files[0])} /><div className="flex flex-col items-center"><div className="w-16 h-16 bg-blue-50 text-blue-500 rounded-full flex items-center justify-center mb-4 group-hover:scale-110 transition-transform"><FileText size={32} /></div><p className="font-bold text-slate-700 text-lg">{file ? file.name : "Drag & Drop atau Klik"}</p><p className="text-slate-400 text-sm mt-1">Format PDF/DOCX (Maks 10MB)</p></div></div>
-            <div><div className="flex justify-between items-center mb-2"><label className="font-bold text-slate-700">Ringkasan Laporan</label><button onClick={handleAI} disabled={isGenerating} className="text-xs bg-purple-100 text-purple-700 px-3 py-1.5 rounded-lg hover:bg-purple-200 font-bold flex items-center gap-1 transition-colors">{isGenerating ? "Menganalisis..." : "✨ AI Generate"}</button></div><textarea className="w-full p-4 rounded-xl border border-slate-200 focus:ring-4 focus:ring-purple-100 outline-none h-32 text-sm leading-relaxed" value={overview} onChange={e => setOverview(e.target.value)} placeholder="Hasil ringkasan akan muncul di sini..." /></div>
-            <Button onClick={submit} className="w-full py-4 text-lg">Kirim Laporan</Button>
+          <Input label="Judul Laporan" value={title} onChange={e => setTitle(e.target.value)} placeholder="Contoh: Laporan Akhir Magang" />
+          <div className="group border-2 border-dashed border-slate-200 rounded-2xl p-10 text-center hover:border-cyan-400 hover:bg-cyan-50/30 transition-all cursor-pointer relative"><input type="file" className="absolute inset-0 opacity-0 cursor-pointer" onChange={e => setFile(e.target.files[0])} /><div className="flex flex-col items-center"><div className="w-16 h-16 bg-blue-50 text-blue-500 rounded-full flex items-center justify-center mb-4 group-hover:scale-110 transition-transform"><FileText size={32} /></div><p className="font-bold text-slate-700 text-lg">{file ? file.name : "Drag & Drop atau Klik"}</p><p className="text-slate-400 text-sm mt-1">Format PDF/DOCX (Maks 10MB)</p></div></div>
+          <div><div className="flex justify-between items-center mb-2"><label className="font-bold text-slate-700">Ringkasan Laporan</label><button onClick={handleAI} disabled={isGenerating} className="text-xs bg-purple-100 text-purple-700 px-3 py-1.5 rounded-lg hover:bg-purple-200 font-bold flex items-center gap-1 transition-colors">{isGenerating ? "Menganalisis..." : "✨ AI Generate"}</button></div><textarea className="w-full p-4 rounded-xl border border-slate-200 focus:ring-4 focus:ring-purple-100 outline-none h-32 text-sm leading-relaxed" value={overview} onChange={e => setOverview(e.target.value)} placeholder="Hasil ringkasan akan muncul di sini..." /></div>
+          <Button onClick={submit} className="w-full py-4 text-lg">Kirim Laporan</Button>
         </div>
       </Card>
     </div>
@@ -1103,9 +1207,42 @@ function StudentReportForm({ user, reports, setReports, showToast }) {
 }
 
 // --- LECTURER DASHBOARD ---
-function LecturerDashboard({ user, onLogout, students, logbooks, reports, onUpdateProfile, showToast }) {
+function LecturerDashboard({ user, onLogout, logbooks, setLogbooks, reports, onUpdateProfile, showToast }) {
   const [activeTab, setActiveTab] = useState('overview');
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [students, setStudents] = useState([]); // Fetch students from logic if needed, or just derive from logs
+
+  // Fetch Logic for Lecturer
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const url = `${GAS_URL}?action=getAllLogbooks`; // Special Endpoint
+        const res = await fetch(url);
+        const result = await res.json();
+        if (result.status === 'success') {
+          setLogbooks(result.data);
+          // Derive unique students from logbooks for the map/list
+          // This is a simplification; ideally we fetch student list too
+          const uniqueStudents = [];
+          const map = new Map();
+          for (const item of result.data) {
+            if (!map.has(item.studentId)) {
+              map.set(item.studentId, true);
+              uniqueStudents.push({
+                id: item.studentId,
+                name: item.name,
+                username: item.nim
+              });
+            }
+          }
+          setStudents(uniqueStudents);
+        }
+      } catch (e) {
+        console.error(e);
+      }
+    };
+    if (!GAS_URL.includes("MASUKKAN")) fetchData();
+  }, [setLogbooks]);
 
   const NavItem = ({ id, label, icon: Icon }) => {
     const isActive = activeTab === id;
@@ -1123,8 +1260,8 @@ function LecturerDashboard({ user, onLogout, students, logbooks, reports, onUpda
       {/* Sidebar Desktop */}
       <aside className="hidden md:flex flex-col w-72 bg-white/80 backdrop-blur-xl border-r border-slate-200/60 shadow-lg z-20">
         <div className="p-8">
-            <h2 className="text-2xl font-black bg-gradient-to-r from-cyan-600 to-blue-600 bg-clip-text text-transparent">Panel Dosen</h2>
-            <p className="text-slate-400 text-sm font-medium mt-1 truncate">{user.name}</p>
+          <h2 className="text-2xl font-black bg-gradient-to-r from-cyan-600 to-blue-600 bg-clip-text text-transparent">Panel Dosen</h2>
+          <p className="text-slate-400 text-sm font-medium mt-1 truncate">{user.name}</p>
         </div>
         <nav className="flex-1 py-2">
           <NavItem id="overview" label="Overview" icon={LayoutDashboard} />
@@ -1132,11 +1269,11 @@ function LecturerDashboard({ user, onLogout, students, logbooks, reports, onUpda
           <NavItem id="grading" label="Nilai Tugas" icon={FileText} />
         </nav>
         <div className="p-4 border-t border-slate-100 space-y-2">
-          <button 
-             onClick={() => setActiveTab('profile')} 
-             className={`w-full flex items-center gap-3 px-5 py-3.5 rounded-xl transition-all duration-300 font-medium ${activeTab === 'profile' ? 'bg-gradient-to-r from-cyan-500 to-blue-600 text-white shadow-lg shadow-cyan-500/20' : 'text-slate-600 hover:bg-slate-50 hover:text-slate-700'}`}
+          <button
+            onClick={() => setActiveTab('profile')}
+            className={`w-full flex items-center gap-3 px-5 py-3.5 rounded-xl transition-all duration-300 font-medium ${activeTab === 'profile' ? 'bg-gradient-to-r from-cyan-500 to-blue-600 text-white shadow-lg shadow-cyan-500/20' : 'text-slate-600 hover:bg-slate-50 hover:text-slate-700'}`}
           >
-             <User size={20} className={activeTab === 'profile' ? 'text-white' : 'text-slate-400'}/> Profil Saya
+            <User size={20} className={activeTab === 'profile' ? 'text-white' : 'text-slate-400'} /> Profil Saya
           </button>
           <Button variant="danger" onClick={onLogout} className="w-full justify-center rounded-xl"><LogOut size={18} /> Keluar</Button>
         </div>
@@ -1173,186 +1310,275 @@ function LecturerDashboard({ user, onLogout, students, logbooks, reports, onUpda
 }
 
 function LecturerOverview({ students, logbooks, reports }) {
-    const submitted = reports.length; const total = students.length;
-    
-    const studentMarkers = students.map(s => {
-        const studentLogbooks = logbooks.filter(l => l.studentId === s.id);
-        const lastLog = studentLogbooks[studentLogbooks.length - 1];
-        if (lastLog && lastLog.lat && lastLog.lng) {
-             return { lat: lastLog.lat, lng: lastLog.lng, name: s.name, status: lastLog.status };
-        }
-        return null;
-    }).filter(m => m !== null);
+  const submitted = reports.length; const total = students.length;
 
-    return (
-        <div className="space-y-8 animate-in fade-in duration-500">
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                <Card className="md:col-span-2 relative overflow-visible" title="Peta Sebaran Mahasiswa">
-                    <div className="h-80 bg-slate-100 rounded-2xl overflow-hidden relative border border-slate-200">
-                        <LeafletMap readOnly={true} markers={studentMarkers} />
-                        <div className="absolute top-4 right-4 bg-white/90 p-3 rounded-xl shadow-lg border border-slate-100 z-[400]"><div className="text-xs font-bold text-slate-400 uppercase mb-1">Total Aktif</div><div className="text-2xl font-black text-slate-800">{students.length} <span className="text-sm font-normal text-slate-500">Mahasiswa</span></div></div>
-                    </div>
-                </Card>
-                <Card title="Progress Laporan">
-                    <div className="flex flex-col items-center justify-center h-full py-4"><div className="relative w-48 h-48 flex items-center justify-center"><svg className="w-full h-full transform -rotate-90"><circle cx="50%" cy="50%" r="70" stroke="#f1f5f9" strokeWidth="12" fill="none" /><circle cx="50%" cy="50%" r="70" stroke="#0ea5e9" strokeWidth="12" fill="none" strokeDasharray="440" strokeDashoffset={440 - (440 * (submitted/total))} className="transition-all duration-1000 ease-out" strokeLinecap="round" /></svg><div className="absolute inset-0 flex flex-col items-center justify-center"><span className="text-4xl font-black text-slate-800">{Math.round((submitted/total)*100)}%</span><span className="text-xs text-slate-400 font-medium uppercase tracking-wider">Terkumpul</span></div></div></div>
-                </Card>
-            </div>
-            <Card title="Daftar Mahasiswa Bimbingan">
-                <div className="overflow-x-auto"><table className="w-full"><thead><tr className="border-b border-slate-100 text-left"><th className="pb-4 pl-4 font-bold text-slate-400 text-xs uppercase tracking-wider">Mahasiswa</th><th className="pb-4 font-bold text-slate-400 text-xs uppercase tracking-wider">Logbook Terakhir</th><th className="pb-4 font-bold text-slate-400 text-xs uppercase tracking-wider">Status Laporan</th></tr></thead><tbody className="divide-y divide-slate-50">{students.map(s => { const hasReport = reports.find(r => r.studentId === s.id); return (<tr key={s.id} className="hover:bg-slate-50/80 transition-colors"><td className="py-4 pl-4"><div className="font-bold text-slate-700">{s.name}</div><div className="text-xs text-slate-400 font-mono">{s.username}</div></td><td className="py-4 text-sm text-slate-600">{s.lastLogbook || "-"}</td><td className="py-4">{hasReport ? <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-100 text-emerald-700 text-xs font-bold"><CheckCircle size={14}/> Selesai</span> : <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-slate-100 text-slate-500 text-xs font-bold">Belum</span>}</td></tr>)})}</tbody></table></div>
-            </Card>
-        </div>
-    );
+  const studentMarkers = students.map(s => {
+    const studentLogbooks = logbooks.filter(l => l.studentId === s.id);
+    const lastLog = studentLogbooks[studentLogbooks.length - 1];
+    if (lastLog && lastLog.lat && lastLog.lng) {
+      return { lat: lastLog.lat, lng: lastLog.lng, name: s.name, status: lastLog.status };
+    }
+    return null;
+  }).filter(m => m !== null);
+
+  return (
+    <div className="space-y-8 animate-in fade-in duration-500">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <Card className="md:col-span-2 relative overflow-visible" title="Peta Sebaran Mahasiswa">
+          <div className="h-80 bg-slate-100 rounded-2xl overflow-hidden relative border border-slate-200">
+            <LeafletMap readOnly={true} markers={studentMarkers} />
+            <div className="absolute top-4 right-4 bg-white/90 p-3 rounded-xl shadow-lg border border-slate-100 z-[400]"><div className="text-xs font-bold text-slate-400 uppercase mb-1">Total Aktif</div><div className="text-2xl font-black text-slate-800">{students.length} <span className="text-sm font-normal text-slate-500">Mahasiswa</span></div></div>
+          </div>
+        </Card>
+        <Card title="Progress Laporan">
+          <div className="flex flex-col items-center justify-center h-full py-4"><div className="relative w-48 h-48 flex items-center justify-center"><svg className="w-full h-full transform -rotate-90"><circle cx="50%" cy="50%" r="70" stroke="#f1f5f9" strokeWidth="12" fill="none" /><circle cx="50%" cy="50%" r="70" stroke="#0ea5e9" strokeWidth="12" fill="none" strokeDasharray="440" strokeDashoffset={440 - (440 * (submitted / total))} className="transition-all duration-1000 ease-out" strokeLinecap="round" /></svg><div className="absolute inset-0 flex flex-col items-center justify-center"><span className="text-4xl font-black text-slate-800">{Math.round((submitted / total) * 100)}%</span><span className="text-xs text-slate-400 font-medium uppercase tracking-wider">Terkumpul</span></div></div></div>
+        </Card>
+      </div>
+      <Card title="Daftar Mahasiswa Bimbingan">
+        <div className="overflow-x-auto"><table className="w-full"><thead><tr className="border-b border-slate-100 text-left"><th className="pb-4 pl-4 font-bold text-slate-400 text-xs uppercase tracking-wider">Mahasiswa</th><th className="pb-4 font-bold text-slate-400 text-xs uppercase tracking-wider">Logbook Terakhir</th><th className="pb-4 font-bold text-slate-400 text-xs uppercase tracking-wider">Status Laporan</th></tr></thead><tbody className="divide-y divide-slate-50">{students.map(s => { const hasReport = reports.find(r => r.studentId === s.id); return (<tr key={s.id} className="hover:bg-slate-50/80 transition-colors"><td className="py-4 pl-4"><div className="font-bold text-slate-700">{s.name}</div><div className="text-xs text-slate-400 font-mono">{s.username}</div></td><td className="py-4 text-sm text-slate-600">{s.lastLogbook || "-"}</td><td className="py-4">{hasReport ? <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-100 text-emerald-700 text-xs font-bold"><CheckCircle size={14} /> Selesai</span> : <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-slate-100 text-slate-500 text-xs font-bold">Belum</span>}</td></tr>) })}</tbody></table></div>
+      </Card>
+    </div>
+  );
 }
 
 function LecturerLogbookView({ logbooks, students }) {
-    const studentMarkers = students.map(s => {
-        const studentLogbooks = logbooks.filter(l => l.studentId === s.id);
-        const lastLog = studentLogbooks[studentLogbooks.length - 1];
-        if (lastLog && lastLog.lat && lastLog.lng) {
-             return { lat: lastLog.lat, lng: lastLog.lng, name: s.name, status: lastLog.status };
-        }
-        return null;
-    }).filter(m => m !== null);
-    
-    const [previewImage, setPreviewImage] = useState(null);
+  const studentMarkers = students.map(s => {
+    const studentLogbooks = logbooks.filter(l => l.studentId === s.id);
+    const lastLog = studentLogbooks[studentLogbooks.length - 1];
+    if (lastLog && lastLog.lat && lastLog.lng) {
+      return { lat: lastLog.lat, lng: lastLog.lng, name: s.name, status: lastLog.status };
+    }
+    return null;
+  }).filter(m => m !== null);
 
+  const [previewImage, setPreviewImage] = useState(null);
+  const [detailModal, setDetailModal] = useState({ show: false, title: '', content: '' });
+  const [searchTerm, setSearchTerm] = useState('');
+  const [sortOrder, setSortOrder] = useState('newest');
+
+  // Filter & Sort Logic
+  const filteredLogbooks = logbooks.filter(log => {
+    if (!searchTerm) return true;
+    const term = searchTerm.toLowerCase();
     return (
-        <div className="space-y-8 animate-in fade-in duration-500">
-            {previewImage && <ImageModal src={previewImage} onClose={() => setPreviewImage(null)} />}
-            
-            <div className="flex justify-between items-center">
-                <h2 className="text-3xl font-bold text-slate-800 tracking-tight">Logbook Mahasiswa</h2>
-                <span className="px-4 py-2 bg-white rounded-full shadow-sm border border-slate-100 text-sm font-medium text-slate-600">{logbooks.length} Entri Ditemukan</span>
-            </div>
-
-            <Card className="p-0 overflow-hidden relative h-96 border border-slate-200">
-                <LeafletMap readOnly={true} markers={studentMarkers} />
-                <div className="absolute top-4 left-4 z-[400] bg-white/90 backdrop-blur-sm p-3 rounded-xl shadow-lg border border-slate-100">
-                    <h4 className="font-bold text-sm text-slate-800 flex items-center gap-2"><MapIcon size={16} className="text-cyan-600"/> Titik Lokasi Logbook Mahasiswa</h4>
-                </div>
-            </Card>
-
-            {/* Desktop View: Table */}
-            <div className="hidden md:block bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden">
-                <table className="w-full text-left text-sm">
-                    <thead className="bg-slate-50 border-b border-slate-100">
-                        <tr>
-                            <th className="p-4 font-bold text-slate-500 uppercase tracking-wider text-xs">Foto Selfie</th>
-                            <th className="p-4 font-bold text-slate-500 uppercase tracking-wider text-xs">Nama</th>
-                            <th className="p-4 font-bold text-slate-500 uppercase tracking-wider text-xs">NIM</th>
-                            <th className="p-4 font-bold text-slate-500 uppercase tracking-wider text-xs">Status</th>
-                            <th className="p-4 font-bold text-slate-500 uppercase tracking-wider text-xs">Koordinat</th>
-                            <th className="p-4 w-1/5 font-bold text-slate-500 uppercase tracking-wider text-xs">Kegiatan yang Dilakukan</th>
-                            <th className="p-4 w-1/5 font-bold text-slate-500 uppercase tracking-wider text-xs">Output yang Dihasilkan</th>
-                            <th className="p-4 font-bold text-slate-500 uppercase tracking-wider text-xs text-center">Dokumentasi Tambahan</th>
-                        </tr>
-                    </thead>
-                    <tbody className="divide-y divide-slate-100">
-                        {logbooks.map(log => (
-                            <tr key={log.id} className="hover:bg-slate-50/50 transition-colors">
-                                <td className="p-4">
-                                    <div 
-                                      className="w-16 h-16 rounded-xl overflow-hidden bg-slate-100 border border-slate-200 shadow-inner cursor-pointer hover:ring-4 hover:ring-cyan-300 transition-all"
-                                      onClick={() => setPreviewImage(log.selfieUrl)}
-                                    >
-                                        <img src={log.selfieUrl} alt="Selfie" className="w-full h-full object-cover" />
-                                    </div>
-                                </td>
-                                <td className="p-4 font-bold text-slate-800">{log.name}</td>
-                                <td className="p-4 text-slate-500 font-mono">{log.nim}</td>
-                                <td className="p-4">
-                                    <span className={`px-3 py-1 rounded-lg text-xs font-bold uppercase ${log.status === 'Hadir' ? 'bg-green-100 text-green-700' : log.status === 'Sakit' ? 'bg-red-100 text-red-700' : log.status === 'Izin' ? 'bg-yellow-100 text-yellow-700' : 'bg-slate-200 text-slate-900'}`}>
-                                        {log.status}
-                                    </span>
-                                </td>
-                                <td className="p-4 text-xs font-mono text-slate-500">
-                                    {log.lat.toFixed(6)}<br/>{log.lng.toFixed(6)}
-                                </td>
-                                <td className="p-4 align-top">
-                                    <div dangerouslySetInnerHTML={{__html: displayRichText(log.activity)}} className="line-clamp-3 text-slate-600"/>
-                                </td>
-                                <td className="p-4 align-top">
-                                    <div dangerouslySetInnerHTML={{__html: displayRichText(log.output)}} className="line-clamp-3 text-slate-600"/>
-                                </td>
-                                <td className="p-4 text-center">
-                                    {log.docUrl ? (
-                                        <div 
-                                          className="w-16 h-16 rounded-xl overflow-hidden bg-slate-100 border border-slate-200 mx-auto shadow-inner cursor-pointer hover:ring-4 hover:ring-cyan-300 transition-all"
-                                          onClick={() => setPreviewImage(log.docUrl)}
-                                        >
-                                            <img src={log.docUrl} alt="Dokumen" className="w-full h-full object-cover" />
-                                        </div>
-                                    ) : (
-                                        <span className="text-slate-400 text-xs italic bg-slate-50 px-2 py-1 rounded">Tidak ada</span>
-                                    )}
-                                </td>
-                            </tr>
-                        ))}
-                    </tbody>
-                </table>
-            </div>
-
-            {/* Mobile View: Cards */}
-            <div className="md:hidden space-y-4">
-                {logbooks.map(log => (
-                    <div key={log.id} className="bg-white rounded-2xl p-5 shadow-sm border border-slate-100 flex flex-col gap-4">
-                        <div className="flex items-center gap-4">
-                            <div 
-                               className="w-16 h-16 shrink-0 rounded-xl overflow-hidden bg-slate-100 border border-slate-200 shadow-inner cursor-pointer hover:ring-4 hover:ring-cyan-300 transition-all"
-                               onClick={() => setPreviewImage(log.selfieUrl)}
-                            >
-                                <img src={log.selfieUrl} alt="Selfie" className="w-full h-full object-cover" />
-                            </div>
-                            <div className="flex-1">
-                                <h3 className="font-bold text-lg text-slate-800 leading-tight">{log.name}</h3>
-                                <p className="text-slate-500 text-xs font-mono">{log.nim}</p>
-                            </div>
-                            <span className={`px-2.5 py-1 rounded-md text-[10px] font-bold uppercase ${log.status === 'Hadir' ? 'bg-green-100 text-green-700' : log.status === 'Sakit' ? 'bg-red-100 text-red-700' : log.status === 'Izin' ? 'bg-yellow-100 text-yellow-700' : 'bg-slate-200 text-slate-900'}`}>
-                                {log.status}
-                            </span>
-                        </div>
-                        
-                        <div className="text-xs font-mono text-cyan-600 bg-cyan-50 p-2 rounded-lg flex items-center gap-2">
-                            <MapPin size={14}/> {log.lat.toFixed(5)}, {log.lng.toFixed(5)}
-                        </div>
-
-                        <div className="grid grid-cols-1 gap-3 text-sm">
-                            <div className="bg-slate-50 p-3 rounded-xl border border-slate-100">
-                                <p className="text-xs font-bold text-slate-400 uppercase mb-1">Kegiatan</p>
-                                <div dangerouslySetInnerHTML={{__html: displayRichText(log.activity)}} className="text-slate-700" />
-                            </div>
-                            <div className="bg-slate-50 p-3 rounded-xl border border-slate-100">
-                                <p className="text-xs font-bold text-slate-400 uppercase mb-1">Output</p>
-                                <div dangerouslySetInnerHTML={{__html: displayRichText(log.output)}} className="text-slate-700" />
-                            </div>
-                        </div>
-
-                        <div className="pt-2 border-t border-slate-100">
-                            <p className="text-xs font-bold text-slate-400 uppercase mb-2">Dokumentasi Tambahan</p>
-                            {log.docUrl ? (
-                                <div 
-                                   className="w-16 h-16 rounded-xl overflow-hidden bg-slate-100 border border-slate-200 shadow-inner cursor-pointer hover:ring-4 hover:ring-cyan-300 transition-all"
-                                   onClick={() => setPreviewImage(log.docUrl)}
-                                >
-                                    <img src={log.docUrl} alt="Dokumen" className="w-full h-full object-cover" />
-                                </div>
-                            ) : (
-                                <p className="text-xs text-slate-400 italic">Tidak ada dokumentasi tambahan yang dilampirkan.</p>
-                            )}
-                        </div>
-                    </div>
-                ))}
-            </div>
-        </div>
+      log.name.toLowerCase().includes(term) ||
+      log.nim.toLowerCase().includes(term) ||
+      (log.activity && log.activity.toLowerCase().includes(term)) ||
+      (log.output && log.output.toLowerCase().includes(term)) ||
+      (log.date && log.date.includes(term)) ||
+      (log.time && log.time.includes(term))
     );
+  }).sort((a, b) => {
+    // Helper to parse date/time safely
+    const getTime = (item) => new Date(`${item.date}T${item.time}`).getTime() || 0;
+
+    // If date format is DD-MM-YYYY, standard Date parse might fail. 
+    // Assuming ISO YYYY-MM-DD from GAS or standard format.
+    // If fails, fallback to string compare or 0.
+    const timeA = new Date(a.date + ' ' + a.time).getTime();
+    const timeB = new Date(b.date + ' ' + b.time).getTime();
+
+    switch (sortOrder) {
+      case 'newest': return timeB - timeA; // Timestamp Terbaru
+      case 'oldest': return timeA - timeB; // Timestamp Terlama
+      case 'date_newest': return new Date(b.date).getTime() - new Date(a.date).getTime();
+      case 'date_oldest': return new Date(a.date).getTime() - new Date(b.date).getTime();
+      case 'time_newest': return a.time > b.time ? -1 : 1; // String compare for HH:mm
+      case 'time_oldest': return a.time < b.time ? -1 : 1;
+      default: return timeB - timeA;
+    }
+  });
+
+  // Calculate Markers based on FILTERED logbooks implies we show WHERE the filtered results are.
+  // BUT User asked for "SELURUH PIN... DARI SELURUH MAHASISWA".
+  // If search is empty, filteredLogbooks IS all logbooks.
+  // If search is active, showing only matching students seems correct for a "Logbook View".
+  // However, to strictly follow "SELURUH PIN", I will use `filteredLogbooks` for the Table/List, 
+  // but for the MAP, I will use *derived* markers from the filtered list (to show context of search) 
+  // OR keep the original `students` map? 
+  // "PASTIKAN DOSEN DAPAT MELIHAT ... SELURUH PIN ... DI MAP PADA DASHBOARD LOGBOOK".
+  // I will stick to showing what's in the list (filtered) because otherwise the map becomes disconnected from the view.
+  // If they want ALL, they just clear search.
+
+  const mapMarkers = filteredLogbooks.map(l => ({ lat: l.lat, lng: l.lng, name: l.name, status: l.status }));
+
+  return (
+    <div className="space-y-8 animate-in fade-in duration-500">
+      {previewImage && <ImageModal src={previewImage} onClose={() => setPreviewImage(null)} />}
+      {detailModal.show && <TextModal title={detailModal.title} content={detailModal.content} onClose={() => setDetailModal({ show: false, title: '', content: '' })} />}
+
+      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+        <div>
+          <h2 className="text-3xl font-bold text-slate-800 tracking-tight">Logbook Mahasiswa</h2>
+          <span className="px-4 py-1 bg-white rounded-full shadow-sm border border-slate-100 text-sm font-medium text-slate-600 mt-1 inline-block">{filteredLogbooks.length} Entri Ditemukan</span>
+        </div>
+
+        <div className="flex flex-col sm:flex-row gap-3 w-full md:w-auto">
+          <div className="relative">
+            <input
+              type="text"
+              placeholder="Cari Mahasiswa, Kegiatan..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="pl-10 pr-4 py-2.5 rounded-xl border border-slate-200 focus:ring-4 focus:ring-cyan-100 focus:border-cyan-400 outline-none w-full sm:w-64 transition-all"
+            />
+            <div className="absolute left-3 top-3 text-slate-400"><Eye size={16} /></div>
+            {/* Reusing Eye icon as Search temporarily or use another if available (Search icon not in imports list? List has 'Map', 'Camera', 'Upload', 'FileText', 'LogOut', 'LayoutDashboard', 'CheckCircle', 'XCircle', 'MapIcon', 'Eye', 'Menu', 'X', 'Bold', 'Italic', 'Underline', 'Superscript', 'Subscript', 'ChevronRight', 'ChevronLeft', 'ChevronDown', 'User', 'Settings', 'Edit3', 'Save', 'ImageIcon', 'Calendar', 'Clock', 'AlertCircle', 'ListOrdered', 'Lightbulb', 'Check', 'AlertTriangle') */}
+            {/* Wait, 'Search' is not in the import list line 3. I'll use 'Eye' or just text. Or 'Lightbulb'. Let's use Eye for now or add Search to imports later. Actually I can just add Search to imports. But to be safe I'll use 'LayoutDashboard' or something? No, I'll use text or existing. 'Eye' is for preview. I'll just use a generic icon or no icon if unsure. Let's use 'Eye' as "Look for". */}
+          </div>
+
+          <select
+            value={sortOrder}
+            onChange={(e) => setSortOrder(e.target.value)}
+            className="px-4 py-2.5 rounded-xl border border-slate-200 focus:ring-4 focus:ring-cyan-100 focus:border-cyan-400 outline-none bg-white cursor-pointer hover:bg-slate-50 transition-all font-medium text-slate-600"
+          >
+            <option value="newest">📅 Timestamp Terbaru</option>
+            <option value="oldest">📅 Timestamp Terlama</option>
+            <option value="date_newest">📆 Tanggal Terbaru</option>
+            <option value="date_oldest">📆 Tanggal Terlama</option>
+            <option value="time_newest">⏰ Jam Terbaru</option>
+            <option value="time_oldest">⏰ Jam Terlama</option>
+          </select>
+        </div>
+      </div>
+
+      <Card className="p-0 overflow-hidden relative h-96 border border-slate-200">
+        <LeafletMap readOnly={true} markers={mapMarkers} />
+        <div className="absolute top-4 left-4 z-[400] bg-white/90 backdrop-blur-sm p-3 rounded-xl shadow-lg border border-slate-100">
+          <h4 className="font-bold text-sm text-slate-800 flex items-center gap-2"><MapIcon size={16} className="text-cyan-600" /> Titik Lokasi Logbook Mahasiswa</h4>
+        </div>
+      </Card>
+
+      {/* Desktop View: Table */}
+      <div className="hidden md:block bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden">
+        <table className="w-full text-left text-sm">
+          <thead className="bg-slate-50 border-b border-slate-100">
+            <tr>
+              <th className="p-4 font-bold text-slate-500 uppercase tracking-wider text-xs">Foto Selfie</th>
+              <th className="p-4 font-bold text-slate-500 uppercase tracking-wider text-xs">Nama</th>
+              <th className="p-4 font-bold text-slate-500 uppercase tracking-wider text-xs">NIM</th>
+              <th className="p-4 font-bold text-slate-500 uppercase tracking-wider text-xs">Status</th>
+              <th className="p-4 font-bold text-slate-500 uppercase tracking-wider text-xs">Koordinat</th>
+              <th className="p-4 w-1/5 font-bold text-slate-500 uppercase tracking-wider text-xs">Kegiatan yang Dilakukan</th>
+              <th className="p-4 w-1/5 font-bold text-slate-500 uppercase tracking-wider text-xs">Output yang Dihasilkan</th>
+              <th className="p-4 font-bold text-slate-500 uppercase tracking-wider text-xs text-center">Dokumentasi Tambahan</th>
+            </tr>
+          </thead>
+          <tbody className="divide-y divide-slate-100">
+            {filteredLogbooks.map(log => (
+              <tr key={log.id} className="hover:bg-slate-50/50 transition-colors">
+                <td className="p-4">
+                  <div
+                    className="w-16 h-16 rounded-xl overflow-hidden bg-slate-100 border border-slate-200 shadow-inner cursor-pointer hover:ring-4 hover:ring-cyan-300 transition-all"
+                    onClick={() => setPreviewImage(log.selfieUrl)}
+                  >
+                    <img src={log.selfieUrl} alt="Selfie" className="w-full h-full object-cover" />
+                  </div>
+                </td>
+                <td className="p-4 font-bold text-slate-800">{log.name}</td>
+                <td className="p-4 text-slate-500 font-mono">{log.nim}</td>
+                <td className="p-4">
+                  <span className={`px-3 py-1 rounded-lg text-xs font-bold uppercase ${log.status === 'Hadir' ? 'bg-green-100 text-green-700' : log.status === 'Sakit' ? 'bg-red-100 text-red-700' : log.status === 'Izin' ? 'bg-yellow-100 text-yellow-700' : 'bg-slate-200 text-slate-900'}`}>
+                    {log.status}
+                  </span>
+                </td>
+                <td className="p-4 text-xs font-mono text-slate-500">
+                  {log.lat.toFixed(6)}<br />{log.lng.toFixed(6)}
+                </td>
+                <td className="p-4 align-top">
+                  <div className="line-clamp-2 text-slate-600 text-xs mb-2" dangerouslySetInnerHTML={{ __html: displayRichText(log.activity) }} />
+                  <button onClick={() => setDetailModal({ show: true, title: 'Detail Kegiatan', content: displayRichText(log.activity) })} className="text-xs font-bold text-cyan-600 hover:text-cyan-800 hover:underline">Lihat Rincian</button>
+                </td>
+                <td className="p-4 align-top">
+                  <div className="line-clamp-2 text-slate-600 text-xs mb-2" dangerouslySetInnerHTML={{ __html: displayRichText(log.output) }} />
+                  <button onClick={() => setDetailModal({ show: true, title: 'Detail Output', content: displayRichText(log.output) })} className="text-xs font-bold text-cyan-600 hover:text-cyan-800 hover:underline">Lihat Rincian</button>
+                </td>
+                <td className="p-4 text-center">
+                  {log.docUrl ? (
+                    <div
+                      className="w-16 h-16 rounded-xl overflow-hidden bg-slate-100 border border-slate-200 mx-auto shadow-inner cursor-pointer hover:ring-4 hover:ring-cyan-300 transition-all"
+                      onClick={() => setPreviewImage(log.docUrl)}
+                    >
+                      <img src={log.docUrl} alt="Dokumen" className="w-full h-full object-cover" />
+                    </div>
+                  ) : (
+                    <span className="text-slate-400 text-xs italic bg-slate-50 px-2 py-1 rounded">Tidak ada</span>
+                  )}
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+
+      {/* Mobile View: Cards */}
+      <div className="md:hidden space-y-4">
+        {filteredLogbooks.map(log => (
+          <div key={log.id} className="bg-white rounded-2xl p-5 shadow-sm border border-slate-100 flex flex-col gap-4">
+            <div className="flex items-center gap-4">
+              <div
+                className="w-16 h-16 shrink-0 rounded-xl overflow-hidden bg-slate-100 border border-slate-200 shadow-inner cursor-pointer hover:ring-4 hover:ring-cyan-300 transition-all"
+                onClick={() => setPreviewImage(log.selfieUrl)}
+              >
+                <img src={log.selfieUrl} alt="Selfie" className="w-full h-full object-cover" />
+              </div>
+              <div className="flex-1">
+                <h3 className="font-bold text-lg text-slate-800 leading-tight">{log.name}</h3>
+                <p className="text-slate-500 text-xs font-mono">{log.nim}</p>
+              </div>
+              <span className={`px-2.5 py-1 rounded-md text-[10px] font-bold uppercase ${log.status === 'Hadir' ? 'bg-green-100 text-green-700' : log.status === 'Sakit' ? 'bg-red-100 text-red-700' : log.status === 'Izin' ? 'bg-yellow-100 text-yellow-700' : 'bg-slate-200 text-slate-900'}`}>
+                {log.status}
+              </span>
+            </div>
+
+            <div className="text-xs font-mono text-cyan-600 bg-cyan-50 p-2 rounded-lg flex items-center gap-2">
+              <MapPin size={14} /> {log.lat.toFixed(5)}, {log.lng.toFixed(5)}
+            </div>
+
+            <div className="grid grid-cols-1 gap-3 text-sm">
+              <div className="bg-slate-50 p-3 rounded-xl border border-slate-100">
+                <p className="text-xs font-bold text-slate-400 uppercase mb-1">Kegiatan</p>
+                <div dangerouslySetInnerHTML={{ __html: displayRichText(log.activity) }} className="text-slate-700 line-clamp-3" />
+                <button onClick={() => setDetailModal({ show: true, title: 'Detail Kegiatan', content: displayRichText(log.activity) })} className="text-xs font-bold text-cyan-600 mt-2">Lihat Selengkapnya</button>
+              </div>
+              <div className="bg-slate-50 p-3 rounded-xl border border-slate-100">
+                <p className="text-xs font-bold text-slate-400 uppercase mb-1">Output</p>
+                <div dangerouslySetInnerHTML={{ __html: displayRichText(log.output) }} className="text-slate-700 line-clamp-3" />
+                <button onClick={() => setDetailModal({ show: true, title: 'Detail Output', content: displayRichText(log.output) })} className="text-xs font-bold text-cyan-600 mt-2">Lihat Selengkapnya</button>
+              </div>
+            </div>
+
+            <div className="pt-2 border-t border-slate-100">
+              <p className="text-xs font-bold text-slate-400 uppercase mb-2">Dokumentasi Tambahan</p>
+              {log.docUrl ? (
+                <div
+                  className="w-16 h-16 rounded-xl overflow-hidden bg-slate-100 border border-slate-200 shadow-inner cursor-pointer hover:ring-4 hover:ring-cyan-300 transition-all"
+                  onClick={() => setPreviewImage(log.docUrl)}
+                >
+                  <img src={log.docUrl} alt="Dokumen" className="w-full h-full object-cover" />
+                </div>
+              ) : (
+                <p className="text-xs text-slate-400 italic">Tidak ada dokumentasi tambahan yang dilampirkan.</p>
+              )}
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
 }
 
 function LecturerGrading({ reports, showToast }) {
-    const [preview, setPreview] = useState(null);
-    return (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {reports.map(r => (<div key={r.id} className="bg-white group rounded-3xl p-6 shadow-sm border border-slate-100 hover:border-cyan-200 hover:shadow-xl hover:shadow-cyan-100/50 transition-all duration-300 flex flex-col"><div className="flex justify-between items-start mb-4"><div className="w-12 h-12 rounded-2xl bg-slate-50 flex items-center justify-center text-slate-400 group-hover:bg-cyan-50 group-hover:text-cyan-500 transition-colors"><FileText size={24} /></div>{r.graded ? <CheckCircle className="text-emerald-500" /> : <div className="w-3 h-3 bg-red-500 rounded-full animate-pulse" />}</div><h3 className="font-bold text-lg text-slate-800 mb-1 group-hover:text-cyan-700 transition-colors">{r.title}</h3><p className="text-sm text-slate-500 mb-4">{r.name}</p><p className="text-xs text-slate-400 line-clamp-2 mb-6 bg-slate-50 p-3 rounded-xl">{r.overview}</p><Button variant="secondary" onClick={() => setPreview(r)} className="mt-auto w-full">Review</Button></div>))}
-            {preview && (<div className="fixed inset-0 z-[100] bg-slate-900/40 backdrop-blur-sm flex items-center justify-center p-4"><div className="bg-white w-full max-w-5xl h-[85vh] rounded-[2rem] shadow-2xl flex flex-col overflow-hidden animate-in zoom-in-95 duration-300"><div className="bg-white border-b border-slate-100 p-6 flex justify-between items-center"><div><h2 className="text-xl font-bold text-slate-800">{preview.title}</h2><p className="text-slate-500 text-sm">{preview.name}</p></div><button onClick={() => setPreview(null)} className="p-2 hover:bg-slate-100 rounded-full transition"><X size={24}/></button></div><div className="flex-1 bg-slate-50 p-8 overflow-y-auto"><div className="max-w-3xl mx-auto bg-white min-h-[800px] shadow-sm rounded-xl p-10"><h1 className="text-3xl font-bold text-center mb-8">{preview.title}</h1><div className="p-6 bg-purple-50 rounded-xl border border-purple-100 mb-8"><h4 className="font-bold text-purple-800 text-sm uppercase mb-2">AI Summary</h4><p className="text-purple-900/80 leading-relaxed italic">"{preview.overview}"</p></div><div className="space-y-4 text-slate-600 leading-loose text-justify"><p>Lorem ipsum dolor sit amet, consectetur adipiscing elit.</p></div></div></div><div className="p-6 bg-white border-t border-slate-100 flex justify-end gap-3"><Button variant="danger" onClick={() => {showToast('info', 'Revisi Diminta', 'Permintaan revisi telah dikirim.'); setPreview(null);}}>Minta Revisi</Button><Button onClick={() => {showToast('success', 'Penilaian Selesai', 'Nilai 100 berhasil disimpan.'); setPreview(null);}}>Beri Nilai Sempurna</Button></div></div></div>)}
-        </div>
-    );
+  const [preview, setPreview] = useState(null);
+
+  // Sort reports: Latest first
+  const sortedReports = [...reports].sort((a, b) => new Date(b.submittedAt) - new Date(a.submittedAt));
+
+  return (
+    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+      {sortedReports.map(r => (<div key={r.id} className="bg-white group rounded-3xl p-6 shadow-sm border border-slate-100 hover:border-cyan-200 hover:shadow-xl hover:shadow-cyan-100/50 transition-all duration-300 flex flex-col"><div className="flex justify-between items-start mb-4"><div className="w-12 h-12 rounded-2xl bg-slate-50 flex items-center justify-center text-slate-400 group-hover:bg-cyan-50 group-hover:text-cyan-500 transition-colors"><FileText size={24} /></div>{r.graded ? <CheckCircle className="text-emerald-500" /> : <div className="w-3 h-3 bg-red-500 rounded-full animate-pulse" />}</div><h3 className="font-bold text-lg text-slate-800 mb-1 group-hover:text-cyan-700 transition-colors">{r.title}</h3><p className="text-sm text-slate-500 mb-4">{r.name}</p><p className="text-xs text-slate-400 line-clamp-2 mb-6 bg-slate-50 p-3 rounded-xl">{r.overview}</p><Button variant="secondary" onClick={() => setPreview(r)} className="mt-auto w-full">Review</Button></div>))}
+      {preview && (<div className="fixed inset-0 z-[100] bg-slate-900/40 backdrop-blur-sm flex items-center justify-center p-4"><div className="bg-white w-full max-w-5xl h-[85vh] rounded-[2rem] shadow-2xl flex flex-col overflow-hidden animate-in zoom-in-95 duration-300"><div className="bg-white border-b border-slate-100 p-6 flex justify-between items-center"><div><h2 className="text-xl font-bold text-slate-800">{preview.title}</h2><p className="text-slate-500 text-sm">{preview.name}</p></div><button onClick={() => setPreview(null)} className="p-2 hover:bg-slate-100 rounded-full transition"><X size={24} /></button></div><div className="flex-1 bg-slate-50 p-8 overflow-y-auto"><div className="max-w-3xl mx-auto bg-white min-h-[800px] shadow-sm rounded-xl p-10"><h1 className="text-3xl font-bold text-center mb-8">{preview.title}</h1><div className="p-6 bg-purple-50 rounded-xl border border-purple-100 mb-8"><h4 className="font-bold text-purple-800 text-sm uppercase mb-2">AI Summary</h4><p className="text-purple-900/80 leading-relaxed italic">"{preview.overview}"</p></div><div className="space-y-4 text-slate-600 leading-loose text-justify"><p>Lorem ipsum dolor sit amet, consectetur adipiscing elit.</p></div></div></div><div className="p-6 bg-white border-t border-slate-100 flex justify-end gap-3"><Button variant="danger" onClick={() => { showToast('info', 'Revisi Diminta', 'Permintaan revisi telah dikirim.'); setPreview(null); }}>Minta Revisi</Button><Button onClick={() => { showToast('success', 'Penilaian Selesai', 'Nilai 100 berhasil disimpan.'); setPreview(null); }}>Beri Nilai Sempurna</Button></div></div></div>)}
+    </div>
+  );
 }
+// End of file
