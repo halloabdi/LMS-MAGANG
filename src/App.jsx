@@ -1036,7 +1036,11 @@ function StudentLogbookForm({ user, logbooks, setLogbooks, showToast }) {
   };
 
   const handleSubmit = async () => {
-    if (!lat || !selfie || activityHTML.length < 5 || outputHTML.length < 5) {
+    // Strip HTML to check real content length
+    const cleanActivity = activityHTML.replace(/<[^>]*>/g, '').trim();
+    const cleanOutput = outputHTML.replace(/<[^>]*>/g, '').trim();
+
+    if (!lat || !selfie || cleanActivity.length === 0 || cleanOutput.length === 0) {
       showToast('warning', 'Data Belum Lengkap', 'Mohon lengkapi: Lokasi, Selfie, Kegiatan, dan Output.');
       return;
     }
