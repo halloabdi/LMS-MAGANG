@@ -1586,7 +1586,7 @@ function LecturerLogbookView({ logbooks, students }) {
               <th className="p-4 font-bold text-slate-500 uppercase tracking-wider text-xs">NIM</th>
               <th className="p-4 font-bold text-slate-500 uppercase tracking-wider text-xs">Kelas</th>
               <th className="p-4 font-bold text-slate-500 uppercase tracking-wider text-xs">Status</th>
-              <th className="p-4 font-bold text-slate-500 uppercase tracking-wider text-xs">Validasi Lokasi</th>
+              <th className="p-4 font-bold text-slate-500 uppercase tracking-wider text-xs">Alamat Lengkap</th>
               <th className="p-4 font-bold text-slate-500 uppercase tracking-wider text-xs">Koordinat</th>
               <th className="p-4 w-1/5 font-bold text-slate-500 uppercase tracking-wider text-xs">Kegiatan yang Dilakukan</th>
               <th className="p-4 w-1/5 font-bold text-slate-500 uppercase tracking-wider text-xs">Output yang Dihasilkan</th>
@@ -1595,7 +1595,7 @@ function LecturerLogbookView({ logbooks, students }) {
           </thead>
           <tbody className="divide-y divide-slate-100">
             {filteredLogbooks.map(log => (
-              <tr key={log.id} className={`hover:bg-slate-50/50 transition-colors ${log.isLocationValid === false ? 'bg-red-50/70' : ''}`}>
+              <tr key={log.id} className="hover:bg-slate-50/50 transition-colors">
                 <td className="p-4">
                   <div
                     className="w-16 h-16 rounded-xl overflow-hidden bg-slate-100 border border-slate-200 shadow-inner cursor-pointer hover:ring-4 hover:ring-cyan-300 transition-all"
@@ -1612,19 +1612,8 @@ function LecturerLogbookView({ logbooks, students }) {
                     {log.status}
                   </span>
                 </td>
-                <td className="p-4">
-                  {log.isLocationValid === false ? (
-                    <div className="flex flex-col">
-                      <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-lg bg-red-100 text-red-700 text-xs font-bold uppercase w-fit">
-                        <AlertCircle size={12} /> Tidak Sesuai
-                      </span>
-                      {log.targetAddress && <span className="text-[10px] text-red-400 mt-1 italic">Target: {log.targetAddress}</span>}
-                    </div>
-                  ) : (
-                    <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-lg bg-cyan-50 text-cyan-700 text-xs font-bold uppercase w-fit">
-                      <Check size={12} /> Sesuai
-                    </span>
-                  )}
+                <td className="p-4 text-xs text-slate-600 max-w-[200px]">
+                  {log.address || '-'}
                 </td>
                 <td className="p-4 text-xs font-mono text-slate-500">
                   {typeof log.lat === 'number' ? log.lat.toFixed(6) : '-'}<br />{typeof log.lng === 'number' ? log.lng.toFixed(6) : '-'}
