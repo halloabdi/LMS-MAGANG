@@ -5,7 +5,7 @@ import {
   Map as MapIcon, Eye, Menu, X, Bold, Italic, Underline,
   Superscript, Subscript, ChevronRight, ChevronLeft, ChevronDown,
   User, Settings, Edit3, Save, Image as ImageIcon, Calendar, Clock,
-  AlertCircle, ListOrdered, Lightbulb, Check, AlertTriangle
+  AlertCircle, ListOrdered, Lightbulb, Check, AlertTriangle, Search
 } from 'lucide-react';
 
 // --- GLOBAL STYLES ---
@@ -331,6 +331,10 @@ const TextModal = ({ title, content, onClose }) => {
 // --- CONFIGURATION ---
 const GAS_URL = "https://script.google.com/macros/s/AKfycbyz0KHa3Hlx4ajvK01BMPbOtRWqwzjqucoVw_KZ1SAUSk8IPZvHyOf3Vaq8IPIFW9_y/exec";
 
+// --- INITIAL DATA ---
+const INITIAL_LOGBOOKS = [];
+const INITIAL_REPORTS = [];
+
 // --- UTILITY: API CALL ---
 const callAPI = async (action, payload = {}) => {
   if (GAS_URL.includes("MASUKKAN_URL")) {
@@ -461,7 +465,12 @@ const LeafletMap = ({ lat, lng, setLat, setLng, setAddress, readOnly = false, ma
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { attribution: '&copy; OpenStreetMap' }).addTo(map);
     mapInstanceRef.current = map;
 
-    // FORCE RELAYOUT AFTER A SHORT DELAY
+    // FORCE RELAYOUT AFTER A SHORT DELAY & ON RESIZE
+    const resizeObserver = new ResizeObserver(() => {
+      if (mapInstanceRef.current) mapInstanceRef.current.invalidateSize();
+    });
+    resizeObserver.observe(mapRef.current);
+
     setTimeout(() => {
       if (mapInstanceRef.current) {
         mapInstanceRef.current.invalidateSize();
@@ -555,16 +564,17 @@ const RichEditor = ({ value, onChange, placeholder }) => {
         <ToolButton onClick={() => execCmd('superscript')} icon={Superscript} title="Superscript" />
         <ToolButton onClick={() => execCmd('subscript')} icon={Subscript} title="Subscript" />
       </div>
-      <div
-        ref={editorRef}
-        contentEditable
-        className="w-full p-4 outline-none min-h-[120px] max-h-[300px] overflow-y-auto text-sm text-slate-700 leading-relaxed list-inside"
-        onInput={handleInput}
-        suppressContentEditableWarning={true}
-        data-placeholder={placeholder}
-        style={{ whiteSpace: 'pre-wrap' }}
-      />
-      {!value && <div className="absolute pointer-events-none text-slate-400 text-sm p-4 mt-[-120px]" onClick={() => editorRef.current.focus()}>{placeholder}</div>}
+      <div className="relative">
+        <div
+          ref={editorRef}
+          contentEditable
+          className="w-full p-4 outline-none min-h-[120px] max-h-[300px] overflow-y-auto text-sm text-slate-700 leading-relaxed list-inside relative z-10"
+          onInput={handleInput}
+          suppressContentEditableWarning={true}
+          style={{ whiteSpace: 'pre-wrap' }}
+        />
+        {!value && <div className="absolute top-4 left-4 text-slate-400 text-sm pointer-events-none z-0">{placeholder}</div>}
+      </div>
     </div>
   );
 };
@@ -774,7 +784,6 @@ export default function App() {
         ))}
       </div>
 
-      {view === 'login' && <LoginPage onLogin={handleLogin} />}
       {view === 'login' && <LoginPage onLogin={handleLogin} />}
       {view === 'student-dashboard' && user && <StudentDashboard user={user} onLogout={handleLogout} logbooks={logbooks} setLogbooks={setLogbooks} reports={reports} setReports={setReports} onUpdateProfile={handleProfileUpdate} showToast={showToast} />}
       {view === 'lecturer-dashboard' && user && <LecturerDashboard user={user} onLogout={handleLogout} logbooks={logbooks} setLogbooks={setLogbooks} reports={reports} onUpdateProfile={handleProfileUpdate} showToast={showToast} />}
@@ -1383,8 +1392,10 @@ function LecturerLogbookView({ logbooks, students }) {
       case 'oldest': return timeA - timeB; // Timestamp Terlama
       case 'date_newest': return new Date(b.date).getTime() - new Date(a.date).getTime();
       case 'date_oldest': return new Date(a.date).getTime() - new Date(b.date).getTime();
-      case 'time_newest': return a.time > b.time ? -1 : 1; // String compare for HH:mm
-      case 'time_oldest': return a.time < b.time ? -1 : 1;
+      case 'time_newest':
+        return (b.time || '').localeCompare(a.time || ''); // Lexicographical compare for HH:mm works
+      case 'time_oldest':
+        return (a.time || '').localeCompare(b.time || '');
       default: return timeB - timeA;
     }
   });
@@ -1422,9 +1433,7 @@ function LecturerLogbookView({ logbooks, students }) {
               onChange={(e) => setSearchTerm(e.target.value)}
               className="pl-10 pr-4 py-2.5 rounded-xl border border-slate-200 focus:ring-4 focus:ring-cyan-100 focus:border-cyan-400 outline-none w-full sm:w-64 transition-all"
             />
-            <div className="absolute left-3 top-3 text-slate-400"><Eye size={16} /></div>
-            {/* Reusing Eye icon as Search temporarily or use another if available (Search icon not in imports list? List has 'Map', 'Camera', 'Upload', 'FileText', 'LogOut', 'LayoutDashboard', 'CheckCircle', 'XCircle', 'MapIcon', 'Eye', 'Menu', 'X', 'Bold', 'Italic', 'Underline', 'Superscript', 'Subscript', 'ChevronRight', 'ChevronLeft', 'ChevronDown', 'User', 'Settings', 'Edit3', 'Save', 'ImageIcon', 'Calendar', 'Clock', 'AlertCircle', 'ListOrdered', 'Lightbulb', 'Check', 'AlertTriangle') */}
-            {/* Wait, 'Search' is not in the import list line 3. I'll use 'Eye' or just text. Or 'Lightbulb'. Let's use Eye for now or add Search to imports later. Actually I can just add Search to imports. But to be safe I'll use 'LayoutDashboard' or something? No, I'll use text or existing. 'Eye' is for preview. I'll just use a generic icon or no icon if unsure. Let's use 'Eye' as "Look for". */}
+            <div className="absolute left-3 top-3 text-slate-400"><Search size={18} /></div>
           </div>
 
           <select
