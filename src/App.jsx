@@ -329,7 +329,7 @@ const TextModal = ({ title, content, onClose }) => {
 };
 
 // --- CONFIGURATION ---
-const GAS_URL = "https://script.google.com/macros/s/AKfycbxI6rD3M86WCHgx3q8VTCPP6oSkkYxfor3MbrcNrhed9VIL3sjAwhED15eODVGtqpKy8Q/exec";
+const GAS_URL = "https://script.google.com/macros/s/AKfycbwz1Mc66nOsxUHSxbJOsEZkZaBAtf348WPl7xO1ZeQo8GfPuJSDEoCDzeG3oqTCAWcP/exec";
 
 // --- INITIAL DATA ---
 const INITIAL_LOGBOOKS = [];
@@ -438,12 +438,27 @@ const LeafletMap = ({ lat, lng, setLat, setLng, setAddress, readOnly = false, ma
     }
 
     return () => {
+      // Clean up map instance
       if (mapInstanceRef.current) {
         mapInstanceRef.current.remove();
         mapInstanceRef.current = null;
       }
     };
-  }, []);
+  }, []); // Empty dependency array to run only once
+
+  const forceResize = () => {
+    if (mapInstanceRef.current) {
+      mapInstanceRef.current.invalidateSize();
+    }
+  };
+
+  useEffect(() => {
+    // Force resize on prop changes or when markers change
+    // This helps when the map is inside a tab or modal that becomes visible
+    const timer1 = setTimeout(forceResize, 100);
+    const timer2 = setTimeout(forceResize, 500);
+    return () => { clearTimeout(timer1); clearTimeout(timer2); };
+  }, [lat, lng, markers]);
 
   const initMap = () => {
     if (mapInstanceRef.current || !window.L || !mapRef.current) return;
@@ -631,7 +646,8 @@ function ProfileSettings({ user, onUpdate, onCancel, showToast }) {
       const result = await callAPI('updateProfile', payload);
 
       // Update Local State in Parent
-      onUpdate({ ...formData, photoUrl: result.photoUrl || formData.photoUrl });
+      // Ensure photoUrl is updated with the result from backend or the preview
+      onUpdate({ ...formData, photoUrl: result.photoUrl || (photoBase64 ? preview : formData.photoUrl) });
       showToast('success', 'Profil Diperbarui', 'Data profil berhasil disimpan ke database.');
     } catch (err) {
       console.error(err);
@@ -731,6 +747,22 @@ export default function App() {
         try {
           // Identify ID to pass: NIM for student, ID/NIP for lecturer
           const idToPass = user.role === 'student' ? user.username : user.id;
+          const fetchDashboardData = async (role, id) => {
+            // Only fetch logbooks for now (centralized)
+            // Both Student and Lecturer need logbooks
+            // Student needs it for their history, Lecturer for monitoring
+            try {
+              const res = await fetch(`${GAS_URL}?action=getAllLogbooks`);
+              const json = await res.json();
+              if (json.status === 'success') {
+                return json.data; // Returns all logbooks
+              }
+              return [];
+            } catch (e) {
+              console.error("Fetch Error", e);
+              return [];
+            }
+          };
           const data = await fetchDashboardData(user.role, idToPass);
 
           if (data) {
@@ -968,17 +1000,20 @@ function StudentLogbookForm({ user, logbooks, setLogbooks, showToast }) {
       setLng(longitude);
       setAccuracy(accuracy);
 
-      // Throttle Reverse Geocoding
+      // Throttle Reverse Geocoding - Bypass throttle if address is still initial/loading
       const now = Date.now();
-      if (now - lastGeoUpdateRef.current > 5000) {
+      if (now - lastGeoUpdateRef.current > 5000 || address === 'Menunggu GPS...' || address === 'Memperbarui lokasi...') {
         lastGeoUpdateRef.current = now;
+        setAddress("Memuat Alamat..."); // Visual feedback
         try {
           const res = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${latitude}&lon=${longitude}`);
           const data = await res.json();
           if (data && data.display_name) setAddress(data.display_name);
         } catch (e) {
-          // Silent fail for address, keep coords
-          if (address === 'Mencari Lokasi...') setAddress(`${latitude.toFixed(6)}, ${longitude.toFixed(6)}`);
+          // Silent fail for address, keep coords if we have then
+          if (address === 'Menunggu GPS...' || address === 'Memuat Alamat...') {
+            setAddress(`${latitude.toFixed(6)}, ${longitude.toFixed(6)}`);
+          }
         }
       }
     };
