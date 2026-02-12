@@ -329,7 +329,7 @@ const TextModal = ({ title, content, onClose }) => {
 };
 
 // --- CONFIGURATION ---
-const GAS_URL = "https://script.google.com/macros/s/AKfycbylA5b3trF3Qprfngs1uc6AyjbNYIEUw34K4Ot6G_einceE19iyNd5L9LkWnLkcWBm7/exec";
+const GAS_URL = "https://script.google.com/macros/s/AKfycbx0ilzVqV0O2wZ4ySGOr5Z-m6EP-LZKRbf2k8SE8B4z9IPRFUWyrJdIBKNk1B1JMQko/exec";
 
 // --- INITIAL DATA ---
 const INITIAL_LOGBOOKS = [];
