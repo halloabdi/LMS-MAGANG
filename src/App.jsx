@@ -1109,7 +1109,7 @@ function StudentLogbookForm({ user, logbooks, setLogbooks, showToast }) {
         fullname: user.name, // Add Full Name
         className: user.class, // Add Class
         link_spreadsheet: user.link_spreadsheet,
-        folder_url: user.link_folder,
+        link_folder: user.link_folder,
         logEntry: newLog
       });
 
@@ -1117,7 +1117,7 @@ function StudentLogbookForm({ user, logbooks, setLogbooks, showToast }) {
       const savedLog = { ...newLog, selfieUrl: result.selfieUrl, docUrl: result.docUrl, selfieBase64: null, docBase64: null };
       setLogbooks([...logbooks, savedLog]);
 
-      showToast('success', 'Berhasil Dikirim', 'Logbook harian Anda berhasil disimpan ke Spreadsheet!');
+      showToast('success', 'Berhasil Dikirim', 'Logbook harian Anda berhasil disimpan!');
 
       setActivityHTML('');
       setOutputHTML('');
@@ -1256,7 +1256,7 @@ function StudentReportForm({ user, reports, setReports, showToast }) {
       const result = await callAPI('submitReport', {
         username: user.username,
         link_spreadsheet: user.link_spreadsheet,
-        folder_url: user.link_folder,
+        link_folder: user.link_folder,
         reportData
       });
 
