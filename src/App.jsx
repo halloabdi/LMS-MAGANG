@@ -329,7 +329,7 @@ const TextModal = ({ title, content, onClose }) => {
 };
 
 // --- CONFIGURATION ---
-const GAS_URL = "https://script.google.com/macros/s/AKfycbwh_-n2ugt4RZfSL86DUXm8fy0GtkLyZTsqOESn9wRQ2ez5MWNrdrdD6TNIbcgb9u4/exec";
+const GAS_URL = "https://script.google.com/macros/s/AKfycbzDuJSO0CQ8F2ZzoqptF11ScjLZGNUXx19JkekYq6SDs-dmCmiMFopuniTm6ndKVX8s/exec";
 
 // --- INITIAL DATA ---
 const INITIAL_LOGBOOKS = [];
@@ -724,6 +724,34 @@ export default function App() {
     }
   }, []);
 
+  // Fetch Data on User Login/Load
+  useEffect(() => {
+    if (user) {
+      const loadData = async () => {
+        try {
+          // Identify ID to pass: NIM for student, ID/NIP for lecturer
+          const idToPass = user.role === 'student' ? user.username : user.id;
+          const data = await fetchDashboardData(user.role, idToPass);
+
+          if (data) {
+            // Backend returns array of logbooks directly or object? 
+            // handleGetDashboardData returns array (from handleGetAllLogbooks lines)
+            // Let's check backend: returns allLogs (Array).
+            if (Array.isArray(data)) {
+              setLogbooks(data);
+            } else if (data.logbooks) {
+              setLogbooks(data.logbooks);
+            }
+          }
+        } catch (err) {
+          console.error("Failed to load dashboard data", err);
+          showToast('error', 'Gagal Memuat Data', 'Tidak dapat mengambil data logbook terbaru.');
+        }
+      };
+      loadData();
+    }
+  }, [user]);
+
   const handleLogin = async (identifier, password) => {
     if (!identifier || !password) {
       showToast('warning', 'Peringatan!', 'Harap isi ID/Email dan Password.');
@@ -738,10 +766,6 @@ export default function App() {
       const role = userData.role;
       setUser(userData);
       setView(role === 'student' ? 'student-dashboard' : 'lecturer-dashboard');
-
-      // Save to LocalStorage
-      const expires = new Date().getTime() + (180 * 24 * 60 * 60 * 1000);
-      localStorage.setItem('app_session', JSON.stringify({ userData, expires }));
 
       showToast('success', 'Berhasil Login!', `Selamat datang kembali, ${userData.name}.`);
 
@@ -801,8 +825,8 @@ function LoginPage({ onLogin }) {
       <div className="w-full max-w-lg bg-white/80 backdrop-blur-2xl rounded-[2.5rem] shadow-2xl overflow-hidden border border-white/50 z-10">
         <div className="pt-12 pb-6 px-10 text-center"><h1 className="text-4xl font-extrabold bg-gradient-to-r from-cyan-600 to-blue-700 bg-clip-text text-transparent tracking-tight mb-2">Sistem Akademik</h1><p className="text-slate-500 text-lg font-medium">Agrinak Mengabdi</p></div>
         <form onSubmit={(e) => { e.preventDefault(); onLogin(identifier, password); }} className="p-10 pt-4">
-          <Input label="ID / Username atau Email" placeholder="Masukkan NIM atau Email" value={identifier} onChange={(e) => setIdentifier(e.target.value)} />
-          <Input label="Password" type="password" placeholder="Kata sandi akun" value={password} onChange={(e) => setPassword(e.target.value)} />
+          <Input label="Username / Email / No HP" placeholder="Masukkan Identitas" value={identifier} onChange={(e) => setIdentifier(e.target.value)} />
+          <Input label="Password" type="password" placeholder="Kata sandi" value={password} onChange={(e) => setPassword(e.target.value)} />
           <Button type="submit" className="w-full mt-6 py-4 text-lg shadow-cyan-500/30 rounded-2xl">Masuk Dashboard</Button>
           <div className="mt-8 text-center text-sm text-slate-500">Made by <a href="https://www.youtube.com/@HALLOABDI" onClick={handleAuthorClick} target="_blank" rel="noopener noreferrer" className="font-bold text-cyan-600 hover:text-cyan-800 transition-colors">Mas Abdi</a> for Agrinak Mengabdi</div>
         </form>
@@ -882,7 +906,7 @@ function StudentDashboard({ user, onLogout, logbooks, setLogbooks, reports, setR
 }
 
 function StudentOverview({ user, logbooks, reports }) {
-  const myLogbooks = logbooks.filter(l => l.studentId === user.id);
+  const myLogbooks = logbooks.filter(l => l.nim === user.username);
   const myReports = reports.filter(r => r.studentId === user.id);
   const lastLogbook = myLogbooks[myLogbooks.length - 1];
   return (
@@ -1051,15 +1075,17 @@ function StudentLogbookForm({ user, logbooks, setLogbooks, showToast }) {
       id: Date.now(),
       studentId: user.id,
       name: user.name,
+      className: user.class, // Add class
       nim: user.username,
       date: date,
       time: time,
       status,
       lat,
       lng,
+      accuracy,
       address,
-      activity: formatHTMLToDBString(activityHTML),
-      output: formatHTMLToDBString(outputHTML),
+      activity: activityHTML,
+      output: outputHTML,
       selfieBase64: selfie, // Kirim base64
       docBase64: doc ? await new Promise((r) => { const reader = new FileReader(); reader.onload = () => r(reader.result); reader.readAsDataURL(doc); }) : null
     };
@@ -1067,6 +1093,8 @@ function StudentLogbookForm({ user, logbooks, setLogbooks, showToast }) {
     try {
       const result = await callAPI('submitLogbook', {
         username: user.username,
+        fullname: user.name, // Add Full Name
+        className: user.class, // Add Class
         link_spreadsheet: user.link_spreadsheet,
         folder_url: user.link_folder,
         logEntry: newLog
@@ -1266,22 +1294,26 @@ function LecturerDashboard({ user, onLogout, logbooks, setLogbooks, reports, onU
         const result = await res.json();
         if (result.status === 'success') {
           setLogbooks(result.data);
-          // Derive unique students from logbooks for the map/list
-          // This is a simplification; ideally we fetch student list too
+
+          // Derive unique students from logbooks for mapping
           const uniqueStudents = [];
-          const map = new Map();
-          for (const item of result.data) {
-            if (!map.has(item.studentId)) {
-              map.set(item.studentId, true);
+          const seenNims = new Set();
+
+          result.data.forEach(log => {
+            if (log.nim && !seenNims.has(log.nim)) {
+              seenNims.add(log.nim);
               uniqueStudents.push({
-                id: item.studentId,
-                name: item.name,
-                username: item.nim
+                id: log.studentId || log.nim,
+                name: log.name,
+                username: log.nim,
+                class: log.class,
+                lastLogbook: log.date + ' ' + log.time
               });
             }
-          }
+          });
           setStudents(uniqueStudents);
         }
+
       } catch (e) {
         console.error(e);
       }
@@ -1502,7 +1534,9 @@ function LecturerLogbookView({ logbooks, students }) {
               <th className="p-4 font-bold text-slate-500 uppercase tracking-wider text-xs">Foto Selfie</th>
               <th className="p-4 font-bold text-slate-500 uppercase tracking-wider text-xs">Nama</th>
               <th className="p-4 font-bold text-slate-500 uppercase tracking-wider text-xs">NIM</th>
+              <th className="p-4 font-bold text-slate-500 uppercase tracking-wider text-xs">Kelas</th>
               <th className="p-4 font-bold text-slate-500 uppercase tracking-wider text-xs">Status</th>
+              <th className="p-4 font-bold text-slate-500 uppercase tracking-wider text-xs">Validasi Lokasi</th>
               <th className="p-4 font-bold text-slate-500 uppercase tracking-wider text-xs">Koordinat</th>
               <th className="p-4 w-1/5 font-bold text-slate-500 uppercase tracking-wider text-xs">Kegiatan yang Dilakukan</th>
               <th className="p-4 w-1/5 font-bold text-slate-500 uppercase tracking-wider text-xs">Output yang Dihasilkan</th>
@@ -1511,7 +1545,7 @@ function LecturerLogbookView({ logbooks, students }) {
           </thead>
           <tbody className="divide-y divide-slate-100">
             {filteredLogbooks.map(log => (
-              <tr key={log.id} className="hover:bg-slate-50/50 transition-colors">
+              <tr key={log.id} className={`hover:bg-slate-50/50 transition-colors ${log.isLocationValid === false ? 'bg-red-50/70' : ''}`}>
                 <td className="p-4">
                   <div
                     className="w-16 h-16 rounded-xl overflow-hidden bg-slate-100 border border-slate-200 shadow-inner cursor-pointer hover:ring-4 hover:ring-cyan-300 transition-all"
@@ -1522,10 +1556,25 @@ function LecturerLogbookView({ logbooks, students }) {
                 </td>
                 <td className="p-4 font-bold text-slate-800">{log.name}</td>
                 <td className="p-4 text-slate-500 font-mono">{log.nim}</td>
+                <td className="p-4 text-slate-600 font-medium">{log.class || '-'}</td>
                 <td className="p-4">
                   <span className={`px-3 py-1 rounded-lg text-xs font-bold uppercase ${log.status === 'Hadir' ? 'bg-green-100 text-green-700' : log.status === 'Sakit' ? 'bg-red-100 text-red-700' : log.status === 'Izin' ? 'bg-yellow-100 text-yellow-700' : 'bg-slate-200 text-slate-900'}`}>
                     {log.status}
                   </span>
+                </td>
+                <td className="p-4">
+                  {log.isLocationValid === false ? (
+                    <div className="flex flex-col">
+                      <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-lg bg-red-100 text-red-700 text-xs font-bold uppercase w-fit">
+                        <AlertCircle size={12} /> Tidak Sesuai
+                      </span>
+                      {log.targetAddress && <span className="text-[10px] text-red-400 mt-1 italic">Target: {log.targetAddress}</span>}
+                    </div>
+                  ) : (
+                    <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-lg bg-cyan-50 text-cyan-700 text-xs font-bold uppercase w-fit">
+                      <Check size={12} /> Sesuai
+                    </span>
+                  )}
                 </td>
                 <td className="p-4 text-xs font-mono text-slate-500">
                   {typeof log.lat === 'number' ? log.lat.toFixed(6) : '-'}<br />{typeof log.lng === 'number' ? log.lng.toFixed(6) : '-'}
@@ -1569,12 +1618,22 @@ function LecturerLogbookView({ logbooks, students }) {
               </div>
               <div className="flex-1">
                 <h3 className="font-bold text-lg text-slate-800 leading-tight">{log.name}</h3>
-                <p className="text-slate-500 text-xs font-mono">{log.nim}</p>
+                <p className="text-slate-500 text-xs font-mono">{log.nim} • {log.class}</p>
               </div>
               <span className={`px-2.5 py-1 rounded-md text-[10px] font-bold uppercase ${log.status === 'Hadir' ? 'bg-green-100 text-green-700' : log.status === 'Sakit' ? 'bg-red-100 text-red-700' : log.status === 'Izin' ? 'bg-yellow-100 text-yellow-700' : 'bg-slate-200 text-slate-900'}`}>
                 {log.status}
               </span>
             </div>
+
+            {log.isLocationValid === false && (
+              <div className="bg-red-50 border border-red-100 p-2 rounded-lg flex items-start gap-2">
+                <AlertCircle size={14} className="text-red-500 mt-0.5 shrink-0" />
+                <div>
+                  <p className="text-xs font-bold text-red-700">Lokasi Tidak Sesuai</p>
+                  {log.targetAddress && <p className="text-[10px] text-red-500 italic">Target: {log.targetAddress}</p>}
+                </div>
+              </div>
+            )}
 
             <div className="text-xs font-mono text-cyan-600 bg-cyan-50 p-2 rounded-lg flex items-center gap-2">
               <MapPin size={14} /> {typeof log.lat === 'number' ? log.lat.toFixed(5) : '-'}, {typeof log.lng === 'number' ? log.lng.toFixed(5) : '-'}
