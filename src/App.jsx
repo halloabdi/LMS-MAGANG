@@ -1483,7 +1483,7 @@ function LecturerLogbookView({ logbooks, students }) {
                   </span>
                 </td>
                 <td className="p-4 text-xs font-mono text-slate-500">
-                  {log.lat.toFixed(6)}<br />{log.lng.toFixed(6)}
+                  {typeof log.lat === 'number' ? log.lat.toFixed(6) : '-'}<br />{typeof log.lng === 'number' ? log.lng.toFixed(6) : '-'}
                 </td>
                 <td className="p-4 align-top">
                   <div className="line-clamp-2 text-slate-600 text-xs mb-2" dangerouslySetInnerHTML={{ __html: displayRichText(log.activity) }} />
@@ -1532,7 +1532,7 @@ function LecturerLogbookView({ logbooks, students }) {
             </div>
 
             <div className="text-xs font-mono text-cyan-600 bg-cyan-50 p-2 rounded-lg flex items-center gap-2">
-              <MapPin size={14} /> {log.lat.toFixed(5)}, {log.lng.toFixed(5)}
+              <MapPin size={14} /> {typeof log.lat === 'number' ? log.lat.toFixed(5) : '-'}, {typeof log.lng === 'number' ? log.lng.toFixed(5) : '-'}
             </div>
 
             <div className="grid grid-cols-1 gap-3 text-sm">
@@ -1581,3 +1581,4 @@ function LecturerGrading({ reports, showToast }) {
     </div>
   );
 }
+// End of file
