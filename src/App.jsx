@@ -5,7 +5,7 @@ import {
   Map as MapIcon, Eye, Menu, X, Bold, Italic, Underline,
   Superscript, Subscript, ChevronRight, ChevronLeft, ChevronDown,
   User, Settings, Edit3, Save, Image as ImageIcon, Calendar, Clock,
-  AlertCircle, ListOrdered, Lightbulb, Check, AlertTriangle, Search, RefreshCw
+  AlertCircle, ListOrdered, Lightbulb, Check, AlertTriangle, Search, RefreshCw, Download, MessageCircle, FileSpreadsheet
 } from 'lucide-react';
 
 // --- GLOBAL STYLES ---
@@ -1272,7 +1272,7 @@ function StudentLogbookForm({ user, logbooks, setLogbooks, showToast }) {
               <label className="text-xs font-bold text-slate-400 uppercase block mb-2">Tanggal</label>
               <CustomDatePicker value={date} onChange={setDate} />
             </div>
-            <div className="p-4 bg-slate-50 rounded-xl border border-slate-200 relative z-20">
+            <div className="p-4 bg-slate-50 rounded-xl border border-slate-200 relative z-30">
               <label className="text-xs font-bold text-slate-400 uppercase block mb-2">Jam</label>
               <CustomTimePicker value={time} onChange={setTime} />
             </div>
@@ -1537,6 +1537,66 @@ function LecturerOverview({ students, logbooks, reports }) {
 
 // --- UNSUBMITTED MODAL ---
 const UnsubmittedModal = ({ students, onClose }) => {
+  const [isExportOpen, setIsExportOpen] = useState(false);
+  const exportRef = useRef(null);
+
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (exportRef.current && !exportRef.current.contains(event.target)) {
+        setIsExportOpen(false);
+      }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
+
+  const handleExportExcel = () => {
+    // Excel Export with 2pt black border as requested
+    const tableHTML = `
+      <table style="border-collapse: collapse; width: 100%;">
+        <thead>
+          <tr>
+            <th style="border: 2pt solid black; padding: 5px; font-weight: bold;">No</th>
+            <th style="border: 2pt solid black; padding: 5px; font-weight: bold;">Nama Mahasiswa</th>
+            <th style="border: 2pt solid black; padding: 5px; font-weight: bold;">NIM</th>
+            <th style="border: 2pt solid black; padding: 5px; font-weight: bold;">Kelas</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${students.map((s, i) => `
+            <tr>
+              <td style="border: 2pt solid black; padding: 5px;">${i + 1}</td>
+              <td style="border: 2pt solid black; padding: 5px;">${s.name}</td>
+              <td style="border: 2pt solid black; padding: 5px;">'${s.nim}</td>
+              <td style="border: 2pt solid black; padding: 5px;">${s.class}</td>
+            </tr>
+          `).join('')}
+        </tbody>
+      </table>
+    `;
+
+    const blob = new Blob([tableHTML], { type: 'application/vnd.ms-excel' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `Mahasiswa_Belum_Logbook_${new Date().toISOString().split('T')[0]}.xls`;
+    a.click();
+    setIsExportOpen(false);
+  };
+
+  const handleExportWA = () => {
+    // WA Export with requested format
+    const today = new Date().toLocaleDateString('id-ID', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+    let message = `Berikut adalah Mahasiswa yang belum mengumpulkan Logbook ${today}:\n`;
+    students.forEach((s, i) => {
+      message += `${i + 1}. ${s.name} (${s.nim}), ${s.class}\n`;
+    });
+
+    const encodedMessage = encodeURIComponent(message);
+    window.open(`https://wa.me/?text=${encodedMessage}`, '_blank');
+    setIsExportOpen(false);
+  };
+
   return (
     <div className="fixed inset-0 z-[1000] bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4 animate-in fade-in duration-200" onClick={onClose}>
       <div className="bg-white w-full max-w-2xl rounded-2xl shadow-2xl overflow-hidden flex flex-col max-h-[80vh] animate-in zoom-in-95" onClick={e => e.stopPropagation()}>
@@ -1570,7 +1630,29 @@ const UnsubmittedModal = ({ students, onClose }) => {
             </tbody>
           </table>
         </div>
-        <div className="p-4 border-t border-slate-100 bg-slate-50 flex justify-end">
+        <div className="p-4 border-t border-slate-100 bg-slate-50 flex justify-end gap-2">
+          {students.length > 0 && (
+            <div className="relative" ref={exportRef}>
+              <button
+                onClick={() => setIsExportOpen(!isExportOpen)}
+                className="px-4 py-2 bg-emerald-50 text-emerald-600 hover:bg-emerald-100 rounded-xl font-bold transition-colors flex items-center gap-2 border border-emerald-100"
+              >
+                <Download size={18} /> Ekspor
+                <ChevronDown size={16} className={`transition-transform ${isExportOpen ? 'rotate-180' : ''}`} />
+              </button>
+
+              {isExportOpen && (
+                <div className="absolute bottom-full right-0 mb-2 w-56 bg-white rounded-xl shadow-xl border border-slate-100 overflow-hidden animate-in fade-in zoom-in-95 origin-bottom-right z-50">
+                  <button onClick={handleExportExcel} className="w-full text-left px-4 py-3 hover:bg-emerald-50 text-slate-700 hover:text-emerald-700 flex items-center gap-2 transition-colors border-b border-slate-50">
+                    <FileSpreadsheet size={18} /> Ekspor ke Excel
+                  </button>
+                  <button onClick={handleExportWA} className="w-full text-left px-4 py-3 hover:bg-emerald-50 text-slate-700 hover:text-emerald-700 flex items-center gap-2 transition-colors">
+                    <MessageCircle size={18} /> Ekspor via WhatsApp
+                  </button>
+                </div>
+              )}
+            </div>
+          )}
           <Button onClick={onClose}>Tutup</Button>
         </div>
       </div>
