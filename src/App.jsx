@@ -318,7 +318,7 @@ const TextModal = ({ title, content, onClose }) => {
           <button onClick={onClose} className="p-2 hover:bg-slate-200 rounded-full transition-colors"><X size={20} /></button>
         </div>
         <div className="p-6 overflow-y-auto text-slate-600 leading-relaxed">
-          <div dangerouslySetInnerHTML={{ __html: content }} className="prose prose-slate max-w-none" />
+          <div dangerouslySetInnerHTML={{ __html: content }} className="prose prose-slate max-w-none [&_ol]:list-decimal [&_ul]:list-disc [&_ol]:pl-5 [&_ul]:pl-5" />
         </div>
         <div className="p-4 border-t border-slate-100 bg-slate-50 flex justify-end">
           <Button onClick={onClose}>Tutup</Button>
@@ -329,7 +329,7 @@ const TextModal = ({ title, content, onClose }) => {
 };
 
 // --- CONFIGURATION ---
-const GAS_URL = "https://script.google.com/macros/s/AKfycbx0ilzVqV0O2wZ4ySGOr5Z-m6EP-LZKRbf2k8SE8B4z9IPRFUWyrJdIBKNk1B1JMQko/exec";
+const GAS_URL = "https://script.google.com/macros/s/AKfycbz5XDEwhV48OFLrypF_IBdpKbyocAA9hg1Sd8zOSdXXPMvoiKgfcUcIJfIaM6TiO0cG/exec";
 
 // --- INITIAL DATA ---
 const INITIAL_LOGBOOKS = [];
@@ -600,7 +600,7 @@ const RichEditor = ({ value, onChange, placeholder }) => {
         <div
           ref={editorRef}
           contentEditable
-          className="w-full p-4 outline-none min-h-[120px] max-h-[300px] overflow-y-auto text-sm text-slate-700 leading-relaxed list-inside relative z-10"
+          className="w-full p-4 outline-none min-h-[120px] max-h-[300px] overflow-y-auto text-sm text-slate-700 leading-relaxed list-inside relative z-10 [&_ol]:list-decimal [&_ul]:list-disc"
           onInput={handleInput}
           suppressContentEditableWarning={true}
           style={{ whiteSpace: 'pre-wrap' }}
@@ -610,6 +610,7 @@ const RichEditor = ({ value, onChange, placeholder }) => {
     </div>
   );
 };
+
 
 const ToolButton = ({ onClick, icon: Icon, title }) => (
   <button onClick={(e) => { e.preventDefault(); onClick(); }} className="p-2 text-slate-500 hover:text-cyan-600 hover:bg-cyan-50 rounded-lg transition-colors" title={title}><Icon size={16} /></button>
@@ -1267,11 +1268,11 @@ function StudentLogbookForm({ user, logbooks, setLogbooks, showToast }) {
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <div className="p-4 bg-slate-50 rounded-xl border border-slate-200 relative z-30">
+            <div className="p-4 bg-slate-50 rounded-xl border border-slate-200 relative z-40">
               <label className="text-xs font-bold text-slate-400 uppercase block mb-2">Tanggal</label>
               <CustomDatePicker value={date} onChange={setDate} />
             </div>
-            <div className="p-4 bg-slate-50 rounded-xl border border-slate-200 relative z-30">
+            <div className="p-4 bg-slate-50 rounded-xl border border-slate-200 relative z-20">
               <label className="text-xs font-bold text-slate-400 uppercase block mb-2">Jam</label>
               <CustomTimePicker value={time} onChange={setTime} />
             </div>
@@ -1489,7 +1490,7 @@ function LecturerDashboard({ user, onLogout, logbooks, setLogbooks, reports, onU
       <main className="flex-1 overflow-y-auto relative pt-24 md:pt-0">
         <div className="p-5 md:p-8 max-w-7xl mx-auto">
           {activeTab === 'overview' && <LecturerOverview students={students} logbooks={logbooks} reports={reports} />}
-          {activeTab === 'logbooks' && <LecturerLogbookView logbooks={logbooks} students={students} />}
+          {activeTab === 'logbooks' && <LecturerLogbookView logbooks={logbooks} students={students} showToast={showToast} />}
           {activeTab === 'grading' && <LecturerGrading reports={reports} showToast={showToast} />}
           {activeTab === 'profile' && <ProfileSettings user={user} onUpdate={onUpdateProfile} onCancel={() => setActiveTab('overview')} showToast={showToast} />}
         </div>
@@ -1529,6 +1530,49 @@ function LecturerOverview({ students, logbooks, reports }) {
     </div>
   );
 }
+
+// --- UNSUBMITTED MODAL ---
+const UnsubmittedModal = ({ students, onClose }) => {
+  return (
+    <div className="fixed inset-0 z-[1000] bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4 animate-in fade-in duration-200" onClick={onClose}>
+      <div className="bg-white w-full max-w-2xl rounded-2xl shadow-2xl overflow-hidden flex flex-col max-h-[80vh] animate-in zoom-in-95" onClick={e => e.stopPropagation()}>
+        <div className="p-4 border-b border-slate-100 flex justify-between items-center bg-slate-50/50">
+          <div>
+            <h3 className="font-bold text-lg text-slate-800">Mahasiswa Belum Logbook (Hari Ini)</h3>
+            <p className="text-sm text-slate-500">Total: {students.length} Mahasiswa</p>
+          </div>
+          <button onClick={onClose} className="p-2 hover:bg-slate-200 rounded-full transition-colors"><X size={20} /></button>
+        </div>
+        <div className="flex-1 overflow-y-auto p-0">
+          <table className="w-full text-sm text-left">
+            <thead className="bg-slate-50 text-slate-500 font-bold sticky top-0">
+              <tr>
+                <th className="p-4 border-b text-xs uppercase tracking-wider">Nama Mahasiswa</th>
+                <th className="p-4 border-b text-xs uppercase tracking-wider">NIM</th>
+                <th className="p-4 border-b text-xs uppercase tracking-wider">Kelas</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-slate-100">
+              {students.map((s, i) => (
+                <tr key={i} className="hover:bg-slate-50">
+                  <td className="p-4 font-bold text-slate-700">{s.name}</td>
+                  <td className="p-4 font-mono text-slate-500">{s.nim}</td>
+                  <td className="p-4 text-slate-600">{s.class}</td>
+                </tr>
+              ))}
+              {students.length === 0 && (
+                <tr><td colSpan="3" className="p-8 text-center text-slate-400">Semua mahasiswa sudah mengisi logbook.</td></tr>
+              )}
+            </tbody>
+          </table>
+        </div>
+        <div className="p-4 border-t border-slate-100 bg-slate-50 flex justify-end">
+          <Button onClick={onClose}>Tutup</Button>
+        </div>
+      </div>
+    </div>
+  );
+};
 
 // --- CUSTOM DROPDOWN COMPONENT (FOR MODERN UI) ---
 const CustomDropdown = ({ options, value, onChange, icon: Icon }) => {
@@ -1576,9 +1620,12 @@ const CustomDropdown = ({ options, value, onChange, icon: Icon }) => {
   );
 };
 
-function LecturerLogbookView({ logbooks, students }) {
+function LecturerLogbookView({ logbooks, students, showToast }) {
   const [previewImage, setPreviewImage] = useState(null);
   const [detailModal, setDetailModal] = useState({ show: false, title: '', content: '' });
+  const [unsubmittedList, setUnsubmittedList] = useState([]);
+  const [showUnsubmitted, setShowUnsubmitted] = useState(false);
+  const [loadingUnsubmitted, setLoadingUnsubmitted] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
   const [sortOrder, setSortOrder] = useState('newest');
   const [dateFilter, setDateFilter] = useState('today'); // Default: Hari Ini (Updated per request)
@@ -1586,6 +1633,27 @@ function LecturerLogbookView({ logbooks, students }) {
   // Pagination State
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 25;
+
+  const handleCheckUnsubmitted = async () => {
+    setLoadingUnsubmitted(true);
+    showToast('info', 'Memuat Data...', 'Sedang mengecek data mahasiswa...');
+    try {
+      const todayStr = new Date().toISOString().split('T')[0];
+      const res = await fetch(`${GAS_URL}?action=getUnsubmitted&date=${todayStr}`);
+      const json = await res.json();
+      if (json.status === 'success') {
+        setUnsubmittedList(json.data);
+        setShowUnsubmitted(true);
+        showToast('success', 'Selesai', `Ditemukan ${json.data.length} mahasiswa belum absen.`);
+      } else {
+        showToast('error', 'Gagal', json.message);
+      }
+    } catch (e) {
+      showToast('error', 'Error', 'Gagal mengambil data.');
+    } finally {
+      setLoadingUnsubmitted(false);
+    }
+  };
 
   // Filter & Sort Logic
   const filteredLogbooks = logbooks.filter(log => {
@@ -1657,13 +1725,17 @@ function LecturerLogbookView({ logbooks, students }) {
     <div className="space-y-6 animate-in fade-in duration-500 pb-10">
       {previewImage && <ImageModal src={previewImage} onClose={() => setPreviewImage(null)} />}
       {detailModal.show && <TextModal title={detailModal.title} content={detailModal.content} onClose={() => setDetailModal({ show: false, title: '', content: '' })} />}
+      {showUnsubmitted && <UnsubmittedModal students={unsubmittedList} onClose={() => setShowUnsubmitted(false)} />}
 
       <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-4 bg-white p-6 rounded-[2rem] shadow-sm border border-slate-100">
         <div>
           <h2 className="text-3xl font-black text-slate-800 tracking-tight mb-2">Logbook Mahasiswa</h2>
-          <div className="flex items-center gap-2">
+          <div className="flex flex-wrap items-center gap-2">
             <span className="px-4 py-1.5 bg-cyan-50 rounded-full border border-cyan-100 text-sm font-bold text-cyan-700">{filteredLogbooks.length} Entri</span>
-            <span className="text-slate-400 text-sm">Halaman {currentPage} dari {totalPages || 1}</span>
+            <button onClick={handleCheckUnsubmitted} disabled={loadingUnsubmitted} className="px-4 py-1.5 bg-red-50 hover:bg-red-100 text-red-600 rounded-full border border-red-100 text-sm font-bold transition-colors flex items-center gap-1">
+              {loadingUnsubmitted ? 'Memuat...' : 'Lihat Mahasiswa Belum Logbook'}
+            </button>
+            <span className="text-slate-400 text-sm ml-2">Halaman {currentPage} dari {totalPages || 1}</span>
           </div>
         </div>
 
@@ -1704,6 +1776,13 @@ function LecturerLogbookView({ logbooks, students }) {
               { value: 'date_oldest', label: 'Tgl Terlama' }
             ]}
           />
+        </div>
+
+        {/* Mobile "Belum Logbook" Button */}
+        <div className="md:hidden w-full">
+          <button onClick={handleCheckUnsubmitted} disabled={loadingUnsubmitted} className="w-full py-3 bg-white border border-red-100 text-red-600 rounded-2xl font-bold shadow-sm hover:bg-red-50 transition-colors">
+            {loadingUnsubmitted ? 'Memuat...' : 'Lihat Mahasiswa Belum Logbook'}
+          </button>
         </div>
       </div>
 
@@ -1751,11 +1830,11 @@ function LecturerLogbookView({ logbooks, students }) {
                   </span>
                 </td>
                 <td className="p-5 align-top">
-                  <div className="line-clamp-2 text-slate-600 text-xs mb-2 leading-relaxed" dangerouslySetInnerHTML={{ __html: displayRichText(log.activity) }} />
+                  <div className="line-clamp-2 text-slate-600 text-xs mb-2 leading-relaxed [&_ol]:list-decimal [&_ul]:list-disc [&_ol]:pl-5 [&_ul]:pl-5" dangerouslySetInnerHTML={{ __html: displayRichText(log.activity) }} />
                   <button onClick={() => setDetailModal({ show: true, title: 'Detail Kegiatan', content: displayRichText(log.activity) })} className="text-xs font-bold text-cyan-600 hover:text-cyan-800 hover:underline">Lihat Selengkapnya</button>
                 </td>
                 <td className="p-5 align-top">
-                  <div className="line-clamp-2 text-slate-600 text-xs mb-2 leading-relaxed" dangerouslySetInnerHTML={{ __html: displayRichText(log.output) }} />
+                  <div className="line-clamp-2 text-slate-600 text-xs mb-2 leading-relaxed [&_ol]:list-decimal [&_ul]:list-disc [&_ol]:pl-5 [&_ul]:pl-5" dangerouslySetInnerHTML={{ __html: displayRichText(log.output) }} />
                   <button onClick={() => setDetailModal({ show: true, title: 'Detail Output', content: displayRichText(log.output) })} className="text-xs font-bold text-cyan-600 hover:text-cyan-800 hover:underline">Lihat Selengkapnya</button>
                 </td>
                 <td className="p-5 text-center">
