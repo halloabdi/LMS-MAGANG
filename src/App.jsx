@@ -1750,6 +1750,8 @@ function LecturerLogbookView({ logbooks, students, showToast, onRefresh }) {
       matchesSearch = (
         (log.name && String(log.name).toLowerCase().includes(term)) ||
         (log.nim && String(log.nim).toLowerCase().includes(term)) ||
+        (log.class && String(log.class).toLowerCase().includes(term)) ||
+        (log.className && String(log.className).toLowerCase().includes(term)) ||
         (log.activity && String(log.activity).toLowerCase().includes(term)) ||
         (log.output && String(log.output).toLowerCase().includes(term)) ||
         (log.address && String(log.address).toLowerCase().includes(term)) ||
