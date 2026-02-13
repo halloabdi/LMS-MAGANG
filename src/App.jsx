@@ -5,7 +5,7 @@ import {
   Map as MapIcon, Eye, Menu, X, Bold, Italic, Underline,
   Superscript, Subscript, ChevronRight, ChevronLeft, ChevronDown,
   User, Settings, Edit3, Save, Image as ImageIcon, Calendar, Clock,
-  AlertCircle, ListOrdered, Lightbulb, Check, AlertTriangle, Search
+  AlertCircle, ListOrdered, Lightbulb, Check, AlertTriangle, Search, RefreshCw
 } from 'lucide-react';
 
 // --- GLOBAL STYLES ---
@@ -1399,40 +1399,44 @@ function LecturerDashboard({ user, onLogout, logbooks, setLogbooks, reports, onU
   const [students, setStudents] = useState([]); // Fetch students from logic if needed, or just derive from logs
 
   // Fetch Logic for Lecturer
-  useEffect(() => {
-    const fetchData = async () => {
-      try {
-        const url = `${GAS_URL}?action=getAllLogbooks`; // Special Endpoint
-        const res = await fetch(url);
-        const result = await res.json();
-        if (result.status === 'success') {
-          setLogbooks(result.data);
+  // Fetch Logic for Lecturer
+  const fetchData = async () => {
+    try {
+      const url = `${GAS_URL}?action=getAllLogbooks`; // Special Endpoint
+      const res = await fetch(url);
+      const result = await res.json();
+      if (result.status === 'success') {
+        setLogbooks(result.data);
 
-          // Derive unique students from logbooks for mapping
-          const uniqueStudents = [];
-          const seenNims = new Set();
+        // Derive unique students from logbooks for mapping
+        const uniqueStudents = [];
+        const seenNims = new Set();
 
-          result.data.forEach(log => {
-            if (log.nim && !seenNims.has(log.nim)) {
-              seenNims.add(log.nim);
-              uniqueStudents.push({
-                id: log.studentId || log.nim,
-                name: log.name,
-                username: log.nim,
-                class: log.class,
-                lastLogbook: log.date + ' ' + log.time
-              });
-            }
-          });
-          setStudents(uniqueStudents);
-        }
-
-      } catch (e) {
-        console.error(e);
+        result.data.forEach(log => {
+          if (log.nim && !seenNims.has(log.nim)) {
+            seenNims.add(log.nim);
+            uniqueStudents.push({
+              id: log.studentId || log.nim,
+              name: log.name,
+              username: log.nim,
+              class: log.class,
+              lastLogbook: log.date + ' ' + log.time
+            });
+          }
+        });
+        setStudents(uniqueStudents);
+        showToast('success', 'Data Diperbarui', 'Data terbaru berhasil dimuat.');
       }
-    };
+
+    } catch (e) {
+      console.error(e);
+      showToast('error', 'Gagal Memuat', 'Terjadi kesalahan saat mengambil data.');
+    }
+  };
+
+  useEffect(() => {
     if (!GAS_URL.includes("MASUKKAN")) fetchData();
-  }, [setLogbooks]);
+  }, []);
 
   const NavItem = ({ id, label, icon: Icon }) => {
     const isActive = activeTab === id;
@@ -1490,7 +1494,7 @@ function LecturerDashboard({ user, onLogout, logbooks, setLogbooks, reports, onU
       <main className="flex-1 overflow-y-auto relative pt-24 md:pt-0">
         <div className="p-5 md:p-8 max-w-7xl mx-auto">
           {activeTab === 'overview' && <LecturerOverview students={students} logbooks={logbooks} reports={reports} />}
-          {activeTab === 'logbooks' && <LecturerLogbookView logbooks={logbooks} students={students} showToast={showToast} />}
+          {activeTab === 'logbooks' && <LecturerLogbookView logbooks={logbooks} students={students} showToast={showToast} onRefresh={fetchData} />}
           {activeTab === 'grading' && <LecturerGrading reports={reports} showToast={showToast} />}
           {activeTab === 'profile' && <ProfileSettings user={user} onUpdate={onUpdateProfile} onCancel={() => setActiveTab('overview')} showToast={showToast} />}
         </div>
@@ -1620,7 +1624,7 @@ const CustomDropdown = ({ options, value, onChange, icon: Icon }) => {
   );
 };
 
-function LecturerLogbookView({ logbooks, students, showToast }) {
+function LecturerLogbookView({ logbooks, students, showToast, onRefresh }) {
   const [previewImage, setPreviewImage] = useState(null);
   const [detailModal, setDetailModal] = useState({ show: false, title: '', content: '' });
   const [unsubmittedList, setUnsubmittedList] = useState([]);
@@ -1729,7 +1733,12 @@ function LecturerLogbookView({ logbooks, students, showToast }) {
 
       <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-4 bg-white p-6 rounded-[2rem] shadow-sm border border-slate-100">
         <div>
-          <h2 className="text-3xl font-black text-slate-800 tracking-tight mb-2">Logbook Mahasiswa</h2>
+          <h2 className="text-3xl font-black text-slate-800 tracking-tight mb-2 flex items-center gap-3">
+            Logbook Mahasiswa
+            <button onClick={onRefresh} className="p-2 bg-slate-100 hover:bg-slate-200 text-slate-600 rounded-full transition-colors" title="Refresh Data">
+              <RefreshCw size={20} />
+            </button>
+          </h2>
           <div className="flex flex-wrap items-center gap-2">
             <span className="px-4 py-1.5 bg-cyan-50 rounded-full border border-cyan-100 text-sm font-bold text-cyan-700">{filteredLogbooks.length} Entri</span>
             <button onClick={handleCheckUnsubmitted} disabled={loadingUnsubmitted} className="px-4 py-1.5 bg-red-50 hover:bg-red-100 text-red-600 rounded-full border border-red-100 text-sm font-bold transition-colors flex items-center gap-1">
@@ -1779,9 +1788,12 @@ function LecturerLogbookView({ logbooks, students, showToast }) {
         </div>
 
         {/* Mobile "Belum Logbook" Button */}
-        <div className="md:hidden w-full">
+        <div className="md:hidden w-full flex flex-col gap-2">
           <button onClick={handleCheckUnsubmitted} disabled={loadingUnsubmitted} className="w-full py-3 bg-white border border-red-100 text-red-600 rounded-2xl font-bold shadow-sm hover:bg-red-50 transition-colors">
             {loadingUnsubmitted ? 'Memuat...' : 'Lihat Mahasiswa Belum Logbook'}
+          </button>
+          <button onClick={onRefresh} className="w-full py-3 bg-white border border-slate-200 text-slate-600 rounded-2xl font-bold shadow-sm hover:bg-slate-50 transition-colors flex items-center justify-center gap-2">
+            <RefreshCw size={18} /> Refresh Data
           </button>
         </div>
       </div>
