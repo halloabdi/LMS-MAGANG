@@ -1748,12 +1748,12 @@ function LecturerLogbookView({ logbooks, students, showToast, onRefresh }) {
     if (searchTerm) {
       const term = searchTerm.toLowerCase();
       matchesSearch = (
-        (log.name && log.name.toLowerCase().includes(term)) ||
-        (log.nim && log.nim.toLowerCase().includes(term)) ||
-        (log.activity && log.activity.toLowerCase().includes(term)) ||
-        (log.output && log.output.toLowerCase().includes(term)) ||
-        (log.address && log.address.toLowerCase().includes(term)) ||
-        (log.date && log.date.includes(term))
+        (log.name && String(log.name).toLowerCase().includes(term)) ||
+        (log.nim && String(log.nim).toLowerCase().includes(term)) ||
+        (log.activity && String(log.activity).toLowerCase().includes(term)) ||
+        (log.output && String(log.output).toLowerCase().includes(term)) ||
+        (log.address && String(log.address).toLowerCase().includes(term)) ||
+        (log.date && String(log.date).toLowerCase().includes(term))
       );
     }
 
