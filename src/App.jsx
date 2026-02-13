@@ -473,10 +473,12 @@ const LeafletMap = ({ lat, lng, setLat, setLng, setAddress, readOnly = false, ma
       shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-shadow.png',
     });
 
-    const initialLat = parseFloat(lat) || -7.9666;
-    const initialLng = parseFloat(lng) || 112.6326;
+    // Default center (Indonesia)
+    const initialLat = parseFloat(lat) || -2.5489;
+    const initialLng = parseFloat(lng) || 118.0149;
+    const initialZoom = 5;
 
-    const map = L.map(mapRef.current).setView([initialLat, initialLng], 13);
+    const map = L.map(mapRef.current).setView([initialLat, initialLng], initialZoom);
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { attribution: '&copy; OpenStreetMap' }).addTo(map);
     mapInstanceRef.current = map;
 
@@ -523,17 +525,25 @@ const LeafletMap = ({ lat, lng, setLat, setLng, setAddress, readOnly = false, ma
 
     if (markers && markers.length > 0) {
       const bounds = L.latLngBounds();
+      let hasValidMarker = false;
+
       markers.forEach(m => {
-        if (m.lat && m.lng) {
-          const marker = L.marker([m.lat, m.lng])
+        // Ensure lat/lng are valid numbers
+        const mLat = parseFloat(m.lat);
+        const mLng = parseFloat(m.lng);
+
+        if (!isNaN(mLat) && !isNaN(mLng) && mLat !== 0 && mLng !== 0) {
+          const marker = L.marker([mLat, mLng])
             .bindPopup(`<div class="text-sm"><b class="font-bold">${m.name}</b><br/>Status: ${m.status}</div>`)
             .addTo(map);
           markersGroupRef.current.push(marker);
-          bounds.extend([m.lat, m.lng]);
+          bounds.extend([mLat, mLng]);
+          hasValidMarker = true;
         }
       });
-      if (markers.length > 0) {
-        map.fitBounds(bounds, { padding: [30, 30], maxZoom: 15 });
+
+      if (hasValidMarker) {
+        map.fitBounds(bounds, { padding: [50, 50], maxZoom: 15 });
       }
     }
   };
@@ -542,8 +552,13 @@ const LeafletMap = ({ lat, lng, setLat, setLng, setAddress, readOnly = false, ma
     if (mapInstanceRef.current && window.L && markers.length > 0) {
       renderMarkers(window.L, mapInstanceRef.current);
     } else if (mapInstanceRef.current && window.L && lat && lng && !readOnly) {
-      if (markerRef.current) markerRef.current.setLatLng([lat, lng]);
-      mapInstanceRef.current.setView([lat, lng], 15);
+      const vLat = parseFloat(lat);
+      const vLng = parseFloat(lng);
+      if (!isNaN(vLat) && !isNaN(vLng)) {
+        if (markerRef.current) markerRef.current.setLatLng([vLat, vLng]);
+        else markerRef.current = window.L.marker([vLat, vLng]).addTo(mapInstanceRef.current);
+        mapInstanceRef.current.setView([vLat, vLng], 15);
+      }
     }
   }, [lat, lng, markers]);
 
@@ -998,22 +1013,49 @@ function StudentLogbookForm({ user, logbooks, setLogbooks, showToast }) {
 
     const successHandler = async (pos) => {
       const { latitude, longitude, accuracy } = pos.coords;
+
+      // LOGIC LOCK: Jika address sudah terisi valid (bukan Menunggu/Gagal/Memuat), JANGAN update lagi otomatis.
+      // Kecuali user menekan tombol Refresh (yang akan mereset address ke "Memperbarui lokasi..." dulu)
+      if (address && !address.startsWith("Menunggu") && !address.startsWith("Gagal") && !address.startsWith("Memuat") && !address.startsWith("Browser")) {
+        return;
+      }
+
       setLat(latitude);
       setLng(longitude);
       setAccuracy(accuracy);
 
-      // Throttle Reverse Geocoding - Bypass throttle if address is still initial/loading
+      // Throttle Reverse Geocoding - Jika belum ada alamat yg valid, kita coba fetch
       const now = Date.now();
       if (now - lastGeoUpdateRef.current > 5000 || address === 'Menunggu GPS...' || address === 'Memperbarui lokasi...') {
         lastGeoUpdateRef.current = now;
-        setAddress("Memuat Alamat..."); // Visual feedback
+        if (address !== "Memperbarui lokasi...") setAddress("Memuat Alamat Lengkap...");
+
         try {
-          const res = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${latitude}&lon=${longitude}`);
+          // Tambah addressdetails=1 untuk dapat rincian
+          const res = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${latitude}&lon=${longitude}&addressdetails=1`);
           const data = await res.json();
-          if (data && data.display_name) setAddress(data.display_name);
+
+          if (data && data.address) {
+            const a = data.address;
+            // Format: Jalan, Desa/Kelurahan, Kecamatan, Kab/Kota, Provinsi, Kode Pos
+            // Ambil komponen yang ada saja
+            const road = a.road || a.street || '';
+            const village = a.village || a.suburb || a.hamlet || ''; // Desa/Kelurahan
+            const district = a.town || a.city_district || a.district || ''; // Kecamatan (kadang mappingnya beda2)
+            const city = a.city || a.regency || a.county || ''; // Kab/Kota
+            const state = a.state || '';
+            const postcode = a.postcode || '';
+
+            const components = [road, village, district, city, state, postcode].filter(c => c && c.trim() !== '');
+            const fullAddress = components.join(', ');
+
+            setAddress(fullAddress || data.display_name);
+          } else if (data && data.display_name) {
+            setAddress(data.display_name);
+          }
         } catch (e) {
-          // Silent fail for address, keep coords if we have then
-          if (address === 'Menunggu GPS...' || address === 'Memuat Alamat...') {
+          // Silent fail, keep coords
+          if (!address || address.startsWith("Menunggu") || address.startsWith("Memuat")) {
             setAddress(`${latitude.toFixed(6)}, ${longitude.toFixed(6)}`);
           }
         }
@@ -1022,13 +1064,15 @@ function StudentLogbookForm({ user, logbooks, setLogbooks, showToast }) {
 
     const errorHandler = (err) => {
       console.warn("GPS Watch Error:", err);
+      // Jangan timpa address yang sudah valid dengan error transient
+      if (address && !address.startsWith("Menunggu") && !address.startsWith("Gagal") && !address.startsWith("Memuat")) return;
+
       let msg = "Gagal mengambil lokasi.";
       if (err.code === 1) msg = "Izin lokasi ditolak. Mohon aktifkan izin lokasi di browser.";
       else if (err.code === 2) msg = "Sinyal GPS tidak tersedia.";
       else if (err.code === 3) msg = "Waktu permintaan GPS habis (Timeout).";
 
-      if (!lat) setAddress(msg); // Only show error text if we haven't locked a position yet
-      // Don't spam toasts on watch error, just console
+      setAddress(msg);
     };
 
     // Primary Watch
@@ -1039,13 +1083,15 @@ function StudentLogbookForm({ user, logbooks, setLogbooks, showToast }) {
     });
 
     return () => navigator.geolocation.clearWatch(watchId);
-  }, []);
+  }, [address]); // Add address dependency so we can check its state in effect
 
   const getLocation = () => {
     if (!navigator.geolocation) return showToast('error', 'Error', 'Browser tidak mendukung GPS');
 
     showToast('info', 'Mencari Lokasi...', 'Sedang memaksa update posisi GPS...');
+    // Reset address ke status loading agar watch/getCurrentPosition bisa update lagi
     setAddress("Memperbarui lokasi...");
+    setLat(null); // Reset coords visual
 
     const success = async (pos) => {
       const { latitude, longitude, accuracy } = pos.coords;
@@ -1054,9 +1100,24 @@ function StudentLogbookForm({ user, logbooks, setLogbooks, showToast }) {
       setAccuracy(accuracy);
 
       try {
-        const res = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${latitude}&lon=${longitude}`);
+        const res = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${latitude}&lon=${longitude}&addressdetails=1`);
         const data = await res.json();
-        setAddress(data.display_name || `${latitude.toFixed(6)}, ${longitude.toFixed(6)}`);
+
+        if (data && data.address) {
+          const a = data.address;
+          const road = a.road || a.street || '';
+          const village = a.village || a.suburb || a.hamlet || '';
+          const district = a.town || a.city_district || a.district || '';
+          const city = a.city || a.regency || a.county || '';
+          const state = a.state || '';
+          const postcode = a.postcode || '';
+
+          const components = [road, village, district, city, state, postcode].filter(c => c && c.trim() !== '');
+          const fullAddress = components.join(', ');
+          setAddress(fullAddress || data.display_name);
+        } else {
+          setAddress(data.display_name || `${latitude.toFixed(6)}, ${longitude.toFixed(6)}`);
+        }
       } catch {
         setAddress(`${latitude.toFixed(6)}, ${longitude.toFixed(6)}`);
       }
@@ -1181,7 +1242,8 @@ function StudentLogbookForm({ user, logbooks, setLogbooks, showToast }) {
         <div className="space-y-8">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div className="bg-slate-50 p-1 rounded-2xl border border-slate-200 flex flex-col h-full">
-              <div className="bg-white rounded-xl overflow-hidden h-64 relative z-0 flex-1"><LeafletMap lat={lat} lng={lng} setLat={setLat} setLng={setLng} setAddress={setAddress} /><div className="absolute top-2 right-2 z-[400]"><button onClick={getLocation} className="bg-white p-2 rounded-lg shadow text-xs font-bold text-cyan-600 hover:bg-cyan-50">↻ Refresh GPS</button></div></div>
+              <div className="bg-white rounded-xl overflow-hidden h-64 relative z-0 flex-1"><LeafletMap lat={lat} lng={lng} setLat={setLat} setLng={setLng} setAddress={setAddress} /></div>
+              <Button onClick={getLocation} variant="secondary" className="w-full mt-2 py-3 border-cyan-200 text-cyan-700 hover:bg-cyan-50 font-bold shadow-sm">↻ Refresh Lokasi</Button>
               <div className="p-4"><div className="flex items-start gap-3"><MapPin className="text-cyan-600 mt-1 shrink-0" size={20} /><div><p className="font-bold text-slate-700 text-sm leading-snug">{address}</p><p className="text-xs text-slate-500 mt-1 font-mono">{lat ? `${lat.toFixed(6)}, ${lng.toFixed(6)}` : "Mencari kordinat..."}</p>{accuracy && <p className="text-[10px] text-green-600">Akurasi GPS: ±{Math.round(accuracy)} meter</p>}</div></div></div>
             </div>
             <div className="bg-slate-50 border border-slate-200 rounded-2xl p-6 text-center flex flex-col justify-center h-full">
@@ -1469,20 +1531,15 @@ function LecturerOverview({ students, logbooks, reports }) {
 }
 
 function LecturerLogbookView({ logbooks, students }) {
-  const studentMarkers = students.map(s => {
-    const studentLogbooks = logbooks.filter(l => l.studentId === s.id);
-    const lastLog = studentLogbooks[studentLogbooks.length - 1];
-    if (lastLog && lastLog.lat && lastLog.lng) {
-      return { lat: lastLog.lat, lng: lastLog.lng, name: s.name, status: lastLog.status };
-    }
-    return null;
-  }).filter(m => m !== null);
-
   const [previewImage, setPreviewImage] = useState(null);
   const [detailModal, setDetailModal] = useState({ show: false, title: '', content: '' });
   const [searchTerm, setSearchTerm] = useState('');
   const [sortOrder, setSortOrder] = useState('newest');
-  const [dateFilter, setDateFilter] = useState('today'); // Default: Hari Ini
+  const [dateFilter, setDateFilter] = useState('all'); // Default: Semua Waktu (sesuai request user "kecuali user memilih filter")
+
+  // Pagination State
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 25;
 
   // Filter & Sort Logic
   const filteredLogbooks = logbooks.filter(log => {
@@ -1495,8 +1552,8 @@ function LecturerLogbookView({ logbooks, students }) {
         (log.nim && log.nim.toLowerCase().includes(term)) ||
         (log.activity && log.activity.toLowerCase().includes(term)) ||
         (log.output && log.output.toLowerCase().includes(term)) ||
-        (log.date && log.date.includes(term)) ||
-        (log.time && log.time.includes(term))
+        (log.address && log.address.toLowerCase().includes(term)) ||
+        (log.date && log.date.includes(term))
       );
     }
 
@@ -1505,181 +1562,182 @@ function LecturerLogbookView({ logbooks, students }) {
     if (dateFilter !== 'all') {
       const logDate = new Date(log.date);
       const today = new Date();
-      // Reset time parts for accurate date comparison
       today.setHours(0, 0, 0, 0);
 
-      // Handle potential invalid date
       if (isNaN(logDate.getTime())) {
-        matchesDate = false; // Invalid date in log, exclude or include? Let's exclude.
+        matchesDate = false;
       } else {
         logDate.setHours(0, 0, 0, 0);
-
         const diffTime = Math.abs(today - logDate);
         const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
 
-        if (dateFilter === 'today') {
-          matchesDate = diffDays === 0;
-        } else if (dateFilter === '3days') {
-          matchesDate = diffDays <= 3;
-        } else if (dateFilter === '7days') {
-          matchesDate = diffDays <= 7;
-        }
+        if (dateFilter === 'today') matchesDate = diffDays === 0;
+        else if (dateFilter === '3days') matchesDate = diffDays <= 3;
+        else if (dateFilter === '7days') matchesDate = diffDays <= 7;
       }
     }
 
     return matchesSearch && matchesDate;
   }).sort((a, b) => {
-    // Helper to parse date/time safely
-    const getTime = (item) => new Date(`${item.date}T${item.time}`).getTime() || 0;
-
-    // If date format is DD-MM-YYYY, standard Date parse might fail. 
-    // Assuming ISO YYYY-MM-DD from GAS or standard format.
-    // If fails, fallback to string compare or 0.
+    // Default Sort by Timestamp (Date + Time)
     const timeA = new Date(a.date + ' ' + a.time).getTime();
     const timeB = new Date(b.date + ' ' + b.time).getTime();
 
     switch (sortOrder) {
-      case 'newest': return timeB - timeA; // Timestamp Terbaru
-      case 'oldest': return timeA - timeB; // Timestamp Terlama
+      case 'newest': return timeB - timeA;
+      case 'oldest': return timeA - timeB;
       case 'date_newest': return new Date(b.date).getTime() - new Date(a.date).getTime();
       case 'date_oldest': return new Date(a.date).getTime() - new Date(b.date).getTime();
-      case 'time_newest':
-        return (b.time || '').localeCompare(a.time || ''); // Lexicographical compare for HH:mm works
-      case 'time_oldest':
-        return (a.time || '').localeCompare(b.time || '');
+      case 'time_newest': return (b.time || '').localeCompare(a.time || '');
+      case 'time_oldest': return (a.time || '').localeCompare(b.time || '');
       default: return timeB - timeA;
     }
   });
 
-  // Calculate Markers based on FILTERED logbooks implies we show WHERE the filtered results are.
-  // BUT User asked for "SELURUH PIN... DARI SELURUH MAHASISWA".
-  // If search is empty, filteredLogbooks IS all logbooks.
-  // If search is active, showing only matching students seems correct for a "Logbook View".
-  // However, to strictly follow "SELURUH PIN", I will use `filteredLogbooks` for the Table/List, 
-  // but for the MAP, I will use *derived* markers from the filtered list (to show context of search) 
-  // OR keep the original `students` map? 
-  // "PASTIKAN DOSEN DAPAT MELIHAT ... SELURUH PIN ... DI MAP PADA DASHBOARD LOGBOOK".
-  // I will stick to showing what's in the list (filtered) because otherwise the map becomes disconnected from the view.
-  // If they want ALL, they just clear search.
+  // Reset pagination when filters change
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [searchTerm, dateFilter, sortOrder]);
 
-  const mapMarkers = filteredLogbooks.map(l => ({ lat: l.lat, lng: l.lng, name: l.name, status: l.status }));
+  // Pagination Logic
+  const indexOfLastItem = currentPage * itemsPerPage;
+  const indexOfFirstItem = indexOfLastItem - itemsPerPage;
+  const currentItems = filteredLogbooks.slice(indexOfFirstItem, indexOfLastItem);
+  const totalPages = Math.ceil(filteredLogbooks.length / itemsPerPage);
+
+  const paginate = (pageNumber) => setCurrentPage(pageNumber);
 
   return (
-    <div className="space-y-8 animate-in fade-in duration-500">
+    <div className="space-y-6 animate-in fade-in duration-500 pb-10">
       {previewImage && <ImageModal src={previewImage} onClose={() => setPreviewImage(null)} />}
       {detailModal.show && <TextModal title={detailModal.title} content={detailModal.content} onClose={() => setDetailModal({ show: false, title: '', content: '' })} />}
 
-      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+      <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-4 bg-white p-6 rounded-[2rem] shadow-sm border border-slate-100">
         <div>
-          <h2 className="text-3xl font-bold text-slate-800 tracking-tight">Logbook Mahasiswa</h2>
-          <span className="px-4 py-1 bg-white rounded-full shadow-sm border border-slate-100 text-sm font-medium text-slate-600 mt-1 inline-block">{filteredLogbooks.length} Entri Ditemukan</span>
+          <h2 className="text-3xl font-black text-slate-800 tracking-tight mb-2">Logbook Mahasiswa</h2>
+          <div className="flex items-center gap-2">
+            <span className="px-4 py-1.5 bg-cyan-50 rounded-full border border-cyan-100 text-sm font-bold text-cyan-700">{filteredLogbooks.length} Entri</span>
+            <span className="text-slate-400 text-sm">Halaman {currentPage} dari {totalPages || 1}</span>
+          </div>
         </div>
 
         <div className="flex flex-col sm:flex-row gap-3 w-full md:w-auto">
-          <div className="relative">
+          <div className="relative group">
             <input
               type="text"
-              placeholder="Cari Mahasiswa, Kegiatan..."
+              placeholder="Cari Mahasiswa..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="pl-10 pr-4 py-2.5 rounded-xl border border-slate-200 focus:ring-4 focus:ring-cyan-100 focus:border-cyan-400 outline-none w-full sm:w-64 transition-all"
+              className="pl-11 pr-4 py-3 rounded-2xl border border-slate-200 bg-slate-50 focus:bg-white focus:ring-4 focus:ring-cyan-100 focus:border-cyan-400 outline-none w-full sm:w-64 transition-all font-medium text-slate-700"
             />
-            <div className="absolute left-3 top-3 text-slate-400"><Search size={18} /></div>
+            <div className="absolute left-4 top-3.5 text-slate-400 group-focus-within:text-cyan-500 transition-colors"><Search size={20} /></div>
           </div>
 
-          <select
-            value={dateFilter}
-            onChange={(e) => setDateFilter(e.target.value)}
-            className="px-4 py-2.5 rounded-xl border border-slate-200 focus:ring-4 focus:ring-cyan-100 focus:border-cyan-400 outline-none bg-white cursor-pointer hover:bg-slate-50 transition-all font-medium text-slate-600"
-          >
-            <option value="today">📅 Hari Ini</option>
-            <option value="3days">📅 3 Hari Terakhir</option>
-            <option value="7days">📅 7 Hari Terakhir</option>
-            <option value="all">📅 Semua Waktu</option>
-          </select>
+          {/* Modern Rounded Custom Select - Date */}
+          <div className="relative px-2">
+            <select
+              value={dateFilter}
+              onChange={(e) => setDateFilter(e.target.value)}
+              className="appearance-none w-full pl-4 pr-10 py-3 rounded-2xl border border-slate-200 bg-white focus:ring-4 focus:ring-cyan-100 focus:border-cyan-400 outline-none cursor-pointer hover:bg-slate-50 transition-all font-bold text-slate-700"
+            >
+              <option value="today">Hari Ini</option>
+              <option value="3days">3 Hari Terakhir</option>
+              <option value="7days">7 Hari Terakhir</option>
+              <option value="all">Semua Waktu</option>
+            </select>
+            <ChevronDown className="absolute right-5 top-3.5 text-slate-400 pointer-events-none" size={20} />
+          </div>
 
-          <select
-            value={sortOrder}
-            onChange={(e) => setSortOrder(e.target.value)}
-            className="px-4 py-2.5 rounded-xl border border-slate-200 focus:ring-4 focus:ring-cyan-100 focus:border-cyan-400 outline-none bg-white cursor-pointer hover:bg-slate-50 transition-all font-medium text-slate-600"
-          >
-            <option value="newest">⏰ Timestamp Terbaru</option>
-            <option value="oldest">⏰ Timestamp Terlama</option>
-            <option value="date_newest">📆 Tanggal Terbaru</option>
-            <option value="date_oldest">📆 Tanggal Terlama</option>
-            <option value="time_newest">⌚ Jam Terbaru</option>
-            <option value="time_oldest">⌚ Jam Terlama</option>
-          </select>
+          {/* Modern Rounded Custom Select - Sort */}
+          <div className="relative px-2">
+            <select
+              value={sortOrder}
+              onChange={(e) => setSortOrder(e.target.value)}
+              className="appearance-none w-full pl-4 pr-10 py-3 rounded-2xl border border-slate-200 bg-white focus:ring-4 focus:ring-cyan-100 focus:border-cyan-400 outline-none cursor-pointer hover:bg-slate-50 transition-all font-bold text-slate-700"
+            >
+              <option value="newest">Terbaru</option>
+              <option value="oldest">Terlama</option>
+              <option value="date_newest">Tgl Terbaru</option>
+              <option value="date_oldest">Tgl Terlama</option>
+            </select>
+            <ChevronDown className="absolute right-5 top-3.5 text-slate-400 pointer-events-none" size={20} />
+          </div>
         </div>
       </div>
 
-      <Card className="p-0 overflow-hidden relative h-96 border border-slate-200">
-        <LeafletMap readOnly={true} markers={mapMarkers} />
-        <div className="absolute top-4 left-4 z-[400] bg-white/90 backdrop-blur-sm p-3 rounded-xl shadow-lg border border-slate-100">
-          <h4 className="font-bold text-sm text-slate-800 flex items-center gap-2"><MapIcon size={16} className="text-cyan-600" /> Titik Lokasi Logbook Mahasiswa</h4>
-        </div>
-      </Card>
+      {/* MAP REMOVED AS REQUESTED */}
 
       {/* Desktop View: Table */}
-      <div className="hidden md:block bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden">
+      <div className="hidden md:block bg-white rounded-[2rem] shadow-xl shadow-slate-200/50 border border-slate-100 overflow-hidden">
         <table className="w-full text-left text-sm">
-          <thead className="bg-slate-50 border-b border-slate-100">
+          <thead className="bg-slate-50/50 border-b border-slate-100">
             <tr>
-              <th className="p-4 font-bold text-slate-500 uppercase tracking-wider text-xs">Foto Selfie</th>
-              <th className="p-4 font-bold text-slate-500 uppercase tracking-wider text-xs">Nama</th>
-              <th className="p-4 font-bold text-slate-500 uppercase tracking-wider text-xs">NIM</th>
-              <th className="p-4 font-bold text-slate-500 uppercase tracking-wider text-xs">Kelas</th>
-              <th className="p-4 font-bold text-slate-500 uppercase tracking-wider text-xs">Status</th>
-              <th className="p-4 font-bold text-slate-500 uppercase tracking-wider text-xs">Alamat Lengkap</th>
-              <th className="p-4 font-bold text-slate-500 uppercase tracking-wider text-xs">Koordinat</th>
-              <th className="p-4 w-1/5 font-bold text-slate-500 uppercase tracking-wider text-xs">Kegiatan yang Dilakukan</th>
-              <th className="p-4 w-1/5 font-bold text-slate-500 uppercase tracking-wider text-xs">Output yang Dihasilkan</th>
-              <th className="p-4 font-bold text-slate-500 uppercase tracking-wider text-xs text-center">Dokumentasi Tambahan</th>
+              <th className="p-5 font-bold text-slate-400 uppercase tracking-wider text-xs">Mahasiswa</th>
+              <th className="p-5 font-bold text-slate-400 uppercase tracking-wider text-xs">Waktu</th>
+              <th className="p-5 font-bold text-slate-400 uppercase tracking-wider text-xs">Status</th>
+              <th className="p-5 font-bold text-slate-400 uppercase tracking-wider text-xs w-1/4">Lokasi</th>
+              <th className="p-5 font-bold text-slate-400 uppercase tracking-wider text-xs w-1/4">Aktivitas</th>
+              <th className="p-5 font-bold text-slate-400 uppercase tracking-wider text-xs text-center">Bukti</th>
             </tr>
           </thead>
-          <tbody className="divide-y divide-slate-100">
-            {filteredLogbooks.map(log => (
-              <tr key={log.id} className="hover:bg-slate-50/50 transition-colors">
-                <td className="p-4">
-                  <div
-                    className="w-16 h-16 rounded-xl overflow-hidden bg-slate-100 border border-slate-200 shadow-inner cursor-pointer hover:ring-4 hover:ring-cyan-300 transition-all"
-                    onClick={() => setPreviewImage(log.selfieUrl)}
-                  >
-                    <img src={log.selfieUrl} alt="Selfie" className="w-full h-full object-cover" />
+          <tbody className="divide-y divide-slate-50">
+            {currentItems.map(log => (
+              <tr key={log.id} className="hover:bg-cyan-50/30 transition-colors group">
+                <td className="p-5">
+                  <div className="flex items-center gap-4">
+                    <div
+                      className="w-12 h-12 rounded-2xl overflow-hidden bg-slate-100 border border-slate-200 shadow-sm cursor-pointer hover:scale-105 transition-transform"
+                      onClick={() => setPreviewImage(log.selfieUrl)}
+                    >
+                      <img src={log.selfieUrl} alt="Selfie" className="w-full h-full object-cover" />
+                    </div>
+                    <div>
+                      <div className="font-bold text-slate-800">{log.name}</div>
+                      <div className="text-xs text-slate-400 font-mono mt-0.5">{log.nim} • {log.class || '-'}</div>
+                    </div>
                   </div>
                 </td>
-                <td className="p-4 font-bold text-slate-800">{log.name}</td>
-                <td className="p-4 text-slate-500 font-mono">{log.nim}</td>
-                <td className="p-4 text-slate-600 font-medium">{log.class || '-'}</td>
-                <td className="p-4">
-                  <span className={`px-3 py-1 rounded-lg text-xs font-bold uppercase ${log.status === 'Hadir' ? 'bg-green-100 text-green-700' : log.status === 'Sakit' ? 'bg-red-100 text-red-700' : log.status === 'Izin' ? 'bg-yellow-100 text-yellow-700' : 'bg-slate-200 text-slate-900'}`}>
+                <td className="p-5">
+                  <div className="font-bold text-slate-600">{log.date}</div>
+                  <div className="text-xs text-slate-400 font-mono">{log.time}</div>
+                </td>
+                <td className="p-5">
+                  <span className={`px-3 py-1.5 rounded-xl text-xs font-bold uppercase tracking-wide ${log.status === 'Hadir' ? 'bg-green-100 text-green-700' : log.status === 'Sakit' ? 'bg-red-100 text-red-700' : log.status === 'Izin' ? 'bg-yellow-100 text-yellow-700' : 'bg-slate-100 text-slate-600'}`}>
                     {log.status}
                   </span>
                 </td>
-                <td className="p-4 text-xs text-slate-600 max-w-[200px]">
-                  {log.address || '-'}
-                </td>
-                <td className="p-4 text-xs font-mono text-slate-500">
-                  {typeof log.lat === 'number' ? log.lat.toFixed(6) : '-'}<br />{typeof log.lng === 'number' ? log.lng.toFixed(6) : '-'}
-                </td>
-                <td className="p-4 align-top">
-                  <div className="line-clamp-2 text-slate-600 text-xs mb-2" dangerouslySetInnerHTML={{ __html: displayRichText(log.activity) }} />
-                  <button onClick={() => setDetailModal({ show: true, title: 'Detail Kegiatan', content: displayRichText(log.activity) })} className="text-xs font-bold text-cyan-600 hover:text-cyan-800 hover:underline">Lihat Rincian</button>
-                </td>
-                <td className="p-4 align-top">
-                  <div className="line-clamp-2 text-slate-600 text-xs mb-2" dangerouslySetInnerHTML={{ __html: displayRichText(log.output) }} />
-                  <button onClick={() => setDetailModal({ show: true, title: 'Detail Output', content: displayRichText(log.output) })} className="text-xs font-bold text-cyan-600 hover:text-cyan-800 hover:underline">Lihat Rincian</button>
-                </td>
-                <td className="p-4 text-center">
-                  {log.docUrl ? (
-                    <div
-                      className="w-16 h-16 rounded-xl overflow-hidden bg-slate-100 border border-slate-200 mx-auto shadow-inner cursor-pointer hover:ring-4 hover:ring-cyan-300 transition-all"
-                      onClick={() => setPreviewImage(log.docUrl)}
-                    >
-                      <img src={log.docUrl} alt="Dokumen" className="w-full h-full object-cover" />
+                <td className="p-5">
+                  <div className="flex items-start gap-2">
+                    <MapPin size={16} className="text-cyan-500 mt-0.5 shrink-0" />
+                    <div>
+                      <p className="text-xs text-slate-600 font-medium leading-relaxed line-clamp-2" title={log.address}>{log.address || '-'}</p>
+                      <p className="text-[10px] text-slate-400 font-mono mt-1">{typeof log.lat === 'number' ? `${log.lat.toFixed(5)}, ${log.lng.toFixed(5)}` : '-'}</p>
                     </div>
+                  </div>
+                </td>
+                <td className="p-5 align-top">
+                  <div className="space-y-2">
+                    <div>
+                      <span className="text-[10px] font-bold text-slate-400 uppercase">Kegiatan</span>
+                      <p className="text-xs text-slate-600 line-clamp-1 cursor-pointer hover:text-cyan-600" onClick={() => setDetailModal({ show: true, title: 'Detail Kegiatan', content: displayRichText(log.activity) })}>{log.activity ? log.activity.replace(/<[^>]*>/g, '') : '-'}</p>
+                    </div>
+                    <div>
+                      <span className="text-[10px] font-bold text-slate-400 uppercase">Output</span>
+                      <p className="text-xs text-slate-600 line-clamp-1 cursor-pointer hover:text-cyan-600" onClick={() => setDetailModal({ show: true, title: 'Detail Output', content: displayRichText(log.output) })}>{log.output ? log.output.replace(/<[^>]*>/g, '') : '-'}</p>
+                    </div>
+                  </div>
+                </td>
+                <td className="p-5 text-center">
+                  {log.docUrl ? (
+                    <button
+                      className="p-2 bg-slate-100 hover:bg-cyan-100 text-slate-500 hover:text-cyan-600 rounded-xl transition-colors"
+                      onClick={() => setPreviewImage(log.docUrl)}
+                      title="Lihat Dokumen"
+                    >
+                      <FileText size={20} />
+                    </button>
                   ) : (
-                    <span className="text-slate-400 text-xs italic bg-slate-50 px-2 py-1 rounded">Tidak ada</span>
+                    <span className="text-slate-300">-</span>
                   )}
                 </td>
               </tr>
@@ -1690,67 +1748,80 @@ function LecturerLogbookView({ logbooks, students }) {
 
       {/* Mobile View: Cards */}
       <div className="md:hidden space-y-4">
-        {filteredLogbooks.map(log => (
-          <div key={log.id} className="bg-white rounded-2xl p-5 shadow-sm border border-slate-100 flex flex-col gap-4">
-            <div className="flex items-center gap-4">
+        {currentItems.map(log => (
+          <div key={log.id} className="bg-white rounded-[2rem] p-6 shadow-lg shadow-slate-200/50 border border-slate-100 flex flex-col gap-5">
+            <div className="flex items-center gap-4 border-b border-slate-50 pb-4">
               <div
-                className="w-16 h-16 shrink-0 rounded-xl overflow-hidden bg-slate-100 border border-slate-200 shadow-inner cursor-pointer hover:ring-4 hover:ring-cyan-300 transition-all"
+                className="w-16 h-16 shrink-0 rounded-2xl overflow-hidden bg-slate-100 border border-slate-200 shadow-inner cursor-pointer"
                 onClick={() => setPreviewImage(log.selfieUrl)}
               >
                 <img src={log.selfieUrl} alt="Selfie" className="w-full h-full object-cover" />
               </div>
+              <div className="flex-1 min-w-0">
+                <h3 className="font-bold text-lg text-slate-800 leading-tight truncate">{log.name}</h3>
+                <p className="text-slate-500 text-xs font-mono mt-1">{log.nim}</p>
+                <div className="flex items-center gap-2 mt-2">
+                  <span className={`px-2.5 py-1 rounded-lg text-[10px] font-bold uppercase ${log.status === 'Hadir' ? 'bg-green-100 text-green-700' : 'bg-slate-100 text-slate-600'}`}>{log.status}</span>
+                  <span className="text-[10px] text-slate-400 bg-slate-50 px-2 py-1 rounded-lg">{log.date} {log.time}</span>
+                </div>
+              </div>
+            </div>
+
+            <div className="bg-slate-50 p-4 rounded-2xl border border-slate-100 flex items-start gap-3">
+              <MapPin size={18} className="text-cyan-600 mt-0.5 shrink-0" />
               <div className="flex-1">
-                <h3 className="font-bold text-lg text-slate-800 leading-tight">{log.name}</h3>
-                <p className="text-slate-500 text-xs font-mono">{log.nim} • {log.class}</p>
+                <p className="text-sm font-bold text-slate-700 leading-snug">{log.address || 'Alamat tidak terdeteksi'}</p>
+                <p className="text-xs text-slate-400 font-mono mt-1">{typeof log.lat === 'number' ? `${log.lat}, ${log.lng}` : 'No GPS'}</p>
               </div>
-              <span className={`px-2.5 py-1 rounded-md text-[10px] font-bold uppercase ${log.status === 'Hadir' ? 'bg-green-100 text-green-700' : log.status === 'Sakit' ? 'bg-red-100 text-red-700' : log.status === 'Izin' ? 'bg-yellow-100 text-yellow-700' : 'bg-slate-200 text-slate-900'}`}>
-                {log.status}
-              </span>
             </div>
 
-            {log.isLocationValid === false && (
-              <div className="bg-red-50 border border-red-100 p-2 rounded-lg flex items-start gap-2">
-                <AlertCircle size={14} className="text-red-500 mt-0.5 shrink-0" />
-                <div>
-                  <p className="text-xs font-bold text-red-700">Lokasi Tidak Sesuai</p>
-                  {log.targetAddress && <p className="text-[10px] text-red-500 italic">Target: {log.targetAddress}</p>}
-                </div>
-              </div>
+            <div className="grid grid-cols-2 gap-3">
+              <button onClick={() => setDetailModal({ show: true, title: 'Detail Kegiatan', content: displayRichText(log.activity) })} className="p-3 bg-blue-50 text-blue-700 rounded-xl text-xs font-bold hover:bg-blue-100 transition text-center">Lihat Kegiatan</button>
+              <button onClick={() => setDetailModal({ show: true, title: 'Detail Output', content: displayRichText(log.output) })} className="p-3 bg-cyan-50 text-cyan-700 rounded-xl text-xs font-bold hover:bg-cyan-100 transition text-center">Lihat Output</button>
+            </div>
+
+            {log.docUrl && (
+              <button onClick={() => setPreviewImage(log.docUrl)} className="w-full py-3 border border-slate-200 rounded-xl text-slate-600 text-xs font-bold flex items-center justify-center gap-2 hover:bg-slate-50">
+                <FileText size={16} /> Lihat Dokumentasi Tambahan
+              </button>
             )}
-
-            <div className="text-xs font-mono text-cyan-600 bg-cyan-50 p-2 rounded-lg flex items-center gap-2">
-              <MapPin size={14} /> {typeof log.lat === 'number' ? log.lat.toFixed(5) : '-'}, {typeof log.lng === 'number' ? log.lng.toFixed(5) : '-'}
-            </div>
-
-            <div className="grid grid-cols-1 gap-3 text-sm">
-              <div className="bg-slate-50 p-3 rounded-xl border border-slate-100">
-                <p className="text-xs font-bold text-slate-400 uppercase mb-1">Kegiatan</p>
-                <div dangerouslySetInnerHTML={{ __html: displayRichText(log.activity) }} className="text-slate-700 line-clamp-3" />
-                <button onClick={() => setDetailModal({ show: true, title: 'Detail Kegiatan', content: displayRichText(log.activity) })} className="text-xs font-bold text-cyan-600 mt-2">Lihat Selengkapnya</button>
-              </div>
-              <div className="bg-slate-50 p-3 rounded-xl border border-slate-100">
-                <p className="text-xs font-bold text-slate-400 uppercase mb-1">Output</p>
-                <div dangerouslySetInnerHTML={{ __html: displayRichText(log.output) }} className="text-slate-700 line-clamp-3" />
-                <button onClick={() => setDetailModal({ show: true, title: 'Detail Output', content: displayRichText(log.output) })} className="text-xs font-bold text-cyan-600 mt-2">Lihat Selengkapnya</button>
-              </div>
-            </div>
-
-            <div className="pt-2 border-t border-slate-100">
-              <p className="text-xs font-bold text-slate-400 uppercase mb-2">Dokumentasi Tambahan</p>
-              {log.docUrl ? (
-                <div
-                  className="w-16 h-16 rounded-xl overflow-hidden bg-slate-100 border border-slate-200 shadow-inner cursor-pointer hover:ring-4 hover:ring-cyan-300 transition-all"
-                  onClick={() => setPreviewImage(log.docUrl)}
-                >
-                  <img src={log.docUrl} alt="Dokumen" className="w-full h-full object-cover" />
-                </div>
-              ) : (
-                <p className="text-xs text-slate-400 italic">Tidak ada dokumentasi tambahan yang dilampirkan.</p>
-              )}
-            </div>
           </div>
         ))}
       </div>
+
+      {/* Pagination Controls */}
+      {totalPages > 1 && (
+        <div className="flex justify-center items-center gap-2 mt-8">
+          <button
+            onClick={() => paginate(currentPage - 1)}
+            disabled={currentPage === 1}
+            className="p-3 rounded-xl bg-white border border-slate-200 text-slate-500 hover:bg-slate-50 disabled:opacity-50 disabled:cursor-not-allowed transition-all shadow-sm"
+          >
+            <ChevronLeft size={20} />
+          </button>
+
+          <div className="hidden sm:flex gap-2">
+            {Array.from({ length: totalPages }, (_, i) => i + 1).map(number => (
+              <button
+                key={number}
+                onClick={() => paginate(number)}
+                className={`w-10 h-10 rounded-xl font-bold text-sm transition-all shadow-sm ${currentPage === number ? 'bg-gradient-to-r from-cyan-500 to-blue-600 text-white transform scale-105' : 'bg-white border border-slate-200 text-slate-600 hover:bg-slate-50'}`}
+              >
+                {number}
+              </button>
+            ))}
+          </div>
+          <span className="sm:hidden font-bold text-slate-600 text-sm">Halaman {currentPage}</span>
+
+          <button
+            onClick={() => paginate(currentPage + 1)}
+            disabled={currentPage === totalPages}
+            className="p-3 rounded-xl bg-white border border-slate-200 text-slate-500 hover:bg-slate-50 disabled:opacity-50 disabled:cursor-not-allowed transition-all shadow-sm"
+          >
+            <ChevronRight size={20} />
+          </button>
+        </div>
+      )}
     </div>
   );
 }
