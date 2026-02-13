@@ -1516,7 +1516,7 @@ function LecturerOverview({ students, logbooks, reports }) {
         <Card className="md:col-span-2 relative overflow-visible" title="Peta Sebaran Mahasiswa">
           <div className="h-80 bg-slate-100 rounded-2xl overflow-hidden relative border border-slate-200">
             <LeafletMap readOnly={true} markers={studentMarkers} />
-            <div className="absolute top-4 right-4 bg-white/90 p-3 rounded-xl shadow-lg border border-slate-100 z-[400]"><div className="text-xs font-bold text-slate-400 uppercase mb-1">Total Aktif</div><div className="text-2xl font-black text-slate-800">{students.length} <span className="text-sm font-normal text-slate-500">Mahasiswa</span></div></div>
+            <LeafletMap readOnly={true} markers={studentMarkers} />
           </div>
         </Card>
         <Card title="Progress Laporan">
