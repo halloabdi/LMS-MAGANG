@@ -1530,12 +1530,58 @@ function LecturerOverview({ students, logbooks, reports }) {
   );
 }
 
+// --- CUSTOM DROPDOWN COMPONENT (FOR MODERN UI) ---
+const CustomDropdown = ({ options, value, onChange, icon: Icon }) => {
+  const [isOpen, setIsOpen] = useState(false);
+  const containerRef = useRef(null);
+
+  const selectedOption = options.find(opt => opt.value === value) || options[0];
+
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (containerRef.current && !containerRef.current.contains(event.target)) setIsOpen(false);
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
+
+  return (
+    <div className="relative" ref={containerRef}>
+      <button
+        onClick={() => setIsOpen(!isOpen)}
+        className="w-full flex items-center gap-2 px-4 py-3 bg-white border border-slate-200 rounded-2xl shadow-sm hover:border-cyan-400 focus:ring-4 focus:ring-cyan-100 transition-all group min-w-[180px]"
+      >
+        {Icon && <Icon size={18} className="text-slate-400 group-hover:text-cyan-500 transition-colors" />}
+        <span className="flex-1 text-left font-bold text-slate-700 text-sm">{selectedOption.label}</span>
+        <ChevronDown size={18} className={`text-slate-400 transition-transform duration-300 ${isOpen ? 'rotate-180' : ''}`} />
+      </button>
+
+      {isOpen && (
+        <div className="absolute top-full left-0 right-0 mt-2 bg-white border border-slate-100 rounded-2xl shadow-xl z-50 overflow-hidden animate-in fade-in zoom-in-95 duration-200">
+          <div className="max-h-60 overflow-y-auto p-1">
+            {options.map((opt) => (
+              <button
+                key={opt.value}
+                onClick={(e) => { e.preventDefault(); onChange(opt.value); setIsOpen(false); }}
+                className={`w-full text-left px-4 py-2.5 rounded-xl text-sm font-medium transition-colors flex items-center justify-between group ${value === opt.value ? 'bg-cyan-50 text-cyan-700' : 'text-slate-600 hover:bg-slate-50'}`}
+              >
+                <span>{opt.label}</span>
+                {value === opt.value && <CheckCircle size={14} className="text-cyan-500" />}
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
+    </div>
+  );
+};
+
 function LecturerLogbookView({ logbooks, students }) {
   const [previewImage, setPreviewImage] = useState(null);
   const [detailModal, setDetailModal] = useState({ show: false, title: '', content: '' });
   const [searchTerm, setSearchTerm] = useState('');
   const [sortOrder, setSortOrder] = useState('newest');
-  const [dateFilter, setDateFilter] = useState('all'); // Default: Semua Waktu (sesuai request user "kecuali user memilih filter")
+  const [dateFilter, setDateFilter] = useState('today'); // Default: Hari Ini (Updated per request)
 
   // Pagination State
   const [currentPage, setCurrentPage] = useState(1);
@@ -1633,35 +1679,31 @@ function LecturerLogbookView({ logbooks, students }) {
             <div className="absolute left-4 top-3.5 text-slate-400 group-focus-within:text-cyan-500 transition-colors"><Search size={20} /></div>
           </div>
 
-          {/* Modern Rounded Custom Select - Date */}
-          <div className="relative px-2">
-            <select
-              value={dateFilter}
-              onChange={(e) => setDateFilter(e.target.value)}
-              className="appearance-none w-full pl-4 pr-10 py-3 rounded-2xl border border-slate-200 bg-white focus:ring-4 focus:ring-cyan-100 focus:border-cyan-400 outline-none cursor-pointer hover:bg-slate-50 transition-all font-bold text-slate-700"
-            >
-              <option value="today">Hari Ini</option>
-              <option value="3days">3 Hari Terakhir</option>
-              <option value="7days">7 Hari Terakhir</option>
-              <option value="all">Semua Waktu</option>
-            </select>
-            <ChevronDown className="absolute right-5 top-3.5 text-slate-400 pointer-events-none" size={20} />
-          </div>
+          {/* Custom Dropdown - Date */}
+          <CustomDropdown
+            value={dateFilter}
+            onChange={setDateFilter}
+            icon={Calendar}
+            options={[
+              { value: 'today', label: 'Hari Ini' },
+              { value: '3days', label: '3 Hari Terakhir' },
+              { value: '7days', label: '7 Hari Terakhir' },
+              { value: 'all', label: 'Semua Waktu' }
+            ]}
+          />
 
-          {/* Modern Rounded Custom Select - Sort */}
-          <div className="relative px-2">
-            <select
-              value={sortOrder}
-              onChange={(e) => setSortOrder(e.target.value)}
-              className="appearance-none w-full pl-4 pr-10 py-3 rounded-2xl border border-slate-200 bg-white focus:ring-4 focus:ring-cyan-100 focus:border-cyan-400 outline-none cursor-pointer hover:bg-slate-50 transition-all font-bold text-slate-700"
-            >
-              <option value="newest">Terbaru</option>
-              <option value="oldest">Terlama</option>
-              <option value="date_newest">Tgl Terbaru</option>
-              <option value="date_oldest">Tgl Terlama</option>
-            </select>
-            <ChevronDown className="absolute right-5 top-3.5 text-slate-400 pointer-events-none" size={20} />
-          </div>
+          {/* Custom Dropdown - Sort */}
+          <CustomDropdown
+            value={sortOrder}
+            onChange={setSortOrder}
+            icon={ListOrdered}
+            options={[
+              { value: 'newest', label: 'Terbaru' },
+              { value: 'oldest', label: 'Terlama' },
+              { value: 'date_newest', label: 'Tgl Terbaru' },
+              { value: 'date_oldest', label: 'Tgl Terlama' }
+            ]}
+          />
         </div>
       </div>
 
@@ -1672,72 +1714,60 @@ function LecturerLogbookView({ logbooks, students }) {
         <table className="w-full text-left text-sm">
           <thead className="bg-slate-50/50 border-b border-slate-100">
             <tr>
-              <th className="p-5 font-bold text-slate-400 uppercase tracking-wider text-xs">Mahasiswa</th>
-              <th className="p-5 font-bold text-slate-400 uppercase tracking-wider text-xs">Waktu</th>
-              <th className="p-5 font-bold text-slate-400 uppercase tracking-wider text-xs">Status</th>
-              <th className="p-5 font-bold text-slate-400 uppercase tracking-wider text-xs w-1/4">Lokasi</th>
-              <th className="p-5 font-bold text-slate-400 uppercase tracking-wider text-xs w-1/4">Aktivitas</th>
-              <th className="p-5 font-bold text-slate-400 uppercase tracking-wider text-xs text-center">Bukti</th>
+              <th className="p-5 font-bold text-slate-400 uppercase tracking-wider text-xs text-center">Foto Selfie</th>
+              <th className="p-5 font-bold text-slate-400 uppercase tracking-wider text-xs">Nama Lengkap Mahasiswa</th>
+              <th className="p-5 font-bold text-slate-400 uppercase tracking-wider text-xs">Tanggal Absensi</th>
+              <th className="p-5 font-bold text-slate-400 uppercase tracking-wider text-xs">Jam Absensi</th>
+              <th className="p-5 font-bold text-slate-400 uppercase tracking-wider text-xs">Status Kehadiran</th>
+              <th className="p-5 font-bold text-slate-400 uppercase tracking-wider text-xs w-1/5">Kegiatan yang Dilakukan</th>
+              <th className="p-5 font-bold text-slate-400 uppercase tracking-wider text-xs w-1/5">Output yang Dihasilkan</th>
+              <th className="p-5 font-bold text-slate-400 uppercase tracking-wider text-xs text-center">Dokumentasi Tambahan</th>
             </tr>
           </thead>
-          <tbody className="divide-y divide-slate-50">
+          <tbody className="divide-y divide-slate-100">
             {currentItems.map(log => (
               <tr key={log.id} className="hover:bg-cyan-50/30 transition-colors group">
-                <td className="p-5">
-                  <div className="flex items-center gap-4">
-                    <div
-                      className="w-12 h-12 rounded-2xl overflow-hidden bg-slate-100 border border-slate-200 shadow-sm cursor-pointer hover:scale-105 transition-transform"
-                      onClick={() => setPreviewImage(log.selfieUrl)}
-                    >
-                      <img src={log.selfieUrl} alt="Selfie" className="w-full h-full object-cover" />
-                    </div>
-                    <div>
-                      <div className="font-bold text-slate-800">{log.name}</div>
-                      <div className="text-xs text-slate-400 font-mono mt-0.5">{log.nim} • {log.class || '-'}</div>
-                    </div>
+                <td className="p-5 text-center">
+                  <div
+                    className="w-16 h-16 rounded-2xl overflow-hidden bg-slate-100 border border-slate-200 shadow-sm mx-auto cursor-pointer hover:scale-105 transition-transform"
+                    onClick={() => setPreviewImage(log.selfieUrl)}
+                  >
+                    <img src={log.selfieUrl} alt="Selfie" className="w-full h-full object-cover" />
                   </div>
                 </td>
                 <td className="p-5">
-                  <div className="font-bold text-slate-600">{log.date}</div>
-                  <div className="text-xs text-slate-400 font-mono">{log.time}</div>
+                  <div className="font-bold text-slate-800">{log.name}</div>
+                  <div className="text-xs text-slate-400 font-mono mt-1">{log.nim} • {log.class || '-'}</div>
+                </td>
+                <td className="p-5 font-medium text-slate-600">
+                  {log.date}
+                </td>
+                <td className="p-5 font-mono text-slate-500">
+                  {log.time}
                 </td>
                 <td className="p-5">
                   <span className={`px-3 py-1.5 rounded-xl text-xs font-bold uppercase tracking-wide ${log.status === 'Hadir' ? 'bg-green-100 text-green-700' : log.status === 'Sakit' ? 'bg-red-100 text-red-700' : log.status === 'Izin' ? 'bg-yellow-100 text-yellow-700' : 'bg-slate-100 text-slate-600'}`}>
                     {log.status}
                   </span>
                 </td>
-                <td className="p-5">
-                  <div className="flex items-start gap-2">
-                    <MapPin size={16} className="text-cyan-500 mt-0.5 shrink-0" />
-                    <div>
-                      <p className="text-xs text-slate-600 font-medium leading-relaxed line-clamp-2" title={log.address}>{log.address || '-'}</p>
-                      <p className="text-[10px] text-slate-400 font-mono mt-1">{typeof log.lat === 'number' ? `${log.lat.toFixed(5)}, ${log.lng.toFixed(5)}` : '-'}</p>
-                    </div>
-                  </div>
+                <td className="p-5 align-top">
+                  <div className="line-clamp-2 text-slate-600 text-xs mb-2 leading-relaxed" dangerouslySetInnerHTML={{ __html: displayRichText(log.activity) }} />
+                  <button onClick={() => setDetailModal({ show: true, title: 'Detail Kegiatan', content: displayRichText(log.activity) })} className="text-xs font-bold text-cyan-600 hover:text-cyan-800 hover:underline">Lihat Selengkapnya</button>
                 </td>
                 <td className="p-5 align-top">
-                  <div className="space-y-2">
-                    <div>
-                      <span className="text-[10px] font-bold text-slate-400 uppercase">Kegiatan</span>
-                      <p className="text-xs text-slate-600 line-clamp-1 cursor-pointer hover:text-cyan-600" onClick={() => setDetailModal({ show: true, title: 'Detail Kegiatan', content: displayRichText(log.activity) })}>{log.activity ? log.activity.replace(/<[^>]*>/g, '') : '-'}</p>
-                    </div>
-                    <div>
-                      <span className="text-[10px] font-bold text-slate-400 uppercase">Output</span>
-                      <p className="text-xs text-slate-600 line-clamp-1 cursor-pointer hover:text-cyan-600" onClick={() => setDetailModal({ show: true, title: 'Detail Output', content: displayRichText(log.output) })}>{log.output ? log.output.replace(/<[^>]*>/g, '') : '-'}</p>
-                    </div>
-                  </div>
+                  <div className="line-clamp-2 text-slate-600 text-xs mb-2 leading-relaxed" dangerouslySetInnerHTML={{ __html: displayRichText(log.output) }} />
+                  <button onClick={() => setDetailModal({ show: true, title: 'Detail Output', content: displayRichText(log.output) })} className="text-xs font-bold text-cyan-600 hover:text-cyan-800 hover:underline">Lihat Selengkapnya</button>
                 </td>
                 <td className="p-5 text-center">
                   {log.docUrl ? (
-                    <button
-                      className="p-2 bg-slate-100 hover:bg-cyan-100 text-slate-500 hover:text-cyan-600 rounded-xl transition-colors"
+                    <div
+                      className="w-16 h-16 rounded-2xl overflow-hidden bg-slate-100 border border-slate-200 mx-auto shadow-sm cursor-pointer hover:scale-105 transition-transform"
                       onClick={() => setPreviewImage(log.docUrl)}
-                      title="Lihat Dokumen"
                     >
-                      <FileText size={20} />
-                    </button>
+                      <img src={log.docUrl} alt="Dokumen" className="w-full h-full object-cover" />
+                    </div>
                   ) : (
-                    <span className="text-slate-300">-</span>
+                    <span className="text-slate-300 text-xs italic">Tidak ada</span>
                   )}
                 </td>
               </tr>
