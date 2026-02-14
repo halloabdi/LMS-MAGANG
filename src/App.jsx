@@ -1,3 +1,4 @@
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import {
   MapPin, Camera, Upload, FileText, LogOut,
   LayoutDashboard, CheckCircle, XCircle,
