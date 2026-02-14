@@ -881,48 +881,42 @@ export default function App() {
     }
   }, []);
 
+  // Reusable Fetch Function
+  const fetchData = async () => {
+    if (!user) return;
+
+    try {
+      // Identify ID to pass: NIM for student, Username/NIP for lecturer
+      const idToPass = user.username;
+
+      // Only fetch logbooks for now (centralized)
+      // Both Student and Lecturer need logbooks
+      const res = await fetch(`${GAS_URL}?action=getAllLogbooks&userId=${idToPass}&role=${user.role}`);
+      const json = await res.json();
+
+      let data = [];
+      if (json.status === 'success') {
+        data = json.data;
+      }
+
+      if (data) {
+        if (Array.isArray(data)) {
+          setLogbooks(data);
+        } else if (data.logbooks) {
+          setLogbooks(data.logbooks);
+        }
+      }
+      return true; // Return true on success
+    } catch (err) {
+      console.error("Failed to load dashboard data", err);
+      showToast('error', 'Gagal Memuat Data', 'Tidak dapat mengambil data logbook terbaru.');
+      return false; // Return false on error
+    }
+  };
+
   // Fetch Data on User Login/Load
   useEffect(() => {
-    if (user) {
-      const loadData = async () => {
-        try {
-          // Identify ID to pass: NIM for student, Username/NIP for lecturer
-          const idToPass = user.username;
-          const fetchDashboardData = async (role, id) => {
-            // Only fetch logbooks for now (centralized)
-            // Both Student and Lecturer need logbooks
-            // Student needs it for their history, Lecturer for monitoring
-            try {
-              const res = await fetch(`${GAS_URL}?action=getAllLogbooks&userId=${id}&role=${role}`);
-              const json = await res.json();
-              if (json.status === 'success') {
-                return json.data; // Returns all logbooks
-              }
-              return [];
-            } catch (e) {
-              console.error("Fetch Error", e);
-              return [];
-            }
-          };
-          const data = await fetchDashboardData(user.role, idToPass);
-
-          if (data) {
-            // Backend returns array of logbooks directly or object? 
-            // handleGetDashboardData returns array (from handleGetAllLogbooks lines)
-            // Let's check backend: returns allLogs (Array).
-            if (Array.isArray(data)) {
-              setLogbooks(data);
-            } else if (data.logbooks) {
-              setLogbooks(data.logbooks);
-            }
-          }
-        } catch (err) {
-          console.error("Failed to load dashboard data", err);
-          showToast('error', 'Gagal Memuat Data', 'Tidak dapat mengambil data logbook terbaru.');
-        }
-      };
-      loadData();
-    }
+    if (user) fetchData();
   }, [user]);
 
   const handleLogin = async (identifier, password) => {
@@ -984,7 +978,7 @@ export default function App() {
       {view === 'login' && <LoginPage onLogin={handleLogin} />}
       {view === 'student-dashboard' && user && (
         <ErrorBoundary>
-          <StudentDashboard user={user} onLogout={handleLogout} logbooks={logbooks} setLogbooks={setLogbooks} reports={reports} setReports={setReports} onUpdateProfile={handleProfileUpdate} showToast={showToast} />
+          <StudentDashboard user={user} onLogout={handleLogout} logbooks={logbooks} setLogbooks={setLogbooks} reports={reports} setReports={setReports} onUpdateProfile={handleProfileUpdate} showToast={showToast} onRefresh={fetchData} />
         </ErrorBoundary>
       )}
       {view === 'lecturer-dashboard' && user && (
@@ -1017,7 +1011,7 @@ function LoginPage({ onLogin }) {
 }
 
 // --- STUDENT DASHBOARD ---
-function StudentDashboard({ user, onLogout, logbooks, setLogbooks, reports, setReports, onUpdateProfile, showToast }) {
+function StudentDashboard({ user, onLogout, logbooks, setLogbooks, reports, setReports, onUpdateProfile, showToast, onRefresh }) {
   const [activeTab, setActiveTab] = useState('overview');
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [editingLogbook, setEditingLogbook] = useState(null);
@@ -1035,18 +1029,7 @@ function StudentDashboard({ user, onLogout, logbooks, setLogbooks, reports, setR
     });
 
     // Update local state
-    // editData.username is the nim. editData.timestamp is the id.
-    // But wait, logbooks have `nim` and `timestamp` (or `date`+`time` which might change).
-    // We used timestamp string from sheet (col A) as ID in backend.
-    // But in frontend `logbooks` array, we have `timestamp` field?
-    // Let's check `handleGetAllLogbooks` response structure. Step 380 `view_file` shows:
-    // result.push({ timestamp: row[0], ..., nim: row[3] })
-    // So we have `timestamp`.
-
     const updatedLogs = logbooks.map(l => {
-      // Compare loosely or using specific ID if available. 
-      // Backend uses timestamp string comparison.
-      // Frontend should use the same `timestamp` it sent in `editData`.
       if (l.nim === editData.username && l.timestamp === editData.timestamp) {
         const newLog = { ...l, ...editData.logEntry };
         // Restore URLs if backend returned them
@@ -1117,7 +1100,7 @@ function StudentDashboard({ user, onLogout, logbooks, setLogbooks, reports, setR
 
       <main className="flex-1 overflow-y-auto relative pt-24 md:pt-0">
         <div className="p-5 md:p-8 max-w-7xl mx-auto">
-          {activeTab === 'overview' && <StudentOverview user={user} logbooks={logbooks} reports={reports} onEditLogbook={handleEditLogbook} />}
+          {activeTab === 'overview' && <StudentOverview user={user} logbooks={logbooks} reports={reports} onEditLogbook={handleEditLogbook} onRefresh={onRefresh} />}
           {activeTab === 'logbook' && <StudentLogbookForm user={user} logbooks={logbooks} setLogbooks={setLogbooks} showToast={showToast} />}
           {activeTab === 'report' && <StudentReportForm user={user} reports={reports} setReports={setReports} showToast={showToast} />}
           {activeTab === 'profile' && <ProfileSettings user={user} onUpdate={onUpdateProfile} onCancel={() => setActiveTab('overview')} showToast={showToast} />}
@@ -1140,7 +1123,7 @@ function StudentDashboard({ user, onLogout, logbooks, setLogbooks, reports, setR
 }
 
 // Fixed Duplicate Function
-function StudentOverview({ user, logbooks = [], reports = [], onEditLogbook }) {
+function StudentOverview({ user, logbooks = [], reports = [], onEditLogbook, onRefresh }) {
   // SAFETY: Ensure props are arrays and remove any null/undefined items
   const safeLogbooks = (Array.isArray(logbooks) ? logbooks : []).filter(l => l && l !== null);
   const safeReports = (Array.isArray(reports) ? reports : []).filter(r => r && r !== null);
@@ -1148,10 +1131,19 @@ function StudentOverview({ user, logbooks = [], reports = [], onEditLogbook }) {
   const [currentPage, setCurrentPage] = useState(1);
   const [previewImage, setPreviewImage] = useState(null);
   const [viewLogDetail, setViewLogDetail] = useState(null);
+  const [isRefreshing, setIsRefreshing] = useState(false);
   const itemsPerPage = 5;
 
   const submittedLogbooks = safeLogbooks.length;
   const submittedReports = safeReports.length;
+
+  const handleRefreshClick = async () => {
+    if (onRefresh) {
+      setIsRefreshing(true);
+      await onRefresh();
+      setIsRefreshing(false);
+    }
+  };
 
   // SORT LOGBOOKS (Newest First)
   const sortedLogbooks = [...safeLogbooks].sort((a, b) => {
@@ -1248,6 +1240,16 @@ function StudentOverview({ user, logbooks = [], reports = [], onEditLogbook }) {
       <div className="space-y-4">
         <div className="flex items-center justify-between">
           <h3 className="text-xl font-bold text-slate-800">Riwayat Logbook</h3>
+          {onRefresh && (
+            <button
+              onClick={handleRefreshClick}
+              disabled={isRefreshing}
+              className={`flex items-center gap-2 px-4 py-2 bg-white border border-slate-200 rounded-xl text-sm font-bold shadow-sm transition-all ${isRefreshing ? 'text-slate-400 cursor-not-allowed' : 'text-cyan-600 hover:bg-cyan-50 hover:border-cyan-200'}`}
+            >
+              <RefreshCw size={16} className={isRefreshing ? 'animate-spin' : ''} />
+              {isRefreshing ? 'Memuat...' : 'Refresh Data'}
+            </button>
+          )}
         </div>
 
         {/* Desktop Table */}
