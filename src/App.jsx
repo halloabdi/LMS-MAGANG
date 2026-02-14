@@ -5,7 +5,7 @@ import {
   Map as MapIcon, Eye, Menu, X, Bold, Italic, Underline,
   Superscript, Subscript, ChevronRight, ChevronLeft, ChevronDown,
   User, Settings, Edit3, Save, Image as ImageIcon, Calendar, Clock,
-  AlertCircle, ListOrdered, Lightbulb, Check, AlertTriangle, Search, RefreshCw, Download, MessageCircle, FileSpreadsheet
+  AlertCircle, ListOrdered, Lightbulb, Check, AlertTriangle, Search, RefreshCw, Download, MessageCircle, FileSpreadsheet, Maximize2
 } from 'lucide-react';
 
 // --- GLOBAL STYLES ---
