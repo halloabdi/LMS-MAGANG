@@ -4,7 +4,7 @@ import {
   LayoutDashboard, CheckCircle, XCircle,
   Map as MapIcon, Eye, Menu, X, Bold, Italic, Underline,
   Superscript, Subscript, ChevronRight, ChevronLeft, ChevronDown,
-  User, Settings, Edit3, Save, Image as ImageIcon, Calendar, Clock,
+  User, Settings, Edit3, Edit2, Save, Image as ImageIcon, Calendar, Clock,
   AlertCircle, ListOrdered, Lightbulb, Check, AlertTriangle, Search, RefreshCw, Download, MessageCircle, FileSpreadsheet
 } from 'lucide-react';
 
@@ -1068,13 +1068,15 @@ function StudentDashboard({ user, onLogout, logbooks, setLogbooks, reports, setR
 }
 
 // Fixed Duplicate Function
-function StudentOverview({ user, logbooks, reports, onEditLogbook }) {
-  const submittedLogbooks = logbooks.length;
-  const submittedReports = reports.length;
+function StudentOverview({ user, logbooks = [], reports = [], onEditLogbook }) {
+  const submittedLogbooks = logbooks?.length || 0;
+  const submittedReports = reports?.length || 0;
 
   // Get Last Location from latest logbook
-  const lastLogbook = logbooks.length > 0 ? logbooks[0] : null;
-  const lastLocation = lastLogbook ? { lat: lastLogbook.lat, lng: lastLogbook.lng, address: lastLogbook.address } : null;
+  const lastLogbook = (logbooks && logbooks.length > 0) ? logbooks[0] : null;
+  const lastLocation = lastLogbook && lastLogbook.lat && lastLogbook.lng
+    ? { lat: lastLogbook.lat, lng: lastLogbook.lng, address: lastLogbook.address || '' }
+    : null;
 
   return (
     <div className="space-y-8 animate-in fade-in duration-500 pb-10">
