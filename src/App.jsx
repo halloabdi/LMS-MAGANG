@@ -1045,7 +1045,7 @@ function StudentDashboard({ user, onLogout, logbooks, setLogbooks, reports, setR
 
       <main className="flex-1 overflow-y-auto relative pt-24 md:pt-0">
         <div className="p-5 md:p-8 max-w-7xl mx-auto">
-          {activeTab === 'overview' && <StudentOverview user={user} logbooks={logbooks} reports={reports} onEditLogbook={handleEditLogbook} />}
+          {activeTab === 'overview' && <StudentOverview key={logbooks.length} user={user} logbooks={logbooks} reports={reports} onEditLogbook={handleEditLogbook} />}
           {activeTab === 'logbook' && <StudentLogbookForm user={user} logbooks={logbooks} setLogbooks={setLogbooks} showToast={showToast} />}
           {activeTab === 'report' && <StudentReportForm user={user} reports={reports} setReports={setReports} showToast={showToast} />}
           {activeTab === 'profile' && <ProfileSettings user={user} onUpdate={onUpdateProfile} onCancel={() => setActiveTab('overview')} showToast={showToast} />}
@@ -1069,23 +1069,37 @@ function StudentDashboard({ user, onLogout, logbooks, setLogbooks, reports, setR
 
 // Fixed Duplicate Function
 function StudentOverview({ user, logbooks = [], reports = [], onEditLogbook }) {
+  const [currentPage, setCurrentPage] = useState(1);
+  const [previewImage, setPreviewImage] = useState(null);
+  const itemsPerPage = 5;
+
   const submittedLogbooks = logbooks?.length || 0;
   const submittedReports = reports?.length || 0;
 
-  // Get Last Location from latest logbook
+  // Pagination Logic
+  const indexOfLastItem = currentPage * itemsPerPage;
+  const indexOfFirstItem = indexOfLastItem - itemsPerPage;
+  const currentItems = logbooks.slice(indexOfFirstItem, indexOfLastItem);
+  const totalPages = Math.ceil(logbooks.length / itemsPerPage);
+
+  const paginate = (pageNumber) => setCurrentPage(pageNumber);
+
+  // Get Last Location from latest logbook (always valid regardless of pagination)
   const lastLogbook = (logbooks && logbooks.length > 0) ? logbooks[0] : null;
   const lastLocation = lastLogbook && lastLogbook.lat && lastLogbook.lng
     ? {
       lat: lastLogbook.lat,
       lng: lastLogbook.lng,
       address: lastLogbook.address || '',
-      name: user.name || 'Anda', // Fix: Add Name for LeafletMap
-      status: lastLogbook.status || 'Terakhir' // Fix: Add Status for LeafletMap
+      name: user.name || 'Anda',
+      status: lastLogbook.status || 'Terakhir'
     }
     : null;
 
   return (
     <div className="space-y-8 animate-in fade-in duration-500 pb-10">
+      {previewImage && <ImageModal src={previewImage} onClose={() => setPreviewImage(null)} />}
+
       {/* 1. STATUS & STATS */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         <Card title="Statistik Kinerja" className="h-full">
@@ -1111,8 +1125,6 @@ function StudentOverview({ user, logbooks = [], reports = [], onEditLogbook }) {
         </div>
       </div>
 
-      {/* MOBILE LAYOUT ORDER: Status (Above) -> Logbook List -> Report List -> Map */}
-
       {/* 2. DAFTAR LOGBOOK (Mobile: Box, Desktop: Table) */}
       <div className="space-y-4">
         <div className="flex items-center justify-between">
@@ -1127,25 +1139,29 @@ function StudentOverview({ user, logbooks = [], reports = [], onEditLogbook }) {
                 <tr>
                   <th className="p-4 font-bold w-16 text-center">No</th>
                   <th className="p-4 font-bold">Waktu & Tanggal</th>
-                  <th className="p-4 font-bold">Foto Selfie</th>
+                  <th className="p-4 font-bold text-center">Foto Selfie</th>
                   <th className="p-4 font-bold">Kegiatan</th>
                   <th className="p-4 font-bold">Output</th>
                   <th className="p-4 font-bold">Status</th>
+                  <th className="p-4 font-bold text-center w-24">Dokumentasi Tambahan</th>
                   <th className="p-4 font-bold text-center">Aksi</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100">
-                {logbooks.map((log, index) => {
-                  if (!log) return null; // Safeguard
+                {currentItems.map((log, index) => {
+                  if (!log) return null;
                   return (
                     <tr key={index} className="hover:bg-slate-50 transition-colors">
-                      <td className="p-4 text-center text-slate-400">{index + 1}</td>
+                      <td className="p-4 text-center text-slate-400">{indexOfFirstItem + index + 1}</td>
                       <td className="p-4">
                         <div className="font-bold text-slate-700">{String(log.date)}</div>
                         <div className="text-xs text-slate-400 font-mono">{String(log.time)}</div>
                       </td>
                       <td className="p-4">
-                        <div className="w-12 h-12 rounded-lg bg-slate-100 border border-slate-200 overflow-hidden">
+                        <div
+                          className="w-16 h-16 rounded-lg bg-slate-100 border border-slate-200 overflow-hidden mx-auto cursor-pointer hover:ring-2 hover:ring-cyan-400 transition-all"
+                          onClick={() => setPreviewImage(log.selfieUrl)}
+                        >
                           {log.selfieUrl ? (
                             <img src={log.selfieUrl} alt="Selfie" className="w-full h-full object-cover" />
                           ) : (
@@ -1153,12 +1169,25 @@ function StudentOverview({ user, logbooks = [], reports = [], onEditLogbook }) {
                           )}
                         </div>
                       </td>
-                      <td className="p-4 max-w-xs truncate" title={log.activity}>{log.activity}</td>
-                      <td className="p-4 max-w-xs truncate" title={log.output}>{log.output}</td>
+                      <td className="p-4 max-w-xs">
+                        <div className="line-clamp-2 prose prose-sm max-w-none [&_ol]:list-decimal [&_ul]:list-disc [&_ol]:pl-4 [&_ul]:pl-4" dangerouslySetInnerHTML={{ __html: log.activity }} />
+                      </td>
+                      <td className="p-4 max-w-xs">
+                        <div className="line-clamp-2 prose prose-sm max-w-none [&_ol]:list-decimal [&_ul]:list-disc [&_ol]:pl-4 [&_ul]:pl-4" dangerouslySetInnerHTML={{ __html: log.output }} />
+                      </td>
                       <td className="p-4">
                         <span className={`inline-flex px-2 py-1 rounded-md text-xs font-bold ${log.status === 'Hadir' ? 'bg-emerald-100 text-emerald-700' : 'bg-amber-100 text-amber-700'}`}>
                           {log.status}
                         </span>
+                      </td>
+                      <td className="p-4 text-center">
+                        {log.docUrl ? (
+                          <a href={log.docUrl} target="_blank" rel="noopener noreferrer" className="inline-flex items-center justify-center p-2 text-cyan-600 bg-cyan-50 rounded-lg hover:bg-cyan-100 transition-colors" title="Lihat Dokumen">
+                            <FileText size={18} />
+                          </a>
+                        ) : (
+                          <span className="text-slate-300">-</span>
+                        )}
                       </td>
                       <td className="p-4 text-center">
                         <button
@@ -1172,8 +1201,8 @@ function StudentOverview({ user, logbooks = [], reports = [], onEditLogbook }) {
                     </tr>
                   );
                 })}
-                {logbooks.length === 0 && (
-                  <tr><td colSpan="7" className="p-8 text-center text-slate-400 italic">Belum ada data logbook.</td></tr>
+                {currentItems.length === 0 && (
+                  <tr><td colSpan="8" className="p-8 text-center text-slate-400 italic">Belum ada data logbook.</td></tr>
                 )}
               </tbody>
             </table>
@@ -1182,13 +1211,16 @@ function StudentOverview({ user, logbooks = [], reports = [], onEditLogbook }) {
 
         {/* Mobile Box View */}
         <div className="md:hidden space-y-4">
-          {logbooks.map((log, index) => {
-            if (!log) return null; // Safeguard
+          {currentItems.map((log, index) => {
+            if (!log) return null;
             return (
               <div key={index} className="bg-white p-4 rounded-xl shadow-sm border border-slate-200 flex flex-col gap-3">
                 <div className="flex justify-between items-start">
                   <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-lg bg-slate-100 overflow-hidden border border-slate-200">
+                    <div
+                      className="w-12 h-12 rounded-lg bg-slate-100 overflow-hidden border border-slate-200 cursor-pointer"
+                      onClick={() => setPreviewImage(log.selfieUrl)}
+                    >
                       {log.selfieUrl ? (
                         <img src={log.selfieUrl} alt="Selfie" className="w-full h-full object-cover" />
                       ) : (
@@ -1207,13 +1239,22 @@ function StudentOverview({ user, logbooks = [], reports = [], onEditLogbook }) {
 
                 <div className="text-sm text-slate-600 border-l-2 border-slate-100 pl-3">
                   <div className="font-semibold text-xs text-slate-400 uppercase mb-1">Kegiatan</div>
-                  <p className="line-clamp-2">{log.activity}</p>
+                  <div className="line-clamp-3 prose prose-sm max-w-none [&_ol]:list-decimal [&_ul]:list-disc [&_ol]:pl-4 [&_ul]:pl-4" dangerouslySetInnerHTML={{ __html: log.activity }} />
                 </div>
 
                 <div className="text-sm text-slate-600 border-l-2 border-slate-100 pl-3">
                   <div className="font-semibold text-xs text-slate-400 uppercase mb-1">Output</div>
-                  <p className="line-clamp-2">{log.output}</p>
+                  <div className="line-clamp-3 prose prose-sm max-w-none [&_ol]:list-decimal [&_ul]:list-disc [&_ol]:pl-4 [&_ul]:pl-4" dangerouslySetInnerHTML={{ __html: log.output }} />
                 </div>
+
+                {log.docUrl && (
+                  <div className="text-sm text-slate-600 border-l-2 border-slate-100 pl-3">
+                    <div className="font-semibold text-xs text-slate-400 uppercase mb-1">Dokumen</div>
+                    <a href={log.docUrl} target="_blank" rel="noopener noreferrer" className="text-cyan-600 hover:underline flex items-center gap-1 font-medium">
+                      <FileText size={14} /> Lihat Dokumen Tambahan
+                    </a>
+                  </div>
+                )}
 
                 <button
                   onClick={() => onEditLogbook(log)}
@@ -1224,13 +1265,45 @@ function StudentOverview({ user, logbooks = [], reports = [], onEditLogbook }) {
               </div>
             );
           })}
-          {logbooks.length === 0 && (
+          {currentItems.length === 0 && (
             <div className="p-8 text-center text-slate-400 italic bg-white rounded-xl border border-dashed border-slate-200">Belum ada logbook.</div>
           )}
         </div>
+
+        {/* PAGINATION CONTROLS */}
+        {totalPages > 1 && (
+          <div className="flex justify-center items-center gap-2 mt-6">
+            <button
+              onClick={() => paginate(currentPage - 1)}
+              disabled={currentPage === 1}
+              className="p-2 rounded-lg border border-slate-200 hover:bg-slate-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+            >
+              <ChevronLeft size={20} className="text-slate-600" />
+            </button>
+            <div className="flex gap-1">
+              {Array.from({ length: totalPages }, (_, i) => i + 1).map((number) => (
+                <button
+                  key={number}
+                  onClick={() => paginate(number)}
+                  className={`w-10 h-10 rounded-lg font-bold text-sm transition-all ${currentPage === number ? 'bg-blue-600 text-white shadow-md scale-105' : 'bg-white border border-slate-200 text-slate-600 hover:bg-slate-50'
+                    }`}
+                >
+                  {number}
+                </button>
+              ))}
+            </div>
+            <button
+              onClick={() => paginate(currentPage + 1)}
+              disabled={currentPage === totalPages}
+              className="p-2 rounded-lg border border-slate-200 hover:bg-slate-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+            >
+              <ChevronRight size={20} className="text-slate-600" />
+            </button>
+          </div>
+        )}
       </div>
 
-      {/* 3. DAFTAR LAPORAN (Below Logbook List on Mobile) */}
+      {/* 3. DAFTAR LAPORAN */}
       <div className="space-y-4">
         <h3 className="text-xl font-bold text-slate-800">Riwayat Laporan</h3>
         <div className="space-y-3">
