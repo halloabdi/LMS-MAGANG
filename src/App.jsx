@@ -1071,44 +1071,25 @@ function StudentDashboard({ user, onLogout, logbooks, setLogbooks, reports, setR
 function StudentOverview({ user, logbooks = [], reports = [], onEditLogbook }) {
   const [currentPage, setCurrentPage] = useState(1);
   const [previewImage, setPreviewImage] = useState(null);
-  const [viewLogDetail, setViewLogDetail] = useState(null);
   const itemsPerPage = 5;
 
   const submittedLogbooks = logbooks?.length || 0;
   const submittedReports = reports?.length || 0;
 
-  // SORT LOGBOOKS (Newest First)
-  const sortedLogbooks = [...logbooks].sort((a, b) => {
-    const dateA = new Date(`${a.date}T${a.time}`);
-    const dateB = new Date(`${b.date}T${b.time}`);
-    return dateB - dateA;
-  });
-
   // Pagination Logic
   const indexOfLastItem = currentPage * itemsPerPage;
   const indexOfFirstItem = indexOfLastItem - itemsPerPage;
-  const currentItems = sortedLogbooks.slice(indexOfFirstItem, indexOfLastItem);
-  const totalPages = Math.ceil(sortedLogbooks.length / itemsPerPage);
+  const currentItems = logbooks.slice(indexOfFirstItem, indexOfLastItem);
+  const totalPages = Math.ceil(logbooks.length / itemsPerPage);
 
   const paginate = (pageNumber) => setCurrentPage(pageNumber);
 
-  // Get Last Location from latest logbook
-  const lastLogbook = sortedLogbooks.length > 0 ? sortedLogbooks[0] : null;
-
-  // Parse Coordinate string
-  let lastLat = null;
-  let lastLng = null;
-  if (lastLogbook) {
-    if (lastLogbook.lat && lastLogbook.lng) {
-      lastLat = lastLogbook.lat;
-      lastLng = lastLogbook.lng;
-    }
-  }
-
-  const lastLocation = lastLogbook && lastLat && lastLng
+  // Get Last Location from latest logbook (always valid regardless of pagination)
+  const lastLogbook = (logbooks && logbooks.length > 0) ? logbooks[0] : null;
+  const lastLocation = lastLogbook && lastLogbook.lat && lastLogbook.lng
     ? {
-      lat: lastLat,
-      lng: lastLng,
+      lat: lastLogbook.lat,
+      lng: lastLogbook.lng,
       address: lastLogbook.address || '',
       name: user.name || 'Anda',
       status: lastLogbook.status || 'Terakhir'
@@ -1118,7 +1099,6 @@ function StudentOverview({ user, logbooks = [], reports = [], onEditLogbook }) {
   return (
     <div className="space-y-8 animate-in fade-in duration-500 pb-10">
       {previewImage && <ImageModal src={previewImage} onClose={() => setPreviewImage(null)} />}
-      {viewLogDetail && <TextModal title={viewLogDetail.title} content={viewLogDetail.content} onClose={() => setViewLogDetail(null)} />}
 
       {/* 1. STATUS & STATS */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -1160,8 +1140,8 @@ function StudentOverview({ user, logbooks = [], reports = [], onEditLogbook }) {
                   <th className="p-4 font-bold w-16 text-center">No</th>
                   <th className="p-4 font-bold">Waktu & Tanggal</th>
                   <th className="p-4 font-bold text-center">Foto Selfie</th>
-                  <th className="p-4 font-bold max-w-[200px]">Kegiatan</th>
-                  <th className="p-4 font-bold max-w-[200px]">Output</th>
+                  <th className="p-4 font-bold">Kegiatan</th>
+                  <th className="p-4 font-bold">Output</th>
                   <th className="p-4 font-bold">Status</th>
                   <th className="p-4 font-bold text-center w-24">Dokumentasi Tambahan</th>
                   <th className="p-4 font-bold text-center">Aksi</th>
@@ -1190,16 +1170,10 @@ function StudentOverview({ user, logbooks = [], reports = [], onEditLogbook }) {
                         </div>
                       </td>
                       <td className="p-4 max-w-xs">
-                        <div className="line-clamp-2 prose prose-sm max-w-none mb-1 [&_ol]:list-decimal [&_ul]:list-disc [&_ol]:pl-4 [&_ul]:pl-4" dangerouslySetInnerHTML={{ __html: log.activity }} />
-                        <button onClick={() => setViewLogDetail({ title: "Detail Kegiatan", content: log.activity })} className="text-xs text-cyan-600 font-bold hover:underline flex items-center gap-1">
-                          <Eye size={12} /> Lihat Rincian
-                        </button>
+                        <div className="line-clamp-2 prose prose-sm max-w-none [&_ol]:list-decimal [&_ul]:list-disc [&_ol]:pl-4 [&_ul]:pl-4" dangerouslySetInnerHTML={{ __html: log.activity }} />
                       </td>
                       <td className="p-4 max-w-xs">
-                        <div className="line-clamp-2 prose prose-sm max-w-none mb-1 [&_ol]:list-decimal [&_ul]:list-disc [&_ol]:pl-4 [&_ul]:pl-4" dangerouslySetInnerHTML={{ __html: log.output }} />
-                        <button onClick={() => setViewLogDetail({ title: "Detail Output", content: log.output })} className="text-xs text-cyan-600 font-bold hover:underline flex items-center gap-1">
-                          <Eye size={12} /> Lihat Rincian
-                        </button>
+                        <div className="line-clamp-2 prose prose-sm max-w-none [&_ol]:list-decimal [&_ul]:list-disc [&_ol]:pl-4 [&_ul]:pl-4" dangerouslySetInnerHTML={{ __html: log.output }} />
                       </td>
                       <td className="p-4">
                         <span className={`inline-flex px-2 py-1 rounded-md text-xs font-bold ${log.status === 'Hadir' ? 'bg-emerald-100 text-emerald-700' : 'bg-amber-100 text-amber-700'}`}>
@@ -1208,13 +1182,9 @@ function StudentOverview({ user, logbooks = [], reports = [], onEditLogbook }) {
                       </td>
                       <td className="p-4 text-center">
                         {log.docUrl ? (
-                          <div
-                            className="w-12 h-12 rounded-lg bg-slate-100 border border-slate-200 overflow-hidden mx-auto cursor-pointer hover:ring-2 hover:ring-cyan-400 transition-all"
-                            onClick={() => setPreviewImage(log.docUrl)}
-                            title="Lihat Dokumentasi"
-                          >
-                            <img src={log.docUrl} alt="Doc" onError={(e) => { e.target.onerror = null; e.target.style.display = 'none'; e.target.parentNode.innerHTML = '<span class="text-[10px] text-slate-400 flex items-center justify-center h-full">File</span>'; }} className="w-full h-full object-cover" />
-                          </div>
+                          <a href={log.docUrl} target="_blank" rel="noopener noreferrer" className="inline-flex items-center justify-center p-2 text-cyan-600 bg-cyan-50 rounded-lg hover:bg-cyan-100 transition-colors" title="Lihat Dokumen">
+                            <FileText size={18} />
+                          </a>
                         ) : (
                           <span className="text-slate-300">-</span>
                         )}
@@ -1269,32 +1239,20 @@ function StudentOverview({ user, logbooks = [], reports = [], onEditLogbook }) {
 
                 <div className="text-sm text-slate-600 border-l-2 border-slate-100 pl-3">
                   <div className="font-semibold text-xs text-slate-400 uppercase mb-1">Kegiatan</div>
-                  <div className="line-clamp-3 prose prose-sm max-w-none [&_ol]:list-decimal [&_ul]:list-disc [&_ol]:pl-4 [&_ul]:pl-4 mb-2" dangerouslySetInnerHTML={{ __html: log.activity }} />
-                  <button onClick={() => setViewLogDetail({ title: "Detail Kegiatan", content: log.activity })} className="text-xs text-cyan-600 font-bold hover:underline flex items-center gap-1">
-                    <Eye size={12} /> Lihat Rincian
-                  </button>
+                  <div className="line-clamp-3 prose prose-sm max-w-none [&_ol]:list-decimal [&_ul]:list-disc [&_ol]:pl-4 [&_ul]:pl-4" dangerouslySetInnerHTML={{ __html: log.activity }} />
                 </div>
 
                 <div className="text-sm text-slate-600 border-l-2 border-slate-100 pl-3">
                   <div className="font-semibold text-xs text-slate-400 uppercase mb-1">Output</div>
-                  <div className="line-clamp-3 prose prose-sm max-w-none [&_ol]:list-decimal [&_ul]:list-disc [&_ol]:pl-4 [&_ul]:pl-4 mb-2" dangerouslySetInnerHTML={{ __html: log.output }} />
-                  <button onClick={() => setViewLogDetail({ title: "Detail Output", content: log.output })} className="text-xs text-cyan-600 font-bold hover:underline flex items-center gap-1">
-                    <Eye size={12} /> Lihat Rincian
-                  </button>
+                  <div className="line-clamp-3 prose prose-sm max-w-none [&_ol]:list-decimal [&_ul]:list-disc [&_ol]:pl-4 [&_ul]:pl-4" dangerouslySetInnerHTML={{ __html: log.output }} />
                 </div>
 
                 {log.docUrl && (
                   <div className="text-sm text-slate-600 border-l-2 border-slate-100 pl-3">
-                    <div className="font-semibold text-xs text-slate-400 uppercase mb-2">Dokumentasi Tambahan</div>
-                    <div
-                      className="w-full h-32 rounded-lg bg-slate-100 overflow-hidden border border-slate-200 cursor-pointer relative group"
-                      onClick={() => setPreviewImage(log.docUrl)}
-                    >
-                      <img src={log.docUrl} alt="Dokumentasi" className="w-full h-full object-cover transition-transform group-hover:scale-105" onError={(e) => { e.target.onerror = null; e.target.style.display = 'none'; e.target.parentNode.innerHTML = '<span class="text-xs text-slate-400 absolute inset-0 flex items-center justify-center">Bukan Gambar / Gagal Load</span>'; }} />
-                      <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-colors flex items-center justify-center">
-                        <Maximize2 className="text-white opacity-0 group-hover:opacity-100 transition-opacity drop-shadow-md" size={24} />
-                      </div>
-                    </div>
+                    <div className="font-semibold text-xs text-slate-400 uppercase mb-1">Dokumen</div>
+                    <a href={log.docUrl} target="_blank" rel="noopener noreferrer" className="text-cyan-600 hover:underline flex items-center gap-1 font-medium">
+                      <FileText size={14} /> Lihat Dokumen Tambahan
+                    </a>
                   </div>
                 )}
 
