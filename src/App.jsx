@@ -2743,11 +2743,17 @@ function LecturerLogbookView({ user, logbooks, students, showToast, onRefresh })
               <button onClick={() => setDetailModal({ show: true, title: 'Detail Output', content: displayRichText(log.output) })} className="p-3 bg-cyan-50 text-cyan-700 rounded-xl text-xs font-bold hover:bg-cyan-100 transition text-center">Lihat Output</button>
             </div>
 
-            {log.docUrl && (
-              <button onClick={() => setPreviewImage(log.docUrl)} className="w-full py-3 border border-slate-200 rounded-xl text-slate-600 text-xs font-bold flex items-center justify-center gap-2 hover:bg-slate-50">
-                <FileText size={16} /> Lihat Dokumentasi Tambahan
-              </button>
-            )}
+            <button
+              onClick={() => log.docUrl && setPreviewImage(log.docUrl)}
+              disabled={!log.docUrl}
+              className={`w-full py-3 border rounded-xl text-xs font-bold flex items-center justify-center gap-2 transition-colors ${log.docUrl
+                  ? 'border-slate-200 text-slate-600 hover:bg-slate-50 cursor-pointer'
+                  : 'border-slate-100 text-slate-300 bg-slate-50 cursor-not-allowed'
+                }`}
+            >
+              <FileText size={16} className={log.docUrl ? "" : "opacity-50"} />
+              {log.docUrl ? "Lihat Dokumentasi Tambahan" : "Tidak Ada Dokumentasi Tambahan"}
+            </button>
           </div>
         ))}
       </div>
