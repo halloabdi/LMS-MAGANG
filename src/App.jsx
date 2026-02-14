@@ -329,7 +329,7 @@ const TextModal = ({ title, content, onClose }) => {
 };
 
 // --- CONFIGURATION ---
-const GAS_URL = "https://script.google.com/macros/s/AKfycbzGVFKCiJj2X7faXNZ7fbFRG2sNEA-UOGGXkwpGRDSoYXt-QNr0NrFaO-frnLVTF7eE/exec";
+const GAS_URL = "https://script.google.com/macros/s/AKfycbwqZHpYD6sFUMkqHS8BUPylOs_IQvNWxIICHC10KBBV_I-ZZ5vea4SsLTTkkhDcB2H4/exec";
 
 // --- INITIAL DATA ---
 const INITIAL_LOGBOOKS = [];
@@ -1582,7 +1582,7 @@ function LecturerDashboard({ user, onLogout, logbooks, setLogbooks, reports, onU
       <main className="flex-1 overflow-y-auto relative pt-24 md:pt-0">
         <div className="p-5 md:p-8 max-w-7xl mx-auto">
           {activeTab === 'overview' && <LecturerOverview students={students} logbooks={logbooks} reports={reports} />}
-          {activeTab === 'logbooks' && <LecturerLogbookView logbooks={logbooks} students={students} showToast={showToast} onRefresh={fetchData} />}
+          {activeTab === 'logbooks' && <LecturerLogbookView user={user} logbooks={logbooks} students={students} showToast={showToast} onRefresh={fetchData} />}
           {activeTab === 'grading' && <LecturerGrading reports={reports} showToast={showToast} />}
           {activeTab === 'profile' && <ProfileSettings user={user} students={students} onUpdate={onUpdateProfile} onCancel={() => setActiveTab('overview')} showToast={showToast} />}
         </div>
@@ -1794,7 +1794,7 @@ const CustomDropdown = ({ options, value, onChange, icon: Icon }) => {
   );
 };
 
-function LecturerLogbookView({ logbooks, students, showToast, onRefresh }) {
+function LecturerLogbookView({ user, logbooks, students, showToast, onRefresh }) {
   const [previewImage, setPreviewImage] = useState(null);
   const [detailModal, setDetailModal] = useState({ show: false, title: '', content: '' });
   const [unsubmittedList, setUnsubmittedList] = useState([]);
@@ -1813,7 +1813,8 @@ function LecturerLogbookView({ logbooks, students, showToast, onRefresh }) {
     showToast('info', 'Memuat Data...', 'Sedang mengecek data mahasiswa...');
     try {
       const todayStr = new Date().toISOString().split('T')[0];
-      const res = await fetch(`${GAS_URL}?action=getUnsubmitted&date=${todayStr}`);
+      const url = `${GAS_URL}?action=getUnsubmitted&date=${todayStr}&userId=${user.username}&role=${user.role}`;
+      const res = await fetch(url);
       const json = await res.json();
       if (json.status === 'success') {
         setUnsubmittedList(json.data);
