@@ -329,8 +329,8 @@ const TextModal = ({ title, content, onClose }) => {
 };
 
 // --- CONFIGURATION ---
-// 15 Feb 04:01 - Version 35: Updated handleEditLogbook
-const GAS_URL = "https://script.google.com/macros/s/AKfycbwMK0SVSjslb7RMQOpZGUKnvL_gqbvKXJktbsolJqvNmr37PnUw_MfxHTnc1YrVS841/exec";
+// 15 Feb 04:33 - Version 36: Fixed Student Data Leak (Filter by NIM)
+const GAS_URL = "https://script.google.com/macros/s/AKfycbwEPk-e6ZLPoak5vsnwcjJPdfVN8N0aE0G5gig5Xb9ckdj9Oih9mdw9WQES9wfGp3Z1/exec";
 
 // --- INITIAL DATA ---
 const INITIAL_LOGBOOKS = [];
