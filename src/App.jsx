@@ -329,7 +329,7 @@ const TextModal = ({ title, content, onClose }) => {
 };
 
 // --- CONFIGURATION ---
-const GAS_URL = "https://script.google.com/macros/s/AKfycbwMrsmw2OrU5J9ZBHpl39eR6-bbPYEKhzP-y3lB_3cTY7A0ARie0y0ekuE34Hkula-w/exec";
+const GAS_URL = "https://script.google.com/macros/s/AKfycbxC2PP8W47PALYgwS0dTIMG5lu5UpspmzAPUTMtvAk5Z7QLj_aQo1T1Bf-O1RdfRi0g/exec";
 
 // --- INITIAL DATA ---
 const INITIAL_LOGBOOKS = [];
@@ -763,14 +763,14 @@ export default function App() {
     if (user) {
       const loadData = async () => {
         try {
-          // Identify ID to pass: NIM for student, ID/NIP for lecturer
-          const idToPass = user.role === 'student' ? user.username : user.id;
+          // Identify ID to pass: NIM for student, Username/NIP for lecturer
+          const idToPass = user.username;
           const fetchDashboardData = async (role, id) => {
             // Only fetch logbooks for now (centralized)
             // Both Student and Lecturer need logbooks
             // Student needs it for their history, Lecturer for monitoring
             try {
-              const res = await fetch(`${GAS_URL}?action=getAllLogbooks`);
+              const res = await fetch(`${GAS_URL}?action=getAllLogbooks&userId=${id}&role=${role}`);
               const json = await res.json();
               if (json.status === 'success') {
                 return json.data; // Returns all logbooks
