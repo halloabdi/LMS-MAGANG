@@ -1069,9 +1069,9 @@ function StudentDashboard({ user, onLogout, logbooks, setLogbooks, reports, setR
 
 // Fixed Duplicate Function
 function StudentOverview({ user, logbooks = [], reports = [], onEditLogbook }) {
-  // SAFETY: Ensure props are arrays even if null passed
-  const safeLogbooks = Array.isArray(logbooks) ? logbooks : [];
-  const safeReports = Array.isArray(reports) ? reports : [];
+  // SAFETY: Ensure props are arrays and remove any null/undefined items
+  const safeLogbooks = (Array.isArray(logbooks) ? logbooks : []).filter(l => l && l !== null);
+  const safeReports = (Array.isArray(reports) ? reports : []).filter(r => r && r !== null);
 
   const [currentPage, setCurrentPage] = useState(1);
   const [previewImage, setPreviewImage] = useState(null);
@@ -1083,8 +1083,13 @@ function StudentOverview({ user, logbooks = [], reports = [], onEditLogbook }) {
 
   // SORT LOGBOOKS (Newest First)
   const sortedLogbooks = [...safeLogbooks].sort((a, b) => {
-    const dateA = new Date(`${a.date}T${a.time}`);
-    const dateB = new Date(`${b.date}T${b.time}`);
+    // Safety check for date/time
+    if (!a.date || !b.date) return 0;
+    const dateA = new Date(`${a.date}T${a.time || '00:00'}`);
+    const dateB = new Date(`${b.date}T${b.time || '00:00'}`);
+    // Handle invalid dates if parsing fails
+    if (isNaN(dateA.getTime())) return 1;
+    if (isNaN(dateB.getTime())) return -1;
     return dateB - dateA;
   });
 
@@ -1103,18 +1108,22 @@ function StudentOverview({ user, logbooks = [], reports = [], onEditLogbook }) {
   let lastLat = null;
   let lastLng = null;
   if (lastLogbook) {
-    if (lastLogbook.lat && lastLogbook.lng) {
-      lastLat = lastLogbook.lat;
-      lastLng = lastLogbook.lng;
+    if (lastLogbook.lat !== undefined && lastLogbook.lng !== undefined) {
+      const parsedLat = parseFloat(lastLogbook.lat);
+      const parsedLng = parseFloat(lastLogbook.lng);
+      if (!isNaN(parsedLat) && !isNaN(parsedLng)) {
+        lastLat = parsedLat;
+        lastLng = parsedLng;
+      }
     }
   }
 
-  const lastLocation = lastLogbook && lastLat && lastLng
+  const lastLocation = lastLogbook && lastLat !== null && lastLng !== null
     ? {
       lat: lastLat,
       lng: lastLng,
       address: lastLogbook.address || '',
-      name: user.name || 'Anda',
+      name: (user && user.name) ? user.name : 'Anda',
       status: lastLogbook.status || 'Terakhir'
     }
     : null;
@@ -1178,8 +1187,8 @@ function StudentOverview({ user, logbooks = [], reports = [], onEditLogbook }) {
                     <tr key={index} className="hover:bg-slate-50 transition-colors">
                       <td className="p-4 text-center text-slate-400">{indexOfFirstItem + index + 1}</td>
                       <td className="p-4">
-                        <div className="font-bold text-slate-700">{String(log.date)}</div>
-                        <div className="text-xs text-slate-400 font-mono">{String(log.time)}</div>
+                        <div className="font-bold text-slate-700">{String(log.date || '-')}</div>
+                        <div className="text-xs text-slate-400 font-mono">{String(log.time || '-')}</div>
                       </td>
                       <td className="p-4">
                         <div
@@ -1194,20 +1203,20 @@ function StudentOverview({ user, logbooks = [], reports = [], onEditLogbook }) {
                         </div>
                       </td>
                       <td className="p-4 max-w-xs">
-                        <div className="line-clamp-2 prose prose-sm max-w-none mb-1 [&_ol]:list-decimal [&_ul]:list-disc [&_ol]:pl-4 [&_ul]:pl-4" dangerouslySetInnerHTML={{ __html: log.activity }} />
-                        <button onClick={() => setViewLogDetail({ title: "Detail Kegiatan", content: log.activity })} className="text-xs text-cyan-600 font-bold hover:underline flex items-center gap-1">
+                        <div className="line-clamp-2 prose prose-sm max-w-none mb-1 [&_ol]:list-decimal [&_ul]:list-disc [&_ol]:pl-4 [&_ul]:pl-4" dangerouslySetInnerHTML={{ __html: log.activity || '' }} />
+                        <button onClick={() => setViewLogDetail({ title: "Detail Kegiatan", content: log.activity || 'Tidak ada konten' })} className="text-xs text-cyan-600 font-bold hover:underline flex items-center gap-1">
                           <Eye size={12} /> Lihat Rincian
                         </button>
                       </td>
                       <td className="p-4 max-w-xs">
-                        <div className="line-clamp-2 prose prose-sm max-w-none mb-1 [&_ol]:list-decimal [&_ul]:list-disc [&_ol]:pl-4 [&_ul]:pl-4" dangerouslySetInnerHTML={{ __html: log.output }} />
-                        <button onClick={() => setViewLogDetail({ title: "Detail Output", content: log.output })} className="text-xs text-cyan-600 font-bold hover:underline flex items-center gap-1">
+                        <div className="line-clamp-2 prose prose-sm max-w-none mb-1 [&_ol]:list-decimal [&_ul]:list-disc [&_ol]:pl-4 [&_ul]:pl-4" dangerouslySetInnerHTML={{ __html: log.output || '' }} />
+                        <button onClick={() => setViewLogDetail({ title: "Detail Output", content: log.output || 'Tidak ada konten' })} className="text-xs text-cyan-600 font-bold hover:underline flex items-center gap-1">
                           <Eye size={12} /> Lihat Rincian
                         </button>
                       </td>
                       <td className="p-4">
                         <span className={`inline-flex px-2 py-1 rounded-md text-xs font-bold ${log.status === 'Hadir' ? 'bg-emerald-100 text-emerald-700' : 'bg-amber-100 text-amber-700'}`}>
-                          {log.status}
+                          {log.status || '-'}
                         </span>
                       </td>
                       <td className="p-4 text-center">
@@ -1262,27 +1271,27 @@ function StudentOverview({ user, logbooks = [], reports = [], onEditLogbook }) {
                       )}
                     </div>
                     <div>
-                      <div className="font-bold text-slate-700 text-sm">{String(log.date)}</div>
-                      <div className="text-xs text-slate-400 font-mono">{String(log.time)}</div>
+                      <div className="font-bold text-slate-700 text-sm">{String(log.date || '-')}</div>
+                      <div className="text-xs text-slate-400 font-mono">{String(log.time || '-')}</div>
                     </div>
                   </div>
                   <span className={`px-2 py-1 rounded-md text-[10px] font-bold uppercase ${log.status === 'Hadir' ? 'bg-emerald-100 text-emerald-700' : 'bg-amber-100 text-amber-700'}`}>
-                    {log.status}
+                    {log.status || '-'}
                   </span>
                 </div>
 
                 <div className="text-sm text-slate-600 border-l-2 border-slate-100 pl-3">
                   <div className="font-semibold text-xs text-slate-400 uppercase mb-1">Kegiatan</div>
-                  <div className="line-clamp-3 prose prose-sm max-w-none [&_ol]:list-decimal [&_ul]:list-disc [&_ol]:pl-4 [&_ul]:pl-4 mb-2" dangerouslySetInnerHTML={{ __html: log.activity }} />
-                  <button onClick={() => setViewLogDetail({ title: "Detail Kegiatan", content: log.activity })} className="text-xs text-cyan-600 font-bold hover:underline flex items-center gap-1">
+                  <div className="line-clamp-3 prose prose-sm max-w-none [&_ol]:list-decimal [&_ul]:list-disc [&_ol]:pl-4 [&_ul]:pl-4 mb-2" dangerouslySetInnerHTML={{ __html: log.activity || '' }} />
+                  <button onClick={() => setViewLogDetail({ title: "Detail Kegiatan", content: log.activity || 'Tidak ada konten' })} className="text-xs text-cyan-600 font-bold hover:underline flex items-center gap-1">
                     <Eye size={12} /> Lihat Rincian
                   </button>
                 </div>
 
                 <div className="text-sm text-slate-600 border-l-2 border-slate-100 pl-3">
                   <div className="font-semibold text-xs text-slate-400 uppercase mb-1">Output</div>
-                  <div className="line-clamp-3 prose prose-sm max-w-none [&_ol]:list-decimal [&_ul]:list-disc [&_ol]:pl-4 [&_ul]:pl-4 mb-2" dangerouslySetInnerHTML={{ __html: log.output }} />
-                  <button onClick={() => setViewLogDetail({ title: "Detail Output", content: log.output })} className="text-xs text-cyan-600 font-bold hover:underline flex items-center gap-1">
+                  <div className="line-clamp-3 prose prose-sm max-w-none [&_ol]:list-decimal [&_ul]:list-disc [&_ol]:pl-4 [&_ul]:pl-4 mb-2" dangerouslySetInnerHTML={{ __html: log.output || '' }} />
+                  <button onClick={() => setViewLogDetail({ title: "Detail Output", content: log.output || 'Tidak ada konten' })} className="text-xs text-cyan-600 font-bold hover:underline flex items-center gap-1">
                     <Eye size={12} /> Lihat Rincian
                   </button>
                 </div>
@@ -1353,14 +1362,14 @@ function StudentOverview({ user, logbooks = [], reports = [], onEditLogbook }) {
       <div className="space-y-4">
         <h3 className="text-xl font-bold text-slate-800">Riwayat Laporan</h3>
         <div className="space-y-3">
-          {reports.map((rep, idx) => (
+          {safeReports.map((rep, idx) => (
             <div key={idx} className="bg-white p-4 rounded-xl shadow-sm border border-slate-200">
               <div className="font-bold text-slate-700">{rep.title}</div>
               <div className="text-sm text-slate-500 mt-1 line-clamp-2">{rep.overview}</div>
               <div className="mt-2 text-xs text-slate-400 font-mono">{rep.timestamp ? new Date(rep.timestamp).toLocaleDateString() : '-'}</div>
             </div>
           ))}
-          {reports.length === 0 && (
+          {safeReports.length === 0 && (
             <div className="p-8 text-center text-slate-400 italic bg-white rounded-xl border border-dashed border-slate-200">Belum ada laporan.</div>
           )}
         </div>
