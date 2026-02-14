@@ -2149,7 +2149,19 @@ function LecturerDashboard({ user, onLogout, logbooks, setLogbooks, reports, onU
         const enrichedStudents = resultStudents.data.map(s => {
           // Find latest logbook for this student
           const studentLogs = resultLog.data ? resultLog.data.filter(l => l.nim === s.nim) : [];
-          const lastLog = studentLogs.length > 0 ? studentLogs[studentLogs.length - 1] : null;
+
+          // Sort explicitly to get the latest (Newest First)
+          studentLogs.sort((a, b) => {
+            // Handle potential invalid dates gracefully
+            const dateA = new Date(`${a.date}T${a.time}`);
+            const dateB = new Date(`${b.date}T${b.time}`);
+            if (isNaN(dateA.getTime())) return 1;
+            if (isNaN(dateB.getTime())) return -1;
+            return dateB - dateA;
+          });
+
+          // Take the first one (latest) because we sorted descending
+          const lastLog = studentLogs.length > 0 ? studentLogs[0] : null;
 
           return {
             ...s,
@@ -2167,20 +2179,40 @@ function LecturerDashboard({ user, onLogout, logbooks, setLogbooks, reports, onU
       } else {
         // Fallback if API fails or returns empty: Derive from logbooks as before
         if (resultLog.status === 'success') {
-          const uniqueStudents = [];
-          const seenNims = new Set();
+          // Robust Fallback: Group by NIM, Keep Latest
+          const studentMap = new Map();
+
           resultLog.data.forEach(log => {
-            if (log.nim && !seenNims.has(log.nim)) {
-              seenNims.add(log.nim);
-              uniqueStudents.push({
-                id: log.studentId || log.nim,
-                name: log.name,
-                username: log.nim,
-                class: log.class,
-                lastLogbook: log.date + ' ' + log.time
-              });
+            if (!log.nim) return;
+
+            const logDate = new Date(`${log.date}T${log.time}`);
+            // Skip invalid dates if any
+            if (isNaN(logDate.getTime())) {
+              // If date invalid, maybe just take it if we have nothing else? 
+              // Or better to skip to avoid bad data. Let's skip.
+              return;
+            }
+
+            if (!studentMap.has(log.nim)) {
+              studentMap.set(log.nim, log);
+            } else {
+              const currentBest = studentMap.get(log.nim);
+              const currentBestDate = new Date(`${currentBest.date}T${currentBest.time}`);
+              if (logDate > currentBestDate) {
+                studentMap.set(log.nim, log);
+              }
             }
           });
+
+          const uniqueStudents = Array.from(studentMap.values()).map(log => ({
+            id: log.studentId || log.nim,
+            name: log.name,
+            username: log.nim,
+            class: log.class,
+            lastLogbook: log.date + ' ' + log.time,
+            lastStatus: log.status
+          }));
+
           setStudents(uniqueStudents);
         }
       }
@@ -2747,8 +2779,8 @@ function LecturerLogbookView({ user, logbooks, students, showToast, onRefresh })
               onClick={() => log.docUrl && setPreviewImage(log.docUrl)}
               disabled={!log.docUrl}
               className={`w-full py-3 border rounded-xl text-xs font-bold flex items-center justify-center gap-2 transition-colors ${log.docUrl
-                  ? 'border-slate-200 text-slate-600 hover:bg-slate-50 cursor-pointer'
-                  : 'border-slate-100 text-slate-300 bg-slate-50 cursor-not-allowed'
+                ? 'border-slate-200 text-slate-600 hover:bg-slate-50 cursor-pointer'
+                : 'border-slate-100 text-slate-300 bg-slate-50 cursor-not-allowed'
                 }`}
             >
               <FileText size={16} className={log.docUrl ? "" : "opacity-50"} />
