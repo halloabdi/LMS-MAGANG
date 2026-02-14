@@ -1402,7 +1402,7 @@ function LecturerDashboard({ user, onLogout, logbooks, setLogbooks, reports, onU
   // Fetch Logic for Lecturer
   const fetchData = async () => {
     try {
-      const url = `${GAS_URL}?action=getAllLogbooks`; // Special Endpoint
+      const url = `${GAS_URL}?action=getAllLogbooks&userId=${user.username}&role=lecturer`; // Special Endpoint
       const res = await fetch(url);
       const result = await res.json();
       if (result.status === 'success') {
