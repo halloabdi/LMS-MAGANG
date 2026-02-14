@@ -1,10 +1,10 @@
-// Import fix
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import {
   MapPin, Camera, Upload, FileText, LogOut,
   LayoutDashboard, CheckCircle, XCircle,
   Map as MapIcon, Eye, Menu, X, Bold, Italic, Underline,
   Superscript, Subscript, ChevronRight, ChevronLeft, ChevronDown,
-  User, Settings, Edit3, Save, Image as ImageIcon, Calendar, Clock,
+  User, Settings, Edit3, Edit2, Save, Image as ImageIcon, Calendar, Clock,
   AlertCircle, ListOrdered, Lightbulb, Check, AlertTriangle, Search, RefreshCw, Download, MessageCircle, FileSpreadsheet
 } from 'lucide-react';
 
@@ -1158,7 +1158,7 @@ function StudentOverview({ user, logbooks = [], reports = [], onEditLogbook }) {
                         className="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors group"
                         title="Edit Logbook"
                       >
-                        <Edit3 size={18} className="group-hover:scale-110 transition-transform" />
+                        <Edit2 size={18} className="group-hover:scale-110 transition-transform" />
                       </button>
                     </td>
                   </tr>
@@ -1208,7 +1208,7 @@ function StudentOverview({ user, logbooks = [], reports = [], onEditLogbook }) {
                 onClick={() => onEditLogbook(log)}
                 className="w-full mt-2 py-2 flex items-center justify-center gap-2 text-sm font-bold text-blue-600 bg-blue-50 hover:bg-blue-100 rounded-lg transition-colors"
               >
-                <Edit3 size={16} /> Edit Logbook
+                <Edit2 size={16} /> Edit Logbook
               </button>
             </div>
           ))}
@@ -1373,7 +1373,7 @@ function LogbookEditModal({ isOpen, onClose, logbook, onUpdate, showToast }) {
     <div className="fixed inset-0 z-[1000] bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4 animate-in fade-in duration-200">
       <div className="bg-white w-full max-w-4xl rounded-2xl shadow-xl flex flex-col max-h-[90vh] animate-in zoom-in-95">
         <div className="p-4 border-b border-slate-100 flex justify-between items-center bg-slate-50/50 rounded-t-2xl">
-          <h3 className="font-bold text-lg text-slate-800 flex items-center gap-2"><Edit3 size={20} /> Edit Logbook</h3>
+          <h3 className="font-bold text-lg text-slate-800 flex items-center gap-2"><Edit2 size={20} /> Edit Logbook</h3>
           <button onClick={onClose} disabled={isSubmitting} className="p-2 hover:bg-slate-200 rounded-full transition-colors"><X size={20} /></button>
         </div>
 
