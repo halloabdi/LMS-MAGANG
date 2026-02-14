@@ -467,12 +467,14 @@ const LeafletMap = ({ lat, lng, setLat, setLng, setAddress, readOnly = false, ma
     const L = window.L;
 
     // FIX FOR MISSING PINS: Explicitly set the default icon path
-    delete L.Icon.Default.prototype._getIconUrl;
-    L.Icon.Default.mergeOptions({
-      iconRetinaUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-icon-2x.png',
-      iconUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-icon.png',
-      shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-shadow.png',
-    });
+    if (L.Icon && L.Icon.Default && L.Icon.Default.prototype) {
+      delete L.Icon.Default.prototype._getIconUrl;
+      L.Icon.Default.mergeOptions({
+        iconRetinaUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-icon-2x.png',
+        iconUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-icon.png',
+        shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-shadow.png',
+      });
+    }
 
     // Default center (Indonesia)
     const initialLat = parseFloat(lat) || -2.5489;
@@ -1045,7 +1047,7 @@ function StudentDashboard({ user, onLogout, logbooks, setLogbooks, reports, setR
 
       <main className="flex-1 overflow-y-auto relative pt-24 md:pt-0">
         <div className="p-5 md:p-8 max-w-7xl mx-auto">
-          {activeTab === 'overview' && <StudentOverview key={logbooks.length} user={user} logbooks={logbooks} reports={reports} onEditLogbook={handleEditLogbook} />}
+          {activeTab === 'overview' && <StudentOverview user={user} logbooks={logbooks} reports={reports} onEditLogbook={handleEditLogbook} />}
           {activeTab === 'logbook' && <StudentLogbookForm user={user} logbooks={logbooks} setLogbooks={setLogbooks} showToast={showToast} />}
           {activeTab === 'report' && <StudentReportForm user={user} reports={reports} setReports={setReports} showToast={showToast} />}
           {activeTab === 'profile' && <ProfileSettings user={user} onUpdate={onUpdateProfile} onCancel={() => setActiveTab('overview')} showToast={showToast} />}
