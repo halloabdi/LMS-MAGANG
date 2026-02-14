@@ -1051,7 +1051,7 @@ function StudentLogbookForm({ user, logbooks, setLogbooks, showToast }) {
   const [lat, setLat] = useState(null); const [lng, setLng] = useState(null); const [address, setAddress] = useState('Menunggu GPS...'); const [accuracy, setAccuracy] = useState(null);
 
   const [status, setStatus] = useState('Hadir');
-  const [date, setDate] = useState(new Date().toISOString().split('T')[0]);
+  const [date, setDate] = useState(new Date().toLocaleDateString('en-CA'));
   const [time, setTime] = useState(new Date().toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' }));
 
   const [activityHTML, setActivityHTML] = useState(''); const [outputHTML, setOutputHTML] = useState('');
@@ -1812,7 +1812,7 @@ function LecturerLogbookView({ user, logbooks, students, showToast, onRefresh })
     setLoadingUnsubmitted(true);
     showToast('info', 'Memuat Data...', 'Sedang mengecek data mahasiswa...');
     try {
-      const todayStr = new Date().toISOString().split('T')[0];
+      const todayStr = new Date().toLocaleDateString('en-CA');
       const url = `${GAS_URL}?action=getUnsubmitted&date=${todayStr}&userId=${user.username}&role=${user.role}`;
       const res = await fetch(url);
       const json = await res.json();
