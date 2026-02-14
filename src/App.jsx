@@ -39,6 +39,45 @@ const GlobalStyles = () => (
   `}</style>
 );
 
+// --- ERROR BOUNDARY ---
+class ErrorBoundary extends React.Component {
+  constructor(props) {
+    super(props);
+    this.state = { hasError: false, error: null, errorInfo: null };
+  }
+
+  static getDerivedStateFromError(error) {
+    return { hasError: true };
+  }
+
+  componentDidCatch(error, errorInfo) {
+    console.error("Uncaught error:", error, errorInfo);
+    this.setState({ error, errorInfo });
+  }
+
+  render() {
+    if (this.state.hasError) {
+      return (
+        <div className="p-8 bg-red-50 border border-red-200 rounded-xl text-red-800">
+          <h2 className="text-xl font-bold mb-2">Terjadi Kesalahan (App Crash)</h2>
+          <p className="mb-4">Maaf, aplikasi mengalami gangguan saat memuat tampilan.</p>
+          <div className="bg-white p-4 rounded-lg border border-red-100 font-mono text-xs overflow-auto max-h-64">
+            <p className="font-bold text-red-600 mb-2">{this.state.error && this.state.error.toString()}</p>
+            <pre>{this.state.errorInfo && this.state.errorInfo.componentStack}</pre>
+          </div>
+          <button
+            onClick={() => window.location.reload()}
+            className="mt-4 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition"
+          >
+            Refresh Halaman
+          </button>
+        </div>
+      );
+    }
+    return this.props.children;
+  }
+}
+
 // --- CUSTOM TOAST NOTIFICATION SYSTEM ---
 // Styled perfectly matching the requested UI reference
 const ToastMessage = ({ id, type, title, message, onClose }) => {
@@ -481,73 +520,96 @@ const LeafletMap = ({ lat, lng, setLat, setLng, setAddress, readOnly = false, ma
     const initialLng = parseFloat(lng) || 118.0149;
     const initialZoom = 5;
 
-    const map = L.map(mapRef.current).setView([initialLat, initialLng], initialZoom);
-    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { attribution: '&copy; OpenStreetMap' }).addTo(map);
-    mapInstanceRef.current = map;
+    try {
+      const map = L.map(mapRef.current).setView([initialLat, initialLng], initialZoom);
+      L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { attribution: '&copy; OpenStreetMap' }).addTo(map);
+      mapInstanceRef.current = map;
 
-    // FORCE RELAYOUT AFTER A SHORT DELAY & ON RESIZE
-    const resizeObserver = new ResizeObserver(() => {
-      if (mapInstanceRef.current) mapInstanceRef.current.invalidateSize();
-    });
-    resizeObserver.observe(mapRef.current);
-
-    setTimeout(() => {
-      if (mapInstanceRef.current) {
-        mapInstanceRef.current.invalidateSize();
-        if (markers.length > 0) renderMarkers(L, mapInstanceRef.current);
-      }
-    }, 250);
-
-    // Handle single marker mode (Logbook Form)
-    if (!readOnly && lat && lng) {
-      const validLat = parseFloat(lat);
-      const validLng = parseFloat(lng);
-      markerRef.current = L.marker([validLat, validLng]).addTo(map);
-      map.on('click', async (e) => {
-        const { lat, lng } = e.latlng;
-        if (setLat && setLng) {
-          setLat(lat); setLng(lng);
-          if (markerRef.current) markerRef.current.setLatLng([lat, lng]);
-          else markerRef.current = L.marker([lat, lng]).addTo(map);
-          try {
-            const res = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}`);
-            const data = await res.json();
-            if (data && data.display_name && setAddress) setAddress(data.display_name);
-          } catch (err) { console.error("Geocoding failed", err); }
+      // FORCE RELAYOUT AFTER A SHORT DELAY & ON RESIZE
+      const resizeObserver = new ResizeObserver(() => {
+        if (mapInstanceRef.current) {
+          try { mapInstanceRef.current.invalidateSize(); } catch (e) { console.warn(e); }
         }
       });
-    }
+      if (mapRef.current) resizeObserver.observe(mapRef.current);
 
-    // Handle multiple markers mode (Overview & Lecturer Logbook)
-    renderMarkers(L, map);
+      setTimeout(() => {
+        if (mapInstanceRef.current) {
+          try {
+            mapInstanceRef.current.invalidateSize();
+            if (markers.length > 0) renderMarkers(L, mapInstanceRef.current);
+          } catch (e) {
+            console.warn("Map resize error:", e);
+          }
+        }
+      }, 250);
+
+      // Handle single marker mode (Logbook Form)
+      if (!readOnly && lat && lng) {
+        const validLat = parseFloat(lat);
+        const validLng = parseFloat(lng);
+        if (!isNaN(validLat) && !isNaN(validLng)) {
+          markerRef.current = L.marker([validLat, validLng]).addTo(map);
+        }
+
+        map.on('click', async (e) => {
+          const { lat, lng } = e.latlng;
+          if (setLat && setLng) {
+            setLat(lat); setLng(lng);
+            if (markerRef.current) markerRef.current.setLatLng([lat, lng]);
+            else markerRef.current = L.marker([lat, lng]).addTo(map);
+            try {
+              const res = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}`);
+              const data = await res.json();
+              if (data && data.display_name && setAddress) setAddress(data.display_name);
+            } catch (err) { console.error("Geocoding failed", err); }
+          }
+        });
+      }
+
+      // Handle multiple markers mode (Overview & Lecturer Logbook)
+      renderMarkers(L, map);
+
+    } catch (err) {
+      console.error("Leaflet Init Error:", err);
+    }
   };
 
   const renderMarkers = (L, map) => {
-    markersGroupRef.current.forEach(m => map.removeLayer(m));
-    markersGroupRef.current = [];
+    try {
+      if (!map || !markersGroupRef.current) return;
 
-    if (markers && markers.length > 0) {
-      const bounds = L.latLngBounds();
-      let hasValidMarker = false;
-
-      markers.forEach(m => {
-        // Ensure lat/lng are valid numbers
-        const mLat = parseFloat(m.lat);
-        const mLng = parseFloat(m.lng);
-
-        if (!isNaN(mLat) && !isNaN(mLng) && mLat !== 0 && mLng !== 0) {
-          const marker = L.marker([mLat, mLng])
-            .bindPopup(`<div class="text-sm"><b class="font-bold">${m.name}</b><br/>Status: ${m.status}</div>`)
-            .addTo(map);
-          markersGroupRef.current.push(marker);
-          bounds.extend([mLat, mLng]);
-          hasValidMarker = true;
-        }
+      markersGroupRef.current.forEach(m => {
+        try { map.removeLayer(m); } catch (e) { }
       });
+      markersGroupRef.current = [];
 
-      if (hasValidMarker) {
-        map.fitBounds(bounds, { padding: [50, 50], maxZoom: 15 });
+      if (markers && markers.length > 0) {
+        const bounds = L.latLngBounds();
+        let hasValidMarker = false;
+
+        markers.forEach(m => {
+          if (!m) return;
+          // Ensure lat/lng are valid numbers
+          const mLat = parseFloat(m.lat);
+          const mLng = parseFloat(m.lng);
+
+          if (!isNaN(mLat) && !isNaN(mLng) && mLat !== 0 && mLng !== 0) {
+            const marker = L.marker([mLat, mLng])
+              .bindPopup(`<div class="text-sm"><b class="font-bold">${m.name || 'Lokasi'}</b><br/>Status: ${m.status || '-'}</div>`)
+              .addTo(map);
+            markersGroupRef.current.push(marker);
+            bounds.extend([mLat, mLng]);
+            hasValidMarker = true;
+          }
+        });
+
+        if (hasValidMarker) {
+          map.fitBounds(bounds, { padding: [50, 50], maxZoom: 15 });
+        }
       }
+    } catch (e) {
+      console.error("Error rendering markers:", e);
     }
   };
 
@@ -920,8 +982,16 @@ export default function App() {
       </div>
 
       {view === 'login' && <LoginPage onLogin={handleLogin} />}
-      {view === 'student-dashboard' && user && <StudentDashboard user={user} onLogout={handleLogout} logbooks={logbooks} setLogbooks={setLogbooks} reports={reports} setReports={setReports} onUpdateProfile={handleProfileUpdate} showToast={showToast} />}
-      {view === 'lecturer-dashboard' && user && <LecturerDashboard user={user} onLogout={handleLogout} logbooks={logbooks} setLogbooks={setLogbooks} reports={reports} onUpdateProfile={handleProfileUpdate} showToast={showToast} />}
+      {view === 'student-dashboard' && user && (
+        <ErrorBoundary>
+          <StudentDashboard user={user} onLogout={handleLogout} logbooks={logbooks} setLogbooks={setLogbooks} reports={reports} setReports={setReports} onUpdateProfile={handleProfileUpdate} showToast={showToast} />
+        </ErrorBoundary>
+      )}
+      {view === 'lecturer-dashboard' && user && (
+        <ErrorBoundary>
+          <LecturerDashboard user={user} onLogout={handleLogout} logbooks={logbooks} setLogbooks={setLogbooks} reports={reports} onUpdateProfile={handleProfileUpdate} showToast={showToast} />
+        </ErrorBoundary>
+      )}
     </div>
   );
 }
@@ -1152,10 +1222,24 @@ function StudentOverview({ user, logbooks = [], reports = [], onEditLogbook }) {
 
         {/* MAP - Desktop Order: 2nd Column */}
         <div className="hidden md:block lg:col-span-2 h-full">
-          <Card title="Lokasi Terakhir" className="h-full min-h-[300px]">
-            <div className="h-full min-h-[300px] bg-slate-100 rounded-2xl overflow-hidden relative border border-slate-200">
-              <LeafletMap readOnly={true} markers={lastLocation ? [{ ...lastLocation, popup: "Lokasi Terakhir Anda" }] : []} />
-            </div>
+          <Card title="Lokasi Terakhir" className="h-[300px] min-h-[300px]">
+            <ErrorBoundary>
+              <div className="h-full bg-slate-100 rounded-2xl overflow-hidden relative border border-slate-200">
+                {lastLocation && (
+                  <LeafletMap
+                    readOnly={true}
+                    markers={[{ ...lastLocation, popup: "Lokasi Terakhir Anda" }]}
+                    lat={lastLocation.lat}
+                    lng={lastLocation.lng}
+                  />
+                )}
+                {!lastLocation && (
+                  <div className="flex items-center justify-center h-full text-slate-400 italic">
+                    Belum ada data lokasi.
+                  </div>
+                )}
+              </div>
+            </ErrorBoundary>
           </Card>
         </div>
       </div>
