@@ -329,7 +329,7 @@ const TextModal = ({ title, content, onClose }) => {
 };
 
 // --- CONFIGURATION ---
-const GAS_URL = "https://script.google.com/macros/s/AKfycbzJzrFf9CBZ7DXlHIc-YUSUml2qabTShu9ALumj_g2vAXrP_RWIc6nzAKg9mcXNDejz/exec";
+const GAS_URL = "https://script.google.com/macros/s/AKfycbzGVFKCiJj2X7faXNZ7fbFRG2sNEA-UOGGXkwpGRDSoYXt-QNr0NrFaO-frnLVTF7eE/exec";
 
 // --- INITIAL DATA ---
 const INITIAL_LOGBOOKS = [];
@@ -617,7 +617,7 @@ const ToolButton = ({ onClick, icon: Icon, title }) => (
 );
 
 // --- PROFILE COMPONENT ---
-function ProfileSettings({ user, onUpdate, onCancel, showToast }) {
+function ProfileSettings({ user, students, onUpdate, onCancel, showToast }) {
   const [formData, setFormData] = useState({
     name: user.name, username: user.username, email: user.email, phone: user.phone || '', password: user.password, photoUrl: user.photoUrl || '',
     bio: user.bio || ''
@@ -625,6 +625,7 @@ function ProfileSettings({ user, onUpdate, onCancel, showToast }) {
   const [loading, setLoading] = useState(false);
   const [preview, setPreview] = useState(user.photoUrl || '');
   const [photoFile, setPhotoFile] = useState(null);
+  const [previewImage, setPreviewImage] = useState(null); // For viewing student photos
 
   const handleChange = (e) => { setFormData({ ...formData, [e.target.name]: e.target.value }); };
 
@@ -676,7 +677,9 @@ function ProfileSettings({ user, onUpdate, onCancel, showToast }) {
   };
 
   return (
-    <div className="animate-in fade-in slide-in-from-bottom-4 duration-500">
+    <div className="animate-in fade-in slide-in-from-bottom-4 duration-500 space-y-8 pb-10">
+      {previewImage && <ImageModal src={previewImage} onClose={() => setPreviewImage(null)} />}
+
       <Card title="Pengaturan Profil Saya">
         <form onSubmit={handleSubmit} className="space-y-6">
           <div className="flex flex-col items-center mb-6">
@@ -713,6 +716,61 @@ function ProfileSettings({ user, onUpdate, onCancel, showToast }) {
           <div className="flex justify-end gap-3 pt-4"><Button type="button" variant="secondary" onClick={onCancel} disabled={loading}>Batal</Button><Button type="submit" variant="primary" disabled={loading}>{loading ? 'Menyimpan...' : 'Simpan Perubahan'}</Button></div>
         </form>
       </Card>
+
+      {user.role === 'lecturer' && (
+        <Card title={`Daftar Mahasiswa Bimbingan Anda (${students ? students.length : 0})`}>
+          {students && students.length > 0 ? (
+            <div className="overflow-x-auto rounded-xl border border-slate-100">
+              <table className="w-full text-left text-sm">
+                <thead className="bg-slate-50 text-slate-500">
+                  <tr>
+                    <th className="p-4 font-bold text-center w-20">No</th>
+                    <th className="p-4 font-bold text-center w-20">Foto</th>
+                    <th className="p-4 font-bold">Nama Mahasiswa</th>
+                    <th className="p-4 font-bold">NIM</th>
+                    <th className="p-4 font-bold">Kelas</th>
+                    <th className="p-4 font-bold">Logbook Terakhir</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-slate-100">
+                  {students.map((student, index) => (
+                    <tr key={student.id || index} className="hover:bg-slate-50 transition-colors">
+                      <td className="p-4 text-center text-slate-400 font-mono">{index + 1}</td>
+                      <td className="p-4">
+                        <div
+                          className="w-10 h-10 rounded-full bg-slate-200 overflow-hidden mx-auto cursor-pointer hover:ring-2 hover:ring-cyan-400 transition-all"
+                          onClick={() => setPreviewImage(student.photoUrl)}
+                        >
+                          {student.photoUrl ? (
+                            <img src={student.photoUrl} alt={student.name} className="w-full h-full object-cover" />
+                          ) : (
+                            <div className="w-full h-full flex items-center justify-center text-slate-400"><User size={20} /></div>
+                          )}
+                        </div>
+                      </td>
+                      <td className="p-4 font-bold text-slate-700">{student.name}</td>
+                      <td className="p-4 font-mono text-slate-500">{student.nim || student.username}</td>
+                      <td className="p-4 text-slate-600">{student.class}</td>
+                      <td className="p-4">
+                        {student.lastLogbook ? (
+                          <span className="text-xs font-bold text-emerald-600 bg-emerald-50 px-2 py-1 rounded-lg">{student.lastLogbook}</span>
+                        ) : (
+                          <span className="text-xs text-slate-400 italic">Belum ada</span>
+                        )}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          ) : (
+            <div className="p-8 text-center flex flex-col items-center justify-center text-slate-400 bg-slate-50 rounded-xl border-2 border-dashed border-slate-200">
+              <User size={48} className="mb-3 opacity-50" />
+              <p>Belum ada data mahasiswa bimbingan yang ditemukan.</p>
+            </div>
+          )}
+        </Card>
+      )}
     </div>
   );
 }
@@ -1402,30 +1460,60 @@ function LecturerDashboard({ user, onLogout, logbooks, setLogbooks, reports, onU
   // Fetch Logic for Lecturer
   const fetchData = async () => {
     try {
-      const url = `${GAS_URL}?action=getAllLogbooks&userId=${user.username}&role=lecturer`; // Special Endpoint
-      const res = await fetch(url);
-      const result = await res.json();
-      if (result.status === 'success') {
-        setLogbooks(result.data);
+      // 1. Get Logbooks
+      const urlLogbooks = `${GAS_URL}?action=getAllLogbooks&userId=${user.username}&role=lecturer`;
+      const resLog = await fetch(urlLogbooks);
+      const resultLog = await resLog.json();
 
-        // Derive unique students from logbooks for mapping
-        const uniqueStudents = [];
-        const seenNims = new Set();
+      // 2. Get Supervised Students (Authoritative List)
+      const urlStudents = `${GAS_URL}?action=getSupervisedStudents&userId=${user.username}`;
+      const resStudents = await fetch(urlStudents);
+      const resultStudents = await resStudents.json();
 
-        result.data.forEach(log => {
-          if (log.nim && !seenNims.has(log.nim)) {
-            seenNims.add(log.nim);
-            uniqueStudents.push({
-              id: log.studentId || log.nim,
-              name: log.name,
-              username: log.nim,
-              class: log.class,
-              lastLogbook: log.date + ' ' + log.time
-            });
-          }
-        });
-        setStudents(uniqueStudents);
+      if (resultLog.status === 'success') {
+        setLogbooks(resultLog.data);
         showToast('success', 'Data Diperbarui', 'Data terbaru berhasil dimuat.');
+      }
+
+      if (resultStudents.status === 'success') {
+        // Enrich student data with latest logbook info for UI convenience
+        const enrichedStudents = resultStudents.data.map(s => {
+          // Find latest logbook for this student
+          const studentLogs = resultLog.data ? resultLog.data.filter(l => l.nim === s.nim) : [];
+          const lastLog = studentLogs.length > 0 ? studentLogs[studentLogs.length - 1] : null;
+
+          return {
+            ...s,
+            // Keep existing fields
+            id: s.id,
+            name: s.name,
+            username: s.nim, // Mapping nim to username for consistency with existing code
+            class: s.class,
+            // Add derived fields
+            lastLogbook: lastLog ? (lastLog.date + ' ' + lastLog.time) : null,
+            lastStatus: lastLog ? lastLog.status : null
+          };
+        });
+        setStudents(enrichedStudents);
+      } else {
+        // Fallback if API fails or returns empty: Derive from logbooks as before
+        if (resultLog.status === 'success') {
+          const uniqueStudents = [];
+          const seenNims = new Set();
+          resultLog.data.forEach(log => {
+            if (log.nim && !seenNims.has(log.nim)) {
+              seenNims.add(log.nim);
+              uniqueStudents.push({
+                id: log.studentId || log.nim,
+                name: log.name,
+                username: log.nim,
+                class: log.class,
+                lastLogbook: log.date + ' ' + log.time
+              });
+            }
+          });
+          setStudents(uniqueStudents);
+        }
       }
 
     } catch (e) {
@@ -1496,7 +1584,7 @@ function LecturerDashboard({ user, onLogout, logbooks, setLogbooks, reports, onU
           {activeTab === 'overview' && <LecturerOverview students={students} logbooks={logbooks} reports={reports} />}
           {activeTab === 'logbooks' && <LecturerLogbookView logbooks={logbooks} students={students} showToast={showToast} onRefresh={fetchData} />}
           {activeTab === 'grading' && <LecturerGrading reports={reports} showToast={showToast} />}
-          {activeTab === 'profile' && <ProfileSettings user={user} onUpdate={onUpdateProfile} onCancel={() => setActiveTab('overview')} showToast={showToast} />}
+          {activeTab === 'profile' && <ProfileSettings user={user} students={students} onUpdate={onUpdateProfile} onCancel={() => setActiveTab('overview')} showToast={showToast} />}
         </div>
       </main>
     </div>
