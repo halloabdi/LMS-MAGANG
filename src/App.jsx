@@ -329,7 +329,8 @@ const TextModal = ({ title, content, onClose }) => {
 };
 
 // --- CONFIGURATION ---
-const GAS_URL = "https://script.google.com/macros/s/AKfycbwqZHpYD6sFUMkqHS8BUPylOs_IQvNWxIICHC10KBBV_I-ZZ5vea4SsLTTkkhDcB2H4/exec";
+// 15 Feb 04:01 - Version 35: Updated handleEditLogbook
+const GAS_URL = "https://script.google.com/macros/s/AKfycbwMK0SVSjslb7RMQOpZGUKnvL_gqbvKXJktbsolJqvNmr37PnUw_MfxHTnc1YrVS841/exec";
 
 // --- INITIAL DATA ---
 const INITIAL_LOGBOOKS = [];
@@ -947,6 +948,47 @@ function LoginPage({ onLogin }) {
 function StudentDashboard({ user, onLogout, logbooks, setLogbooks, reports, setReports, onUpdateProfile, showToast }) {
   const [activeTab, setActiveTab] = useState('overview');
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [editingLogbook, setEditingLogbook] = useState(null);
+
+  const handleEditLogbook = (log) => {
+    setEditingLogbook(log);
+  };
+
+  const handleUpdateLogbook = async (editData) => {
+    // API Call
+    const res = await callAPI('editLogbook', {
+      ...editData,
+      link_spreadsheet: user.link_spreadsheet,
+      link_folder: user.link_folder
+    });
+
+    // Update local state
+    // editData.username is the nim. editData.timestamp is the id.
+    // But wait, logbooks have `nim` and `timestamp` (or `date`+`time` which might change).
+    // We used timestamp string from sheet (col A) as ID in backend.
+    // But in frontend `logbooks` array, we have `timestamp` field?
+    // Let's check `handleGetAllLogbooks` response structure. Step 380 `view_file` shows:
+    // result.push({ timestamp: row[0], ..., nim: row[3] })
+    // So we have `timestamp`.
+
+    const updatedLogs = logbooks.map(l => {
+      // Compare loosely or using specific ID if available. 
+      // Backend uses timestamp string comparison.
+      // Frontend should use the same `timestamp` it sent in `editData`.
+      if (l.nim === editData.username && l.timestamp === editData.timestamp) {
+        const newLog = { ...l, ...editData.logEntry };
+        // Restore URLs if backend returned them
+        if (res.selfieUrl) newLog.selfieUrl = res.selfieUrl;
+        if (res.docUrl) newLog.docUrl = res.docUrl;
+        return newLog;
+      }
+      return l;
+    });
+
+    setLogbooks(updatedLogs);
+    showToast('success', 'Berhasil', 'Logbook telah diperbarui.');
+    setEditingLogbook(null);
+  };
 
   const NavItem = ({ id, label, icon: Icon }) => {
     const isActive = activeTab === id;
@@ -1003,45 +1045,436 @@ function StudentDashboard({ user, onLogout, logbooks, setLogbooks, reports, setR
 
       <main className="flex-1 overflow-y-auto relative pt-24 md:pt-0">
         <div className="p-5 md:p-8 max-w-7xl mx-auto">
-          {activeTab === 'overview' && <StudentOverview user={user} logbooks={logbooks} reports={reports} />}
+          {activeTab === 'overview' && <StudentOverview user={user} logbooks={logbooks} reports={reports} onEditLogbook={handleEditLogbook} />}
           {activeTab === 'logbook' && <StudentLogbookForm user={user} logbooks={logbooks} setLogbooks={setLogbooks} showToast={showToast} />}
           {activeTab === 'report' && <StudentReportForm user={user} reports={reports} setReports={setReports} showToast={showToast} />}
           {activeTab === 'profile' && <ProfileSettings user={user} onUpdate={onUpdateProfile} onCancel={() => setActiveTab('overview')} showToast={showToast} />}
         </div>
       </main>
+
+      {/* Edit Modal */}
+      {editingLogbook && (
+        <LogbookEditModal
+          isOpen={!!editingLogbook}
+          onClose={() => setEditingLogbook(null)}
+          logbook={editingLogbook}
+          onUpdate={handleUpdateLogbook}
+          showToast={showToast}
+          user={user}
+        />
+      )}
     </div>
   );
 }
 
-function StudentOverview({ user, logbooks, reports }) {
-  const myLogbooks = logbooks.filter(l => l.nim === user.username);
-  const myReports = reports.filter(r => r.studentId === user.id);
-  const lastLogbook = myLogbooks[myLogbooks.length - 1];
+// Fixed Duplicate Function
+function StudentOverview({ user, logbooks, reports, onEditLogbook }) {
+  const submittedLogbooks = logbooks.length;
+  const submittedReports = reports.length;
+
+  // Get Last Location from latest logbook
+  const lastLogbook = logbooks.length > 0 ? logbooks[0] : null;
+  const lastLocation = lastLogbook ? { lat: lastLogbook.lat, lng: lastLogbook.lng, address: lastLogbook.address } : null;
+
   return (
-    <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
-      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
-        <div><h1 className="text-3xl font-bold text-slate-800 tracking-tight">Selamat Datang!</h1><p className="text-slate-500">Ringkasan aktivitas magang Anda.</p></div>
-        <span className="px-4 py-2 bg-white rounded-full shadow-sm border border-slate-100 text-sm font-medium text-slate-600">{new Date().toLocaleDateString('id-ID', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })}</span>
+    <div className="space-y-8 animate-in fade-in duration-500 pb-10">
+      {/* 1. STATUS & STATS */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <Card title="Statistik Kinerja" className="h-full">
+          <div className="grid grid-cols-2 gap-4 h-full items-center">
+            <div className="bg-blue-50/50 p-6 rounded-2xl text-center border border-blue-100 hover:shadow-md transition-shadow">
+              <div className="text-xs font-bold text-blue-400 uppercase tracking-wider mb-2">Logbook</div>
+              <div className="text-5xl font-black text-blue-600">{submittedLogbooks}</div>
+            </div>
+            <div className="bg-cyan-50/50 p-6 rounded-2xl text-center border border-cyan-100 hover:shadow-md transition-shadow">
+              <div className="text-xs font-bold text-cyan-400 uppercase tracking-wider mb-2">Laporan</div>
+              <div className="text-5xl font-black text-cyan-600">{submittedReports}</div>
+            </div>
+          </div>
+        </Card>
+
+        {/* MAP - Desktop Order: 2nd Column */}
+        <div className="hidden md:block lg:col-span-2 h-full">
+          <Card title="Lokasi Terakhir" className="h-full min-h-[300px]">
+            <div className="h-full min-h-[300px] bg-slate-100 rounded-2xl overflow-hidden relative border border-slate-200">
+              <LeafletMap readOnly={true} markers={lastLocation ? [{ ...lastLocation, popup: "Lokasi Terakhir Anda" }] : []} />
+            </div>
+          </Card>
+        </div>
       </div>
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-        <Card title="Statistik Kinerja">
-          <div className="grid grid-cols-2 gap-4">
-            <div className="p-4 bg-gradient-to-br from-blue-50 to-blue-100/50 rounded-2xl border border-blue-100 flex flex-col items-center justify-center text-center">
-              <span className="text-xs font-bold text-blue-600 uppercase w-full break-words leading-tight mb-2">Logbook</span>
-              <div className="text-4xl font-black text-blue-700">{myLogbooks.length}</div>
-            </div>
-            <div className="p-4 bg-gradient-to-br from-cyan-50 to-cyan-100/50 rounded-2xl border border-cyan-100 flex flex-col items-center justify-center text-center">
-              <span className="text-xs font-bold text-cyan-600 uppercase w-full break-words leading-tight mb-2">Laporan</span>
-              <div className="text-4xl font-black text-cyan-700">{myReports.length}</div>
-            </div>
+
+      {/* MOBILE LAYOUT ORDER: Status (Above) -> Logbook List -> Report List -> Map */}
+
+      {/* 2. DAFTAR LOGBOOK (Mobile: Box, Desktop: Table) */}
+      <div className="space-y-4">
+        <div className="flex items-center justify-between">
+          <h3 className="text-xl font-bold text-slate-800">Riwayat Logbook</h3>
+        </div>
+
+        {/* Desktop Table */}
+        <div className="hidden md:block bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
+          <div className="overflow-x-auto">
+            <table className="w-full text-sm text-left">
+              <thead className="bg-slate-50 text-slate-500 border-b border-slate-200">
+                <tr>
+                  <th className="p-4 font-bold w-16 text-center">No</th>
+                  <th className="p-4 font-bold">Waktu & Tanggal</th>
+                  <th className="p-4 font-bold">Foto Selfie</th>
+                  <th className="p-4 font-bold">Kegiatan</th>
+                  <th className="p-4 font-bold">Output</th>
+                  <th className="p-4 font-bold">Status</th>
+                  <th className="p-4 font-bold text-center">Aksi</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-slate-100">
+                {logbooks.map((log, index) => (
+                  <tr key={index} className="hover:bg-slate-50 transition-colors">
+                    <td className="p-4 text-center text-slate-400">{index + 1}</td>
+                    <td className="p-4">
+                      <div className="font-bold text-slate-700">{log.date}</div>
+                      <div className="text-xs text-slate-400 font-mono">{log.time}</div>
+                    </td>
+                    <td className="p-4">
+                      <div className="w-12 h-12 rounded-lg bg-slate-100 border border-slate-200 overflow-hidden">
+                        {log.selfieUrl ? (
+                          <img src={log.selfieUrl} alt="Selfie" className="w-full h-full object-cover" />
+                        ) : (
+                          <div className="w-full h-full flex items-center justify-center text-slate-300"><User size={20} /></div>
+                        )}
+                      </div>
+                    </td>
+                    <td className="p-4 max-w-xs truncate" title={log.activity}>{log.activity}</td>
+                    <td className="p-4 max-w-xs truncate" title={log.output}>{log.output}</td>
+                    <td className="p-4">
+                      <span className={`inline-flex px-2 py-1 rounded-md text-xs font-bold ${log.status === 'Hadir' ? 'bg-emerald-100 text-emerald-700' : 'bg-amber-100 text-amber-700'}`}>
+                        {log.status}
+                      </span>
+                    </td>
+                    <td className="p-4 text-center">
+                      <button
+                        onClick={() => onEditLogbook(log)}
+                        className="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors group"
+                        title="Edit Logbook"
+                      >
+                        <Edit2 size={18} className="group-hover:scale-110 transition-transform" />
+                      </button>
+                    </td>
+                  </tr>
+                ))}
+                {logbooks.length === 0 && (
+                  <tr><td colSpan="7" className="p-8 text-center text-slate-400 italic">Belum ada data logbook.</td></tr>
+                )}
+              </tbody>
+            </table>
           </div>
-        </Card>
+        </div>
+
+        {/* Mobile Box View */}
+        <div className="md:hidden space-y-4">
+          {logbooks.map((log, index) => (
+            <div key={index} className="bg-white p-4 rounded-xl shadow-sm border border-slate-200 flex flex-col gap-3">
+              <div className="flex justify-between items-start">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-lg bg-slate-100 overflow-hidden border border-slate-200">
+                    {log.selfieUrl ? (
+                      <img src={log.selfieUrl} alt="Selfie" className="w-full h-full object-cover" />
+                    ) : (
+                      <div className="flex items-center justify-center h-full text-slate-300"><User size={16} /></div>
+                    )}
+                  </div>
+                  <div>
+                    <div className="font-bold text-slate-700 text-sm">{log.date}</div>
+                    <div className="text-xs text-slate-400 font-mono">{log.time}</div>
+                  </div>
+                </div>
+                <span className={`px-2 py-1 rounded-md text-[10px] font-bold uppercase ${log.status === 'Hadir' ? 'bg-emerald-100 text-emerald-700' : 'bg-amber-100 text-amber-700'}`}>
+                  {log.status}
+                </span>
+              </div>
+
+              <div className="text-sm text-slate-600 border-l-2 border-slate-100 pl-3">
+                <div className="font-semibold text-xs text-slate-400 uppercase mb-1">Kegiatan</div>
+                <p className="line-clamp-2">{log.activity}</p>
+              </div>
+
+              <div className="text-sm text-slate-600 border-l-2 border-slate-100 pl-3">
+                <div className="font-semibold text-xs text-slate-400 uppercase mb-1">Output</div>
+                <p className="line-clamp-2">{log.output}</p>
+              </div>
+
+              <button
+                onClick={() => onEditLogbook(log)}
+                className="w-full mt-2 py-2 flex items-center justify-center gap-2 text-sm font-bold text-blue-600 bg-blue-50 hover:bg-blue-100 rounded-lg transition-colors"
+              >
+                <Edit2 size={16} /> Edit Logbook
+              </button>
+            </div>
+          ))}
+          {logbooks.length === 0 && (
+            <div className="p-8 text-center text-slate-400 italic bg-white rounded-xl border border-dashed border-slate-200">Belum ada logbook.</div>
+          )}
+        </div>
+      </div>
+
+      {/* 3. DAFTAR LAPORAN (Below Logbook List on Mobile) */}
+      <div className="space-y-4">
+        <h3 className="text-xl font-bold text-slate-800">Riwayat Laporan</h3>
+        <div className="space-y-3">
+          {reports.map((rep, idx) => (
+            <div key={idx} className="bg-white p-4 rounded-xl shadow-sm border border-slate-200">
+              <div className="font-bold text-slate-700">{rep.title}</div>
+              <div className="text-sm text-slate-500 mt-1 line-clamp-2">{rep.overview}</div>
+              <div className="mt-2 text-xs text-slate-400 font-mono">{rep.timestamp ? new Date(rep.timestamp).toLocaleDateString() : '-'}</div>
+            </div>
+          ))}
+          {reports.length === 0 && (
+            <div className="p-8 text-center text-slate-400 italic bg-white rounded-xl border border-dashed border-slate-200">Belum ada laporan.</div>
+          )}
+        </div>
+      </div>
+
+      {/* MAP - Mobile Order: Last */}
+      <div className="md:hidden">
         <Card title="Lokasi Terakhir">
-          <div className="h-48 bg-slate-100 rounded-2xl overflow-hidden relative border border-slate-200">
-            {lastLogbook ? <LeafletMap lat={lastLogbook.lat} lng={lastLogbook.lng} readOnly={true} /> : <div className="flex items-center justify-center h-full text-slate-400 text-sm">Belum ada data lokasi</div>}
-            {lastLogbook && <div className="absolute bottom-4 left-4 right-4 bg-white/95 backdrop-blur-sm px-4 py-3 rounded-xl text-xs shadow-lg border border-slate-100 z-[400]"><div className="font-bold text-slate-700 mb-1">Terakhir check-in:</div><div className="text-slate-500 truncate">{lastLogbook.address || 'Koordinat GPS'}</div></div>}
+          <div className="h-64 bg-slate-100 rounded-2xl overflow-hidden relative border border-slate-200">
+            <LeafletMap readOnly={true} markers={lastLocation ? [{ ...lastLocation, popup: "Lokasi Terakhir Anda" }] : []} />
           </div>
         </Card>
+      </div>
+
+    </div>
+  );
+}
+
+function LogbookEditModal({ isOpen, onClose, logbook, onUpdate, showToast }) {
+  if (!isOpen || !logbook) return null;
+
+  const [activity, setActivity] = useState(logbook.activity || '');
+  const [output, setOutput] = useState(logbook.output || '');
+  const [date, setDate] = useState(logbook.date || new Date().toLocaleDateString('en-CA'));
+  const [time, setTime] = useState(logbook.time || '');
+  const [status, setStatus] = useState(logbook.status || 'Hadir');
+
+  // Location
+  const [updateLocation, setUpdateLocation] = useState(false);
+  const [lat, setLat] = useState(logbook.lat);
+  const [lng, setLng] = useState(logbook.lng);
+  const [address, setAddress] = useState(logbook.address || '');
+  const [accuracy, setAccuracy] = useState(logbook.accuracy);
+  const [locLoading, setLocLoading] = useState(false);
+
+  // Files
+  const [selfie, setSelfie] = useState(null); // Base64
+  const [doc, setDoc] = useState(null); // File object
+  const [previewSelfie, setPreviewSelfie] = useState(logbook.selfieUrl);
+  const [docMode, setDocMode] = useState(null);
+  const [cameraActive, setCameraActive] = useState(false);
+  const videoRef = useRef(null);
+  const canvasRef = useRef(null);
+
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
+  useEffect(() => {
+    setActivity(logbook.activity || '');
+    setOutput(logbook.output || '');
+    setDate(logbook.date || new Date().toLocaleDateString('en-CA'));
+    setTime(logbook.time || '');
+    setStatus(logbook.status || 'Hadir');
+    setLat(logbook.lat);
+    setLng(logbook.lng);
+    setAddress(logbook.address || '');
+    setAccuracy(logbook.accuracy);
+    setUpdateLocation(false);
+    setSelfie(null);
+    setDoc(null);
+    setPreviewSelfie(logbook.selfieUrl);
+  }, [logbook]);
+
+  const getLocation = () => {
+    if (!navigator.geolocation) return showToast('error', 'Error', 'Browser tidak mendukung GPS');
+    setLocLoading(true);
+    setUpdateLocation(true);
+    setAddress("Memperbarui lokasi...");
+
+    navigator.geolocation.getCurrentPosition(async (pos) => {
+      const { latitude, longitude, accuracy } = pos.coords;
+      setLat(latitude);
+      setLng(longitude);
+      setAccuracy(accuracy);
+
+      try {
+        const res = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${latitude}&lon=${longitude}&addressdetails=1`);
+        const data = await res.json();
+        if (data && data.display_name) {
+          setAddress(data.display_name);
+        } else {
+          setAddress(`${latitude.toFixed(6)}, ${longitude.toFixed(6)}`);
+        }
+      } catch {
+        setAddress(`${latitude.toFixed(6)}, ${longitude.toFixed(6)}`);
+      }
+      setLocLoading(false);
+      showToast('success', 'Lokasi Update', `Akurasi: ±${Math.round(accuracy)}m`);
+    }, (err) => {
+      setLocLoading(false);
+      showToast('error', 'Gagal GPS', err.message);
+      setUpdateLocation(false);
+      // Revert to old location if failed? 
+      // Better to keep user aware that update failed.
+    }, { enableHighAccuracy: true, timeout: 20000, maximumAge: 0 });
+  };
+
+  const startCamera = async () => { setCameraActive(true); try { const stream = await navigator.mediaDevices.getUserMedia({ video: true }); if (videoRef.current) videoRef.current.srcObject = stream; } catch { showToast('error', 'Kamera Error', 'Akses kamera ditolak'); setCameraActive(false); } };
+  const takePhoto = () => { const video = videoRef.current; const canvas = canvasRef.current; if (video && canvas) { canvas.width = video.videoWidth; canvas.height = video.videoHeight; canvas.getContext('2d').drawImage(video, 0, 0); const dataUrl = canvas.toDataURL('image/png'); setSelfie(dataUrl); setPreviewSelfie(dataUrl); video.srcObject.getTracks().forEach(t => t.stop()); setCameraActive(false); } };
+
+  const handleSubmit = async () => {
+    const cleanActivity = activity.replace(/<[^>]*>/g, '').trim();
+    const cleanOutput = output.replace(/<[^>]*>/g, '').trim();
+
+    if (cleanActivity.length === 0 || cleanOutput.length === 0) {
+      showToast('warning', 'Data Kosong', 'Kegiatan dan Output wajib diisi.');
+      return;
+    }
+
+    setIsSubmitting(true);
+    showToast('info', 'Menyimpan...', 'Sedang memperbarui logbook...');
+
+    try {
+      const editData = {
+        username: logbook.nim, // From logbook object
+        timestamp: logbook.timestamp, // Original timestamp to identify row
+        link_folder: "", // Need to get link_folder from somewhere? 
+        // Ah, user object isn't passed here? 
+        // Wait, I need link_folder to upload files.
+        // I should pass user object to this modal.
+        // Or just assume user has it.
+        logEntry: {
+          date, time, status, activity, output,
+          updateLocation, lat, lng, address, accuracy,
+          selfieBase64: selfie,
+          docBase64: doc ? await new Promise((r) => { const reader = new FileReader(); reader.onload = () => r(reader.result); reader.readAsDataURL(doc); }) : null
+        }
+      };
+
+      // Call onUpdate prop which wraps the API call
+      await onUpdate(editData);
+
+      setIsSubmitting(false);
+      onClose();
+    } catch (e) {
+      setIsSubmitting(false);
+      showToast('error', 'Gagal', e.message);
+    }
+  };
+
+  return (
+    <div className="fixed inset-0 z-[1000] bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4 animate-in fade-in duration-200">
+      <div className="bg-white w-full max-w-4xl rounded-2xl shadow-xl flex flex-col max-h-[90vh] animate-in zoom-in-95">
+        <div className="p-4 border-b border-slate-100 flex justify-between items-center bg-slate-50/50 rounded-t-2xl">
+          <h3 className="font-bold text-lg text-slate-800 flex items-center gap-2"><Edit2 size={20} /> Edit Logbook</h3>
+          <button onClick={onClose} disabled={isSubmitting} className="p-2 hover:bg-slate-200 rounded-full transition-colors"><X size={20} /></button>
+        </div>
+
+        <div className="overflow-y-auto p-6 space-y-6">
+          {/* Location Section */}
+          <div className="bg-slate-50 p-4 rounded-xl border border-slate-200">
+            <label className="block text-sm font-bold text-slate-700 mb-2">Lokasi (Lat, Lng)</label>
+            <div className="flex gap-4 items-start">
+              <div className="flex-1">
+                <div className="font-mono text-xs bg-white p-2 border rounded mb-1">{lat}, {lng}</div>
+                <div className="text-sm text-slate-600">{address}</div>
+              </div>
+              <Button onClick={getLocation} disabled={locLoading || isSubmitting} variant="secondary" className="whitespace-nowrap flex items-center gap-2">
+                <MapPin size={16} /> {locLoading ? 'Mencari...' : 'Perbarui Lokasi'}
+              </Button>
+            </div>
+            {updateLocation && <p className="text-xs text-amber-600 mt-2 font-bold">* Lokasi akan diperbarui ke posisi saat ini.</p>}
+          </div>
+
+          {/* Date/Time/Status */}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div className="p-3 bg-white border border-slate-200 rounded-xl">
+              <label className="text-xs font-bold text-slate-400 uppercase block mb-1">Tanggal</label>
+              <input type="date" value={date} onChange={e => setDate(e.target.value)} className="w-full text-sm font-bold text-slate-700 outline-none" disabled={isSubmitting} />
+            </div>
+            <div className="p-3 bg-white border border-slate-200 rounded-xl">
+              <label className="text-xs font-bold text-slate-400 uppercase block mb-1">Jam</label>
+              <input type="time" value={time} onChange={e => setTime(e.target.value)} className="w-full text-sm font-bold text-slate-700 outline-none" disabled={isSubmitting} />
+            </div>
+            <div className="p-3 bg-white border border-slate-200 rounded-xl">
+              <label className="text-xs font-bold text-slate-400 uppercase block mb-1">Status</label>
+              <select value={status} onChange={e => setStatus(e.target.value)} className="w-full text-sm font-bold text-slate-700 outline-none bg-transparent" disabled={isSubmitting}>
+                <option value="Hadir">Hadir</option>
+                <option value="Izin">Izin</option>
+                <option value="Sakit">Sakit</option>
+              </select>
+            </div>
+          </div>
+
+          {/* Activity & Output */}
+          <div className="space-y-4">
+            <div><label className="block text-sm font-bold text-slate-700 mb-2">Kegiatan</label><RichEditor value={activity} onChange={setActivity} disabled={isSubmitting} /></div>
+            <div><label className="block text-sm font-bold text-slate-700 mb-2">Output</label><RichEditor value={output} onChange={setOutput} disabled={isSubmitting} /></div>
+          </div>
+
+          {/* Selfie & Doc */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="border border-slate-200 rounded-xl p-4">
+              <label className="block text-sm font-bold text-slate-700 mb-2">Foto Selfie</label>
+              {previewSelfie ? (
+                <div className="relative group">
+                  <img src={previewSelfie} className="w-full h-48 object-cover rounded-lg" alt="Selfie" />
+                  <button onClick={() => { setSelfie(null); setPreviewSelfie(null); }} className="absolute top-2 right-2 bg-red-500 text-white p-1 rounded-full opacity-0 group-hover:opacity-100 transition-opacity" disabled={isSubmitting}><X size={14} /></button>
+                </div>
+              ) : cameraActive ? (
+                <div className="space-y-2">
+                  <video ref={videoRef} autoPlay playsInline className="w-full h-48 bg-black rounded-lg object-cover" />
+                  <canvas ref={canvasRef} className="hidden" />
+                  <Button onClick={takePhoto} className="w-full text-xs">Ambil Foto</Button>
+                </div>
+              ) : (
+                <div className="flex gap-2">
+                  <Button onClick={startCamera} variant="secondary" className="flex-1 text-xs" disabled={isSubmitting}>Kamera</Button>
+                  <label className="flex-1 cursor-pointer bg-slate-100 hover:bg-slate-200 text-slate-600 font-bold rounded-xl flex items-center justify-center text-xs transition-colors p-2">
+                    Upload
+                    <input type="file" className="hidden" accept="image/*" onChange={(e) => {
+                      const file = e.target.files[0];
+                      if (file) {
+                        const reader = new FileReader();
+                        reader.onload = (ev) => { setSelfie(ev.target.result); setPreviewSelfie(ev.target.result); };
+                        reader.readAsDataURL(file);
+                      }
+                    }} disabled={isSubmitting} />
+                  </label>
+                </div>
+              )}
+            </div>
+
+            <div className="border border-slate-200 rounded-xl p-4">
+              <label className="block text-sm font-bold text-slate-700 mb-2">Dokumen (Opsional)</label>
+              {doc ? (
+                <div className="flex items-center justify-between p-3 bg-green-50 text-green-700 rounded-lg border border-green-200">
+                  <span className="text-sm truncate font-bold">{doc.name}</span>
+                  <button onClick={() => setDoc(null)} className="text-red-500 hover:bg-red-50 p-1 rounded" disabled={isSubmitting}><X size={16} /></button>
+                </div>
+              ) : (
+                <div className="flex gap-2 h-full items-end pb-1">
+                  <label className="w-full cursor-pointer bg-slate-100 hover:bg-slate-200 text-slate-600 font-bold rounded-xl flex items-center justify-center text-xs transition-colors p-3 border-2 border-dashed border-slate-300">
+                    <Upload size={16} className="mr-2" /> Pilih Dokumen Baru
+                    <input type="file" className="hidden" onChange={(e) => setDoc(e.target.files[0])} disabled={isSubmitting} />
+                  </label>
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+
+        <div className="p-4 border-t border-slate-100 bg-slate-50 rounded-b-2xl flex justify-end gap-3">
+          <Button variant="secondary" onClick={onClose} disabled={isSubmitting}>Batal</Button>
+          <Button onClick={handleSubmit} disabled={isSubmitting}>
+            {isSubmitting ? 'Menyimpan...' : 'Simpan Perubahan'}
+          </Button>
+        </div>
       </div>
     </div>
   );
@@ -1063,6 +1496,7 @@ function StudentLogbookForm({ user, logbooks, setLogbooks, showToast }) {
 
   const [previewImage, setPreviewImage] = useState(null);
   const lastGeoUpdateRef = useRef(0);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   useEffect(() => {
     if (!navigator.geolocation) {
@@ -1240,27 +1674,28 @@ function StudentLogbookForm({ user, logbooks, setLogbooks, showToast }) {
     }
 
     showToast('info', 'Mengirim Data...', 'Mohon tunggu sebentar.');
-
-    const newLog = {
-      id: Date.now(),
-      studentId: user.id,
-      name: user.name,
-      className: user.class, // Add class
-      nim: user.username,
-      date: date,
-      time: time,
-      status,
-      lat,
-      lng,
-      accuracy,
-      address,
-      activity: activityHTML,
-      output: outputHTML,
-      selfieBase64: selfie, // Kirim base64
-      docBase64: doc ? await new Promise((r) => { const reader = new FileReader(); reader.onload = () => r(reader.result); reader.readAsDataURL(doc); }) : null
-    };
+    setIsSubmitting(true);
 
     try {
+      const newLog = {
+        id: Date.now(),
+        studentId: user.id,
+        name: user.name,
+        className: user.class, // Add class
+        nim: user.username,
+        date: date,
+        time: time,
+        status,
+        lat,
+        lng,
+        accuracy,
+        address,
+        activity: activityHTML,
+        output: outputHTML,
+        selfieBase64: selfie, // Kirim base64
+        docBase64: doc ? await new Promise((r) => { const reader = new FileReader(); reader.onload = () => r(reader.result); reader.readAsDataURL(doc); }) : null
+      };
+
       const result = await callAPI('submitLogbook', {
         username: user.username,
         fullname: user.name, // Add Full Name
@@ -1283,6 +1718,8 @@ function StudentLogbookForm({ user, logbooks, setLogbooks, showToast }) {
       setDocMode(null);
     } catch (err) {
       showToast('error', 'Gagal Mengirim', err.message);
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -1372,7 +1809,9 @@ function StudentLogbookForm({ user, logbooks, setLogbooks, showToast }) {
               </div>
             )}
           </div>
-          <Button onClick={handleSubmit} className="w-full py-4 text-lg mt-4 shadow-xl shadow-cyan-500/20 relative z-10">Kirim Logbook</Button>
+          <Button onClick={handleSubmit} disabled={isSubmitting} className="w-full py-4 text-lg mt-4 shadow-xl shadow-cyan-500/20 relative z-10">
+            {isSubmitting ? 'Mengirim...' : 'Kirim Logbook'}
+          </Button>
         </div>
       </Card>
     </div>
@@ -1952,10 +2391,10 @@ function LecturerLogbookView({ user, logbooks, students, showToast, onRefresh })
             onChange={setSortOrder}
             icon={ListOrdered}
             options={[
-              { value: 'newest', label: 'Terbaru' },
-              { value: 'oldest', label: 'Terlama' },
-              { value: 'date_newest', label: 'Tgl Terbaru' },
-              { value: 'date_oldest', label: 'Tgl Terlama' }
+              { value: 'newest', label: 'Terbaru Dikirim' },
+              { value: 'oldest', label: 'Terlama Dikirim' },
+              { value: 'date_newest', label: 'Tanggal Terbaru' },
+              { value: 'date_oldest', label: 'Tanggal Terlama' }
             ]}
           />
         </div>
