@@ -1623,21 +1623,17 @@ function LogbookEditModal({ isOpen, onClose, logbook, onUpdate, showToast }) {
 
           {/* Date/Time/Status */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <div className="p-3 bg-white border border-slate-200 rounded-xl">
+            <div className="p-3 bg-white border border-slate-200 rounded-xl relative z-40">
               <label className="text-xs font-bold text-slate-400 uppercase block mb-1">Tanggal</label>
-              <input type="date" value={date} onChange={e => setDate(e.target.value)} className="w-full text-sm font-bold text-slate-700 outline-none" disabled={isSubmitting} />
+              <CustomDatePicker value={date} onChange={setDate} />
             </div>
-            <div className="p-3 bg-white border border-slate-200 rounded-xl">
+            <div className="p-3 bg-white border border-slate-200 rounded-xl relative z-30">
               <label className="text-xs font-bold text-slate-400 uppercase block mb-1">Jam</label>
-              <input type="time" value={time} onChange={e => setTime(e.target.value)} className="w-full text-sm font-bold text-slate-700 outline-none" disabled={isSubmitting} />
+              <CustomTimePicker value={time || '00:00'} onChange={setTime} />
             </div>
-            <div className="p-3 bg-white border border-slate-200 rounded-xl">
+            <div className="p-3 bg-white border border-slate-200 rounded-xl relative z-20">
               <label className="text-xs font-bold text-slate-400 uppercase block mb-1">Status</label>
-              <select value={status} onChange={e => setStatus(e.target.value)} className="w-full text-sm font-bold text-slate-700 outline-none bg-transparent" disabled={isSubmitting}>
-                <option value="Hadir">Hadir</option>
-                <option value="Izin">Izin</option>
-                <option value="Sakit">Sakit</option>
-              </select>
+              <CustomStatusSelect value={status} onChange={setStatus} />
             </div>
           </div>
 
