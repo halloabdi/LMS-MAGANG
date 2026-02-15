@@ -936,6 +936,11 @@ export default function App() {
 
       showToast('success', 'Berhasil Login!', `Selamat datang kembali, ${userData.name}.`);
 
+      // Save session for 8 months
+      const eightMonths = 8 * 30 * 24 * 60 * 60 * 1000;
+      const expires = new Date().getTime() + eightMonths;
+      localStorage.setItem('app_session', JSON.stringify({ userData, expires }));
+
     } catch (err) {
       showToast('error', 'Login Gagal', err.message);
     }
