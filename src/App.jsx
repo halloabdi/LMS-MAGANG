@@ -631,16 +631,17 @@ const LeafletMap = ({ lat, lng, setLat, setLng, setAddress, readOnly = false, ma
 };
 
 // --- RICH TEXT EDITOR COMPONENT ---
-const RichEditor = ({ value, onChange, placeholder }) => {
+const RichEditor = ({ value, onChange, placeholder, disabled }) => {
   const editorRef = useRef(null);
 
   const execCmd = (command) => {
+    if (disabled) return;
     document.execCommand(command, false, null);
     editorRef.current.focus();
   };
 
   const handleInput = () => {
-    if (editorRef.current) onChange(editorRef.current.innerHTML);
+    if (editorRef.current && !disabled) onChange(editorRef.current.innerHTML);
   };
 
   useEffect(() => {
@@ -650,21 +651,21 @@ const RichEditor = ({ value, onChange, placeholder }) => {
   }, [value]);
 
   return (
-    <div className="border border-slate-200 rounded-xl overflow-hidden focus-within:ring-4 focus-within:ring-cyan-100 transition-all bg-white shadow-sm">
+    <div className={`border border-slate-200 rounded-xl overflow-hidden focus-within:ring-4 focus-within:ring-cyan-100 transition-all bg-white shadow-sm ${disabled ? 'opacity-60 pointer-events-none bg-slate-50' : ''}`}>
       <div className="bg-slate-50/50 p-2 flex gap-1 border-b border-slate-100 backdrop-blur-sm">
-        <ToolButton onClick={() => execCmd('bold')} icon={Bold} title="Bold" />
-        <ToolButton onClick={() => execCmd('italic')} icon={Italic} title="Italic" />
-        <ToolButton onClick={() => execCmd('underline')} icon={Underline} title="Underline" />
+        <ToolButton onClick={() => execCmd('bold')} icon={Bold} title="Bold" disabled={disabled} />
+        <ToolButton onClick={() => execCmd('italic')} icon={Italic} title="Italic" disabled={disabled} />
+        <ToolButton onClick={() => execCmd('underline')} icon={Underline} title="Underline" disabled={disabled} />
         <div className="w-px h-6 bg-slate-200 mx-1"></div>
-        <ToolButton onClick={() => execCmd('insertOrderedList')} icon={ListOrdered} title="Poin Angka (Numbered List)" />
+        <ToolButton onClick={() => execCmd('insertOrderedList')} icon={ListOrdered} title="Poin Angka (Numbered List)" disabled={disabled} />
         <div className="w-px h-6 bg-slate-200 mx-1"></div>
-        <ToolButton onClick={() => execCmd('superscript')} icon={Superscript} title="Superscript" />
-        <ToolButton onClick={() => execCmd('subscript')} icon={Subscript} title="Subscript" />
+        <ToolButton onClick={() => execCmd('superscript')} icon={Superscript} title="Superscript" disabled={disabled} />
+        <ToolButton onClick={() => execCmd('subscript')} icon={Subscript} title="Subscript" disabled={disabled} />
       </div>
       <div className="relative">
         <div
           ref={editorRef}
-          contentEditable
+          contentEditable={!disabled}
           className="w-full p-4 outline-none min-h-[120px] max-h-[300px] overflow-y-auto text-sm text-slate-700 leading-relaxed list-inside relative z-10 [&_ol]:list-decimal [&_ul]:list-disc"
           onInput={handleInput}
           suppressContentEditableWarning={true}
@@ -677,8 +678,8 @@ const RichEditor = ({ value, onChange, placeholder }) => {
 };
 
 
-const ToolButton = ({ onClick, icon: Icon, title }) => (
-  <button onClick={(e) => { e.preventDefault(); onClick(); }} className="p-2 text-slate-500 hover:text-cyan-600 hover:bg-cyan-50 rounded-lg transition-colors" title={title}><Icon size={16} /></button>
+const ToolButton = ({ onClick, icon: Icon, title, disabled }) => (
+  <button onClick={(e) => { e.preventDefault(); if (!disabled) onClick(); }} disabled={disabled} className={`p-2 rounded-lg transition-colors ${disabled ? 'text-slate-300 cursor-not-allowed' : 'text-slate-500 hover:text-cyan-600 hover:bg-cyan-50'}`} title={title}><Icon size={16} /></button>
 );
 
 // --- PROFILE COMPONENT ---
@@ -1728,6 +1729,7 @@ function StudentLogbookForm({ user, logbooks, setLogbooks, showToast }) {
   const [previewImage, setPreviewImage] = useState(null);
   const lastGeoUpdateRef = useRef(0);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const isSubmittingRef = useRef(false);
 
   useEffect(() => {
     if (!navigator.geolocation) {
@@ -1899,6 +1901,9 @@ function StudentLogbookForm({ user, logbooks, setLogbooks, showToast }) {
     const cleanActivity = activityHTML.replace(/<[^>]*>/g, '').trim();
     const cleanOutput = outputHTML.replace(/<[^>]*>/g, '').trim();
 
+    // Prevent Double Submission
+    if (isSubmittingRef.current) return;
+
     if (!lat || !selfie || cleanActivity.length === 0 || cleanOutput.length === 0) {
       showToast('warning', 'Data Belum Lengkap', 'Mohon lengkapi: Lokasi, Selfie, Kegiatan, dan Output.');
       return;
@@ -1906,6 +1911,7 @@ function StudentLogbookForm({ user, logbooks, setLogbooks, showToast }) {
 
     showToast('info', 'Mengirim Data...', 'Mohon tunggu sebentar.');
     setIsSubmitting(true);
+    isSubmittingRef.current = true;
 
     try {
       const newLog = {
@@ -1951,6 +1957,7 @@ function StudentLogbookForm({ user, logbooks, setLogbooks, showToast }) {
       showToast('error', 'Gagal Mengirim', err.message);
     } finally {
       setIsSubmitting(false);
+      isSubmittingRef.current = false;
     }
   };
 
@@ -2008,8 +2015,8 @@ function StudentLogbookForm({ user, logbooks, setLogbooks, showToast }) {
             </div>
           </div>
 
-          <div className="relative z-10"><label className="block text-sm font-bold text-slate-700 mb-2">Kegiatan yang Dilakukan</label><RichEditor value={activityHTML} onChange={setActivityHTML} placeholder="Ketik di sini... (Bisa ditebalkan, miring, garis bawah, dan poin angka)" /></div>
-          <div className="relative z-10"><label className="block text-sm font-bold text-slate-700 mb-2">Output yang Dihasilkan</label><RichEditor value={outputHTML} onChange={setOutputHTML} placeholder="Hasil kerja yang dicapai..." /></div>
+          <div className="relative z-10"><label className="block text-sm font-bold text-slate-700 mb-2">Kegiatan yang Dilakukan</label><RichEditor value={activityHTML} onChange={setActivityHTML} placeholder="Ketik di sini... (Bisa ditebalkan, miring, garis bawah, dan poin angka)" disabled={isSubmitting} /></div>
+          <div className="relative z-10"><label className="block text-sm font-bold text-slate-700 mb-2">Output yang Dihasilkan</label><RichEditor value={outputHTML} onChange={setOutputHTML} placeholder="Hasil kerja yang dicapai..." disabled={isSubmitting} /></div>
           <div className="relative z-10"><label className="block text-sm font-bold text-slate-700 mb-2">Dokumentasi Tambahan</label>
             {doc ? (
               <div
