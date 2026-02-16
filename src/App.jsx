@@ -419,7 +419,7 @@ const fetchDashboardData = async (role, userId) => {
 // --- UTILITY COMPONENTS ---
 
 const Button = ({ children, onClick, variant = 'primary', className = '', type = 'button', ...props }) => {
-  const baseStyle = "px-4 py-2 rounded-xl font-medium transition-all duration-300 transform active:scale-95 shadow-md flex items-center justify-center gap-2";
+  const baseStyle = "px-4 py-2 rounded-xl font-medium transition-all duration-300 transform active:scale-95 shadow-md flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed disabled:grayscale disabled:active:scale-100 disabled:shadow-none";
   const variants = {
     primary: "bg-gradient-to-r from-cyan-500 to-blue-600 text-white hover:shadow-lg hover:shadow-cyan-500/30 hover:from-cyan-600 hover:to-blue-700",
     secondary: "bg-white text-slate-700 border border-slate-200 hover:bg-slate-50",
