@@ -368,8 +368,8 @@ const TextModal = ({ title, content, onClose }) => {
 };
 
 // --- CONFIGURATION ---
-// 16 Feb 04:52 - Version 39: Fixed Lecturer Column Mapping (Profile Update)
-const GAS_URL = "https://script.google.com/macros/s/AKfycbyUZiIeikxe8e5IYb96QEH0cb8BHAEvsBbQmRW-oj3GX5G28NFbn06PnBivDfkt_P7u/exec";
+// 16 Feb 05:00 - Version 40: Fixed Lecturer Login Data (Phone, Link Folder)
+const GAS_URL = "https://script.google.com/macros/s/AKfycbwmawd6X3shaGlqLeCLO8Rgd5X6nIoB0dZUUVIejqRmFH85DgOwsMg1BV-wf1aed2Mu/exec";
 
 // --- INITIAL DATA ---
 const INITIAL_LOGBOOKS = [];
