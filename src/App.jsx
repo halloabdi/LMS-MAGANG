@@ -684,10 +684,20 @@ const ToolButton = ({ onClick, icon: Icon, title, disabled }) => (
 
 // --- PROFILE COMPONENT ---
 function ProfileSettings({ user, students, onUpdate, onCancel, showToast }) {
+  // Initialize state with all necessary fields, including academic info breakdown
   const [formData, setFormData] = useState({
-    name: user.name, username: user.username, email: user.email, phone: user.phone || '', password: user.password, photoUrl: user.photoUrl || '',
-    bio: user.bio || ''
+    name: user.name,
+    username: user.username,
+    email: user.email,
+    phone: user.phone || '',
+    password: user.password,
+    photoUrl: user.photoUrl || '',
+    bio: user.bio || '',
+    internship_place: user.internship_place || '',
+    supervisor1: user.supervisor_internal ? user.supervisor_internal.split(' ### ')[0] : '',
+    supervisor2: user.supervisor_internal ? (user.supervisor_internal.split(' ### ')[1] || '') : ''
   });
+
   const [loading, setLoading] = useState(false);
   const [preview, setPreview] = useState(user.photoUrl || '');
   const [photoFile, setPhotoFile] = useState(null);
@@ -704,6 +714,11 @@ function ProfileSettings({ user, students, onUpdate, onCancel, showToast }) {
     }
   };
 
+  const copyToClipboard = (text) => {
+    navigator.clipboard.writeText(text);
+    showToast('success', 'Berhasil Disalin', 'NIM berhasil disalin ke clipboard.');
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
@@ -718,6 +733,9 @@ function ProfileSettings({ user, students, onUpdate, onCancel, showToast }) {
         });
       }
 
+      // Reconstruct the supervisor string for the backend
+      const supervisor_internal = `${formData.supervisor1} ### ${formData.supervisor2}`;
+
       const payload = {
         ...formData,
         id: user.id, // Current User ID
@@ -725,14 +743,21 @@ function ProfileSettings({ user, students, onUpdate, onCancel, showToast }) {
         photoBase64: photoBase64,
         mimeType: photoFile ? photoFile.type : null,
         // Include link_folder if available in user object to help backend place file
-        link_folder: user.link_folder
+        link_folder: user.link_folder,
+        // Ensure strictly formatted academic info is sent
+        supervisor_internal: supervisor_internal,
+        internship_place: formData.internship_place
       };
 
       const result = await callAPI('updateProfile', payload);
 
       // Update Local State in Parent
       // Ensure photoUrl is updated with the result from backend or the preview
-      onUpdate({ ...formData, photoUrl: result.photoUrl || (photoBase64 ? preview : formData.photoUrl) });
+      onUpdate({
+        ...formData,
+        photoUrl: result.photoUrl || (photoBase64 ? preview : formData.photoUrl),
+        supervisor_internal: supervisor_internal
+      });
       showToast('success', 'Profil Diperbarui', 'Data profil berhasil disimpan ke database.');
     } catch (err) {
       console.error(err);
@@ -757,12 +782,38 @@ function ProfileSettings({ user, students, onUpdate, onCancel, showToast }) {
             </div>
             <p className="text-sm text-slate-500 mt-2">Klik ikon kamera untuk ganti foto</p>
           </div>
+
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <Input label="Nama Lengkap" name="name" value={formData.name} onChange={handleChange} />
-            <Input label={user.role === 'student' ? 'NIM' : 'NIP / Username'} name="username" value={formData.username} onChange={handleChange} />
+
+            {/* NIM Field - Read Only & Copyable */}
+            <div className="mb-4">
+              <label className="block text-sm font-semibold text-slate-500 mb-2 ml-1">
+                {user.role === 'student' ? 'NIM' : 'NIP / Username'}
+              </label>
+              <div className="relative">
+                <input
+                  type="text"
+                  value={formData.username}
+                  readOnly
+                  className="w-full px-5 py-3 rounded-xl border border-slate-200 bg-slate-100 text-slate-500 cursor-not-allowed focus:outline-none"
+                />
+                <button
+                  type="button"
+                  onClick={() => copyToClipboard(formData.username)}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 p-2 text-slate-400 hover:text-cyan-600 hover:bg-cyan-50 rounded-lg transition-colors"
+                  title="Salin NIM"
+                >
+                  <FileText size={18} />
+                </button>
+              </div>
+              <p className="text-xs text-slate-400 mt-1 ml-1">*NIM tidak dapat diubah. Hubungi admin jika terdapat kesalahan.</p>
+            </div>
+
             <Input label="Alamat Email" name="email" type="email" value={formData.email} onChange={handleChange} />
             <Input label="Nomor Telepon" name="phone" type="tel" value={formData.phone} onChange={handleChange} placeholder="08123456789" />
-            <Input label="Password" name="password" type="password" value={formData.password} onChange={handleChange} />
+            <Input label="Password" name="password" type="password" value={formData.password} onChange={handleChange} placeholder="Biarkan kosong jika tidak ingin mengubah" />
+
             <div className="md:col-span-2">
               <label className="block text-sm font-semibold text-slate-500 mb-2 ml-1">Bio / Uraian Singkat</label>
               <textarea
@@ -774,12 +825,55 @@ function ProfileSettings({ user, students, onUpdate, onCancel, showToast }) {
               />
             </div>
           </div>
+
           <div className="border-t border-slate-100 pt-6 mt-6">
-            <h4 className="font-bold text-slate-700 mb-2">Informasi Akademik</h4>
-            {user.role === 'student' && (<div className="bg-slate-50 p-4 rounded-xl space-y-3 text-sm border border-slate-100"><div><span className="font-bold text-slate-500">Tempat Magang:</span><br />{user.internship_place}</div><div><span className="font-bold text-slate-500">Dosen Pembimbing:</span><br /><FormatText text={user.supervisor_internal} /></div></div>)}
-            {user.role === 'lecturer' && (<div className="bg-slate-50 p-4 rounded-xl space-y-3 text-sm border border-slate-100"><div><span className="font-bold text-slate-500">Jabatan:</span> {user.jabatan}</div><div><span className="font-bold text-slate-500">Kelas Ampuan:</span> {user.classId || '-'}</div><div><span className="font-bold text-slate-500">Status:</span> Aktif</div></div>)}
+            <h4 className="font-bold text-slate-700 mb-4 text-lg">Informasi Akademik</h4>
+
+            {user.role === 'student' && (
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6 bg-slate-50/50 p-6 rounded-2xl border border-slate-100">
+                <div className="md:col-span-2">
+                  <Input
+                    label="Tempat Magang"
+                    name="internship_place"
+                    value={formData.internship_place}
+                    onChange={handleChange}
+                    placeholder="Contoh: PT. Telkom Indonesia"
+                  />
+                </div>
+
+                <Input
+                  label="Dosen Pembimbing 1"
+                  name="supervisor1"
+                  value={formData.supervisor1}
+                  onChange={handleChange}
+                  placeholder="Nama Dosen Pembimbing Pertama"
+                />
+
+                <Input
+                  label="Dosen Pembimbing 2"
+                  name="supervisor2"
+                  value={formData.supervisor2}
+                  onChange={handleChange}
+                  placeholder="Nama Dosen Pembimbing Kedua (Opsional)"
+                />
+              </div>
+            )}
+
+            {user.role === 'lecturer' && (
+              <div className="bg-slate-50 p-4 rounded-xl space-y-3 text-sm border border-slate-100">
+                <div><span className="font-bold text-slate-500">Jabatan:</span> {user.jabatan}</div>
+                <div><span className="font-bold text-slate-500">Kelas Ampuan:</span> {user.classId || '-'}</div>
+                <div><span className="font-bold text-slate-500">Status:</span> Aktif</div>
+              </div>
+            )}
           </div>
-          <div className="flex justify-end gap-3 pt-4"><Button type="button" variant="secondary" onClick={onCancel} disabled={loading}>Batal</Button><Button type="submit" variant="primary" disabled={loading}>{loading ? 'Menyimpan...' : 'Simpan Perubahan'}</Button></div>
+
+          <div className="flex justify-end gap-3 pt-4">
+            <Button type="button" variant="secondary" onClick={onCancel} disabled={loading}>Batal</Button>
+            <Button type="submit" variant="primary" disabled={loading}>
+              {loading ? 'Menyimpan...' : 'Simpan Perubahan'}
+            </Button>
+          </div>
         </form>
       </Card>
 
