@@ -912,7 +912,7 @@ function ProfileSettings({ user, students, onUpdate, onCancel, showToast }) {
                 </div>
 
                 <Input
-                  label="Dosen Pembimbing 1"
+                  label="Dosen Pembimbing Utama"
                   name="supervisor1"
                   value={formData.supervisor1}
                   onChange={handleChange}
@@ -920,7 +920,7 @@ function ProfileSettings({ user, students, onUpdate, onCancel, showToast }) {
                 />
 
                 <Input
-                  label="Dosen Pembimbing 2"
+                  label="Dosen Pembimbing Pendamping"
                   name="supervisor2"
                   value={formData.supervisor2}
                   onChange={handleChange}
