@@ -786,9 +786,22 @@ function ProfileSettings({ user, students, onUpdate, onCancel, showToast }) {
 
   const headerLabelStyle = "font-bold text-slate-700 text-lg";
 
+  const [showGuide, setShowGuide] = useState(false);
+
+  const guideContent = `
+    <ol class="list-decimal pl-5 space-y-2 text-sm text-slate-600">
+      <li>Pastikan kamu menuliskan nama asli dosen pembimbing secara lengkap sesuai dengan data resmi dari kampus agar logbook kamu bisa langsung terhubung ke layar dosen yang bersangkutan tanpa nyasar. 🏫</li>
+      <li>Kamu tidak perlu pusing memikirkan kelengkapan gelar akademik seperti sarjana atau magister karena sistem sudah dirancang pintar untuk mengabaikan embel-embel tersebut dan hanya berfokus pada nama utamanya saja. 🎓</li>
+      <li>Hindari menyingkat nama dosen pembimbing apalagi hanya menggunakan sapaan akrab atau nama panggilan gaul sehari-hari karena sistem bisa kebingungan dan berisiko gagal mendata namamu serta huruf kapital/besar setiap kata. 🙅‍♂️</li>
+      <li>Jangan khawatir jika kamu salah menaruh tanda titik atau koma saat menuliskan gelar karena sistem secara otomatis akan membersihkan tanda baca tersebut asalkan huruf pada nama utamanya tidak salah ketik. ✨</li>
+      <li>Sebagai contoh penulisan yang tepat dan mudah terbaca sistem adalah <b>Budi Abdi</b> atau <b>Dr Budi Abdi S Pt M Si</b>. Sementara contoh yang tidak tepat adalah <b>Pak Abdi</b> atau <b>B Mengabdi</b> karena pemotongan nama maupun ketidaksesuaian nama membuat sistem kesulitan melacak data (misal: Budi Abdi ✅ | budi abdi ❌ | budi Abdi ❌ | Budi ❌). 📝</li>
+    </ol>
+  `;
+
   return (
     <div className="animate-in fade-in slide-in-from-bottom-4 duration-500 space-y-8 pb-10">
       {previewImage && <ImageModal src={previewImage} onClose={() => setPreviewImage(null)} />}
+      {showGuide && <TextModal title="Panduan Penulisan Nama Dosen" content={guideContent} onClose={() => setShowGuide(false)} />}
 
       <Card title={<span className="text-2xl font-extrabold bg-gradient-to-r from-cyan-600 to-blue-600 bg-clip-text text-transparent">Pengaturan Profil Saya</span>}>
         <form onSubmit={handleSubmit} className="space-y-6">
@@ -875,7 +888,16 @@ function ProfileSettings({ user, students, onUpdate, onCancel, showToast }) {
           </div>
 
           <div className="border-t border-slate-100 pt-6 mt-6">
-            <h4 className="font-bold text-slate-700 mb-4 text-lg">Informasi Akademik</h4>
+            <div className="flex items-center justify-between mb-4">
+              <h4 className="font-bold text-slate-700 text-lg">Informasi Akademik</h4>
+              <button
+                type="button"
+                onClick={() => setShowGuide(true)}
+                className="text-sm font-bold text-cyan-600 hover:text-cyan-700 hover:bg-cyan-50 px-3 py-1.5 rounded-lg transition-colors flex items-center gap-1.5"
+              >
+                <Lightbulb size={16} /> Lihat Panduan
+              </button>
+            </div>
 
             {user.role === 'student' && (
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6 bg-slate-50/50 p-6 rounded-2xl border border-slate-100">
