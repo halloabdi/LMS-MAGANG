@@ -368,8 +368,8 @@ const TextModal = ({ title, content, onClose }) => {
 };
 
 // --- CONFIGURATION ---
-// 16 Feb 04:17 - Version 37: Profile Update Handler Added
-const GAS_URL = "https://script.google.com/macros/s/AKfycbwzGUEUm51Q-h-pY80VrRvTInBBrzPGmNDoD9TE7-_YjKygHG2mwVIm6Ffl15gLrYgY/exec";
+// 16 Feb 04:23 - Version 38: Profile Fixes (Email, Bio, PhotoUrl)
+const GAS_URL = "https://script.google.com/macros/s/AKfycbx4br2fxabA06BBqAyE12LdZzEb4GdjkeUUvwROPVOqEWAEN775Z83EeQ27nsfm6LPG/exec";
 
 // --- INITIAL DATA ---
 const INITIAL_LOGBOOKS = [];
