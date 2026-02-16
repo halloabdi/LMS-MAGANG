@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef, useCallback } from 'react';
 import {
   MapPin, Camera, Upload, FileText, LogOut,
   LayoutDashboard, CheckCircle, XCircle,
-  Map as MapIcon, Eye, Menu, X, Bold, Italic, Underline,
+  Map as MapIcon, Eye, EyeOff, Menu, X, Bold, Italic, Underline,
   Superscript, Subscript, ChevronRight, ChevronLeft, ChevronDown,
   User, Settings, Edit3, Save, Image as ImageIcon, Calendar, Clock,
   AlertCircle, ListOrdered, Lightbulb, Check, AlertTriangle, Search, RefreshCw, Download, MessageCircle, FileSpreadsheet, Maximize2
@@ -444,19 +444,36 @@ const Card = ({ children, className = '', title }) => (
   </div>
 );
 
-const Input = ({ label, type = "text", value, onChange, placeholder, ...props }) => (
-  <div className="mb-4">
-    <label className="block text-sm font-semibold text-slate-500 mb-2 ml-1">{label}</label>
-    <input
-      type={type}
-      value={value}
-      onChange={onChange}
-      className="w-full px-5 py-3 rounded-xl border border-slate-200 focus:ring-4 focus:ring-cyan-100 focus:border-cyan-400 outline-none transition-all bg-slate-50 focus:bg-white text-slate-700 placeholder:text-slate-400"
-      placeholder={placeholder}
-      {...props}
-    />
-  </div>
-);
+const Input = ({ label, type = "text", value, onChange, placeholder, labelClassName, ...props }) => {
+  const [showPassword, setShowPassword] = useState(false);
+  const isPassword = type === "password";
+  const inputType = isPassword ? (showPassword ? "text" : "password") : type;
+
+  return (
+    <div className="mb-4">
+      <label className={`block mb-2 ml-1 ${labelClassName || 'text-sm font-semibold text-slate-500'}`}>{label}</label>
+      <div className="relative">
+        <input
+          type={inputType}
+          value={value}
+          onChange={onChange}
+          className="w-full px-5 py-3 rounded-xl border border-slate-200 focus:ring-4 focus:ring-cyan-100 focus:border-cyan-400 outline-none transition-all bg-slate-50 focus:bg-white text-slate-700 placeholder:text-slate-400"
+          placeholder={placeholder}
+          {...props}
+        />
+        {isPassword && (
+          <button
+            type="button"
+            onClick={() => setShowPassword(!showPassword)}
+            className="absolute right-3 top-1/2 -translate-y-1/2 p-2 text-slate-400 hover:text-cyan-600 rounded-lg transition-colors"
+          >
+            {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
+          </button>
+        )}
+      </div>
+    </div>
+  );
+};
 
 // --- LEAFLET MAP COMPONENT (ROBUST IMPLEMENTATION) ---
 const LeafletMap = ({ lat, lng, setLat, setLng, setAddress, readOnly = false, markers = [] }) => {
@@ -767,6 +784,8 @@ function ProfileSettings({ user, students, onUpdate, onCancel, showToast }) {
     }
   };
 
+  const headerLabelStyle = "font-bold text-slate-700 text-lg";
+
   return (
     <div className="animate-in fade-in slide-in-from-bottom-4 duration-500 space-y-8 pb-10">
       {previewImage && <ImageModal src={previewImage} onClose={() => setPreviewImage(null)} />}
@@ -784,11 +803,17 @@ function ProfileSettings({ user, students, onUpdate, onCancel, showToast }) {
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <Input label="Nama Lengkap" name="name" value={formData.name} onChange={handleChange} />
+            <Input
+              label="Nama Lengkap"
+              name="name"
+              value={formData.name}
+              onChange={handleChange}
+              labelClassName={headerLabelStyle}
+            />
 
             {/* NIM Field - Read Only & Copyable */}
             <div className="mb-4">
-              <label className="block text-sm font-semibold text-slate-500 mb-2 ml-1">
+              <label className={`block mb-2 ml-1 ${headerLabelStyle}`}>
                 {user.role === 'student' ? 'NIM' : 'NIP / Username'}
               </label>
               <div className="relative">
@@ -810,12 +835,35 @@ function ProfileSettings({ user, students, onUpdate, onCancel, showToast }) {
               <p className="text-xs text-slate-400 mt-1 ml-1">*NIM tidak dapat diubah. Hubungi admin jika terdapat kesalahan.</p>
             </div>
 
-            <Input label="Alamat Email" name="email" type="email" value={formData.email} onChange={handleChange} />
-            <Input label="Nomor Telepon" name="phone" type="tel" value={formData.phone} onChange={handleChange} placeholder="08123456789" />
-            <Input label="Password" name="password" type="password" value={formData.password} onChange={handleChange} placeholder="Biarkan kosong jika tidak ingin mengubah" />
+            <Input
+              label="Alamat Email"
+              name="email"
+              type="email"
+              value={formData.email}
+              onChange={handleChange}
+              labelClassName={headerLabelStyle}
+            />
+            <Input
+              label="Nomor Telepon"
+              name="phone"
+              type="tel"
+              value={formData.phone}
+              onChange={handleChange}
+              placeholder="08123456789"
+              labelClassName={headerLabelStyle}
+            />
+            <Input
+              label="Password"
+              name="password"
+              type="password"
+              value={formData.password}
+              onChange={handleChange}
+              placeholder="Biarkan kosong jika tidak ingin mengubah"
+              labelClassName={headerLabelStyle}
+            />
 
             <div className="md:col-span-2">
-              <label className="block text-sm font-semibold text-slate-500 mb-2 ml-1">Bio / Uraian Singkat</label>
+              <label className={`block mb-2 ml-1 ${headerLabelStyle}`}>Bio / Uraian Singkat</label>
               <textarea
                 name="bio"
                 value={formData.bio}
