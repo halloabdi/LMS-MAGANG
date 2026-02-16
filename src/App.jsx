@@ -790,7 +790,7 @@ function ProfileSettings({ user, students, onUpdate, onCancel, showToast }) {
     <div className="animate-in fade-in slide-in-from-bottom-4 duration-500 space-y-8 pb-10">
       {previewImage && <ImageModal src={previewImage} onClose={() => setPreviewImage(null)} />}
 
-      <Card title="Pengaturan Profil Saya">
+      <Card title={<span className="text-2xl font-extrabold bg-gradient-to-r from-cyan-600 to-blue-600 bg-clip-text text-transparent">Pengaturan Profil Saya</span>}>
         <form onSubmit={handleSubmit} className="space-y-6">
           <div className="flex flex-col items-center mb-6">
             <div className="relative group">
