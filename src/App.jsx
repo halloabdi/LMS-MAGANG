@@ -368,8 +368,8 @@ const TextModal = ({ title, content, onClose }) => {
 };
 
 // --- CONFIGURATION ---
-// 15 Feb 04:33 - Version 36: Fixed Student Data Leak (Filter by NIM)
-const GAS_URL = "https://script.google.com/macros/s/AKfycbwEPk-e6ZLPoak5vsnwcjJPdfVN8N0aE0G5gig5Xb9ckdj9Oih9mdw9WQES9wfGp3Z1/exec";
+// 16 Feb 04:17 - Version 37: Profile Update Handler Added
+const GAS_URL = "https://script.google.com/macros/s/AKfycbwzGUEUm51Q-h-pY80VrRvTInBBrzPGmNDoD9TE7-_YjKygHG2mwVIm6Ffl15gLrYgY/exec";
 
 // --- INITIAL DATA ---
 const INITIAL_LOGBOOKS = [];
