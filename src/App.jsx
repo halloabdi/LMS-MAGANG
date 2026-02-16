@@ -368,8 +368,8 @@ const TextModal = ({ title, content, onClose }) => {
 };
 
 // --- CONFIGURATION ---
-// 16 Feb 05:00 - Version 40: Fixed Lecturer Login Data (Phone, Link Folder)
-const GAS_URL = "https://script.google.com/macros/s/AKfycbwmawd6X3shaGlqLeCLO8Rgd5X6nIoB0dZUUVIejqRmFH85DgOwsMg1BV-wf1aed2Mu/exec";
+// 16 Feb 05:08 - Version 41: Robust Row Finding (ID or Username/NIP)
+const GAS_URL = "https://script.google.com/macros/s/AKfycbwpHGJ7Lfe4-rh3L_wPNXTdreHuEZoucLhpEuREnLgcPcsIRtIvw8ZPcta5rxitOKlV/exec";
 
 // --- INITIAL DATA ---
 const INITIAL_LOGBOOKS = [];
@@ -840,12 +840,12 @@ function ProfileSettings({ user, students, onUpdate, onCancel, showToast }) {
                   type="button"
                   onClick={() => copyToClipboard(formData.username)}
                   className="absolute right-3 top-1/2 -translate-y-1/2 p-2 text-slate-400 hover:text-cyan-600 hover:bg-cyan-50 rounded-lg transition-colors"
-                  title="Salin NIM"
+                  title={`Salin ${user.role === 'student' ? 'NIM' : 'NIP'}`}
                 >
                   <FileText size={18} />
                 </button>
               </div>
-              <p className="text-xs text-slate-400 mt-1 ml-1">*NIM tidak dapat diubah. Hubungi admin jika terdapat kesalahan.</p>
+              <p className="text-xs text-slate-400 mt-1 ml-1">*{user.role === 'student' ? 'NIM' : 'NIP'} tidak dapat diubah. Hubungi admin jika terdapat kesalahan.</p>
             </div>
 
             <Input
