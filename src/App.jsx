@@ -368,8 +368,8 @@ const TextModal = ({ title, content, onClose }) => {
 };
 
 // --- CONFIGURATION ---
-// 16 Feb 04:23 - Version 38: Profile Fixes (Email, Bio, PhotoUrl)
-const GAS_URL = "https://script.google.com/macros/s/AKfycbx4br2fxabA06BBqAyE12LdZzEb4GdjkeUUvwROPVOqEWAEN775Z83EeQ27nsfm6LPG/exec";
+// 16 Feb 04:52 - Version 39: Fixed Lecturer Column Mapping (Profile Update)
+const GAS_URL = "https://script.google.com/macros/s/AKfycbyUZiIeikxe8e5IYb96QEH0cb8BHAEvsBbQmRW-oj3GX5G28NFbn06PnBivDfkt_P7u/exec";
 
 // --- INITIAL DATA ---
 const INITIAL_LOGBOOKS = [];
