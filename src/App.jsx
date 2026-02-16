@@ -369,7 +369,7 @@ const TextModal = ({ title, content, onClose }) => {
 
 // --- CONFIGURATION ---
 // 16 Feb 05:31 - Version 42: Strict Link Folder Validation & Bio Column Override
-const GAS_URL = "https://script.google.com/macros/s/AKfycbzzsYHDqEE7-ZRfchZ_Iii8JCTRT1F8n9anmI3zrb_DLpVSzIG8lQsj3w3bh42og_6W/exec";
+const GAS_URL = "https://script.google.com/macros/s/AKfycbwOEM-xtGHEFhtHa5NwN-WXTe9SS4tiTb7thghmUrB5w-BXCMAuDIg5LUHd8qZiLeed/exec";
 
 // --- INITIAL DATA ---
 const INITIAL_LOGBOOKS = [];
