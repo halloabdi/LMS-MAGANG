@@ -368,8 +368,8 @@ const TextModal = ({ title, content, onClose }) => {
 };
 
 // --- CONFIGURATION ---
-// 16 Feb 05:08 - Version 41: Robust Row Finding (ID or Username/NIP)
-const GAS_URL = "https://script.google.com/macros/s/AKfycbwpHGJ7Lfe4-rh3L_wPNXTdreHuEZoucLhpEuREnLgcPcsIRtIvw8ZPcta5rxitOKlV/exec";
+// 16 Feb 05:31 - Version 42: Strict Link Folder Validation & Bio Column Override
+const GAS_URL = "https://script.google.com/macros/s/AKfycbzzsYHDqEE7-ZRfchZ_Iii8JCTRT1F8n9anmI3zrb_DLpVSzIG8lQsj3w3bh42og_6W/exec";
 
 // --- INITIAL DATA ---
 const INITIAL_LOGBOOKS = [];
