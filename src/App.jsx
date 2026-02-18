@@ -369,7 +369,7 @@ const TextModal = ({ title, content, onClose }) => {
 
 // --- CONFIGURATION ---
 // 18 Feb 14:51 - Version 45: Location Tracking & Detection Status
-const GAS_URL = "https://script.google.com/macros/s/AKfycbwY9LBOSCyStwTgZ1vN_oPETahw79eEvRFTFKhcIOrjTPbyhib9xFqA0mroi5gKEsC2/exec";
+const GAS_URL = "https://script.google.com/macros/s/AKfycbxbYrIlpJAtnoEQAhOvkmIsKABO4GawC5qkaFXFqV2Gsks3vtZ94cjWbxqZkHw5ELuM/exec";
 
 // --- INITIAL DATA ---
 const INITIAL_LOGBOOKS = [];
