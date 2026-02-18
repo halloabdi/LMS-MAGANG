@@ -2380,6 +2380,8 @@ function StudentLogbookForm({ user, logbooks, setLogbooks, showToast }) {
       setLat(latitude);
       setLng(longitude);
       setAccuracy(accuracy);
+      setLocationType('automatic'); // Ensure status is automatic when GPS works
+      setShowManualInput(false); // Hide manual input if GPS works
 
       // Throttle Reverse Geocoding - Jika belum ada alamat yg valid, kita coba fetch
       const now = Date.now();
