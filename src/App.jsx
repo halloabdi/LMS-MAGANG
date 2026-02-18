@@ -1055,7 +1055,7 @@ const ImageCropper = ({ imageSrc, onCrop, onCancel }) => {
             <button onClick={onCancel} className="p-2 hover:bg-slate-100 rounded-full transition text-slate-400 hover:text-red-500"><X size={20} /></button>
           </div>
 
-          <div className="flex-1 p-6 space-y-6 overflow-y-auto">
+          <div className="hidden lg:block flex-1 p-6 space-y-6 overflow-y-auto">
             {/* Info Box */}
             <div className="bg-cyan-50 p-4 rounded-xl border border-cyan-100">
               <h4 className="font-bold text-cyan-800 text-sm mb-1 flex items-center gap-2"><Lightbulb size={14} /> Pengaturan Potongan</h4>
