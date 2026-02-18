@@ -721,6 +721,148 @@ const getPhotoUrl = (url) => {
   }
   return url;
 };
+// --- IMAGE CROPPER COMPONENT ---
+const ImageCropper = ({ imageSrc, onCrop, onCancel }) => {
+  const [zoom, setZoom] = useState(1);
+  const [offset, setOffset] = useState({ x: 0, y: 0 });
+  const [isDragging, setIsDragging] = useState(false);
+  const [dragStart, setDragStart] = useState({ x: 0, y: 0 });
+  const imageRef = useRef(null);
+  const containerRef = useRef(null);
+
+  const handleMouseDown = (e) => {
+    setIsDragging(true);
+    setDragStart({ x: e.clientX - offset.x, y: e.clientY - offset.y });
+  };
+
+  const handleMouseMove = (e) => {
+    if (!isDragging) return;
+    e.preventDefault();
+    setOffset({
+      x: e.clientX - dragStart.x,
+      y: e.clientY - dragStart.y
+    });
+  };
+
+  const handleMouseUp = () => setIsDragging(false);
+
+  // Touch support
+  const handleTouchStart = (e) => {
+    setIsDragging(true);
+    setDragStart({ x: e.touches[0].clientX - offset.x, y: e.touches[0].clientY - offset.y });
+  };
+
+  const handleTouchMove = (e) => {
+    if (!isDragging) return;
+    setOffset({
+      x: e.touches[0].clientX - dragStart.x,
+      y: e.touches[0].clientY - dragStart.y
+    });
+  };
+
+  const handleCrop = async () => {
+    const canvas = document.createElement('canvas');
+    const ctx = canvas.getContext('2d');
+    const image = imageRef.current;
+
+    // Set fixed output size (e.g., 400x400 for high quality profile)
+    canvas.width = 400;
+    canvas.height = 400;
+
+    // Draw simple white background (optional)
+    ctx.fillStyle = '#FFFFFF';
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+    // Calculate source rectangle
+    // The container is 256x256 (w-64 h-64).
+    // The image scale is `zoom`.
+    // The image position is `offset`.
+
+    // We need to map the visible area of the image in the container to the canvas.
+    // Easier approach: Draw image to canvas with transforms.
+
+    const scale = zoom; // Current visual scale
+
+    // We want the center of the crop box to map to the center of the canvas
+    // But our offset is applied to the image relative to top-left.
+
+    // Let's rely on the visual ratio.
+    // Container size in pixels (approx 256px if w-64 is 16rem * 16px).
+    const containerSize = 256;
+
+    // Scale factor from container to output canvas
+    const outputScale = canvas.width / containerSize;
+
+    ctx.save();
+    ctx.scale(outputScale, outputScale); // Scale drawing operations to match output size
+    ctx.translate(containerSize / 2, containerSize / 2);
+    ctx.translate(offset.x, offset.y);
+    ctx.scale(zoom, zoom);
+    ctx.drawImage(image, -image.naturalWidth / 2, -image.naturalHeight / 2);
+    ctx.restore();
+
+    canvas.toBlob((blob) => {
+      onCrop(blob);
+    }, 'image/jpeg', 0.9);
+  };
+
+  return (
+    <div className="fixed inset-0 z-[100] bg-slate-900/80 backdrop-blur-sm flex items-center justify-center p-4 animate-in fade-in duration-200">
+      <div className="bg-white w-full max-w-md rounded-2xl shadow-2xl overflow-hidden flex flex-col animate-in zoom-in-95">
+        <div className="p-4 border-b border-slate-100 flex justify-between items-center">
+          <h3 className="font-bold text-lg text-slate-800">Sesuaikan Foto</h3>
+          <button onClick={onCancel} className="p-2 hover:bg-slate-100 rounded-full transition"><X size={20} /></button>
+        </div>
+
+        <div className="p-6 flex flex-col items-center">
+          <div
+            ref={containerRef}
+            className="w-64 h-64 rounded-full overflow-hidden border-4 border-cyan-500 shadow-xl relative cursor-move bg-slate-100 touch-none"
+            onMouseDown={handleMouseDown}
+            onMouseMove={handleMouseMove}
+            onMouseUp={handleMouseUp}
+            onMouseLeave={handleMouseUp}
+            onTouchStart={handleTouchStart}
+            onTouchMove={handleTouchMove}
+            onTouchEnd={handleMouseUp}
+          >
+            <img
+              ref={imageRef}
+              src={imageSrc}
+              alt="Crop Preview"
+              className="max-w-none absolute top-1/2 left-1/2 origin-center pointer-events-none select-none"
+              style={{
+                transform: `translate(-50%, -50%) translate(${offset.x}px, ${offset.y}px) scale(${zoom})`
+              }}
+              draggable={false}
+            />
+          </div>
+
+          <div className="w-full mt-6 space-y-2">
+            <div className="flex justify-between text-xs font-bold text-slate-500 uppercase">
+              <span>Zoom Out</span>
+              <span>Zoom In</span>
+            </div>
+            <input
+              type="range"
+              min="1"
+              max="3"
+              step="0.1"
+              value={zoom}
+              onChange={(e) => setZoom(parseFloat(e.target.value))}
+              className="w-full h-2 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-cyan-600"
+            />
+          </div>
+        </div>
+
+        <div className="p-4 border-t border-slate-100 bg-slate-50 flex justify-end gap-3">
+          <Button variant="secondary" onClick={onCancel}>Batal</Button>
+          <Button onClick={handleCrop} className="px-6">Simpan Foto</Button>
+        </div>
+      </div>
+    </div>
+  );
+};
 
 // --- PROFILE COMPONENT ---
 function ProfileSettings({ user, students, onUpdate, onCancel, showToast }) {
@@ -743,6 +885,7 @@ function ProfileSettings({ user, students, onUpdate, onCancel, showToast }) {
   const [photoFile, setPhotoFile] = useState(null);
   const [preview, setPreview] = useState(getPhotoUrl(user.photoUrl) || '');
   const [previewImage, setPreviewImage] = useState(null); // For viewing student photos
+  const [croppingImage, setCroppingImage] = useState(null);
 
   // Update preview when manual URL changes (and no file selected)
   useEffect(() => {
@@ -756,10 +899,21 @@ function ProfileSettings({ user, students, onUpdate, onCancel, showToast }) {
   const handleFileChange = (e) => {
     const file = e.target.files[0];
     if (file) {
-      const url = URL.createObjectURL(file);
-      setPreview(url);
-      setPhotoFile(file);
+      const reader = new FileReader();
+      reader.onload = (ev) => {
+        setCroppingImage(ev.target.result);
+      };
+      reader.readAsDataURL(file);
+      e.target.value = null; // Allow re-selecting same file
     }
+  };
+
+  const handleCropComplete = (croppedBlob) => {
+    const url = URL.createObjectURL(croppedBlob);
+    setPreview(url);
+    const file = new File([croppedBlob], "profile_cropped.jpg", { type: "image/jpeg" });
+    setPhotoFile(file);
+    setCroppingImage(null);
   };
 
   const copyToClipboard = (text) => {
@@ -848,6 +1002,14 @@ function ProfileSettings({ user, students, onUpdate, onCancel, showToast }) {
       {previewImage && <ImageModal src={previewImage} onClose={() => setPreviewImage(null)} />}
       {showGuide && <TextModal title="Panduan Penulisan Nama Dosen" content={guideContent} onClose={() => setShowGuide(false)} />}
 
+      {croppingImage && (
+        <ImageCropper
+          imageSrc={croppingImage}
+          onCrop={handleCropComplete}
+          onCancel={() => { setCroppingImage(null); }}
+        />
+      )}
+
       <Card title={<span className="text-2xl font-extrabold bg-gradient-to-r from-cyan-600 to-blue-600 bg-clip-text text-transparent">Pengaturan Profil Saya</span>}>
         <form onSubmit={handleSubmit} className="space-y-6">
           <div className="flex flex-col items-center mb-6">
@@ -858,20 +1020,6 @@ function ProfileSettings({ user, students, onUpdate, onCancel, showToast }) {
               <label className="absolute bottom-0 right-0 bg-cyan-600 text-white p-2 rounded-full shadow-lg cursor-pointer hover:bg-cyan-700 transition-colors"><Camera size={16} /><input type="file" className="hidden" accept="image/*" onChange={handleFileChange} /></label>
             </div>
             <p className="text-sm text-slate-500 mt-2">Klik ikon kamera untuk ganti foto</p>
-
-            {/* Manual Photo URL Input */}
-            <div className="w-full max-w-md mt-4">
-              <label className="text-xs font-bold text-slate-500 uppercase mb-1 block">Atau Masukkan Link Google Drive (Opsional)</label>
-              <input
-                type="text"
-                name="photoUrl"
-                value={formData.photoUrl}
-                onChange={handleChange}
-                placeholder="https://drive.google.com/file/d/.../view"
-                className="w-full px-4 py-2 rounded-xl border border-slate-200 text-sm focus:ring-2 focus:ring-cyan-100 outline-none transition-all placeholder:text-slate-300"
-              />
-              <p className="text-[10px] text-slate-400 mt-1">Pastikan link Google Drive memiliki akses 'Anyone with the link' (Siapa saja yang memiliki link).</p>
-            </div>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
