@@ -3487,21 +3487,14 @@ function LecturerLogbookView({ user, logbooks, students, showToast, onRefresh })
           <tbody className="divide-y divide-slate-100">
             {currentItems.map(log => {
               // Parse Detection Status
-              let detectionStatus = 'unknown';
+              // Parse Detection Status
+              let detectionStatus = log.locationType || 'manual'; // Default to manual/unknown
               let displayAddress = log.address || '-';
 
-              if (displayAddress.includes('## Deteksi Otomatis')) {
-                detectionStatus = 'automatic';
-                displayAddress = displayAddress.replace(' ## Deteksi Otomatis', '');
-              } else if (displayAddress.includes('## Input Manual')) {
-                detectionStatus = 'manual';
-                displayAddress = displayAddress.replace(' ## Input Manual', '');
-              } else {
-                // LEGACY DATA LOGIC:
-                // Cutoff: 18 Feb 2026, 15:00 WIB
+              // LEGACY DATA FALLBACK:
+              // If backend says 'manual' (default) but date is before 18 Feb 15:00 WIB, treat as automatic.
+              if (detectionStatus === 'manual' && log.date) {
                 try {
-                  // log.date is YYYY-MM-DD, log.time is HH:mm
-                  // Create ISO string for WIB (+07:00)
                   const logIso = `${log.date}T${log.time}:00+07:00`;
                   const logDateObj = new Date(logIso);
                   const cutoffDate = new Date('2026-02-18T15:00:00+07:00');
@@ -3510,7 +3503,7 @@ function LecturerLogbookView({ user, logbooks, students, showToast, onRefresh })
                     detectionStatus = 'automatic';
                   }
                 } catch (e) {
-                  console.error("Date parse error", e);
+                  // Ignore parse error, keep as manual
                 }
               }
 
@@ -3591,21 +3584,13 @@ function LecturerLogbookView({ user, logbooks, students, showToast, onRefresh })
       <div className="md:hidden space-y-4">
         {currentItems.map(log => {
           // Parse Detection Status (Duplicate logic for mobile)
-          let detectionStatus = 'unknown';
+          // Parse Detection Status (Mobile)
+          let detectionStatus = log.locationType || 'manual';
           let displayAddress = log.address || '-';
 
-          if (displayAddress.includes('## Deteksi Otomatis')) {
-            detectionStatus = 'automatic';
-            displayAddress = displayAddress.replace(' ## Deteksi Otomatis', '');
-          } else if (displayAddress.includes('## Input Manual')) {
-            detectionStatus = 'manual';
-            displayAddress = displayAddress.replace(' ## Input Manual', '');
-          } else {
-            // LEGACY DATA LOGIC:
-            // Cutoff: 18 Feb 2026, 15:00 WIB
+          // LEGACY DATA FALLBACK:
+          if (detectionStatus === 'manual' && log.date) {
             try {
-              // log.date is YYYY-MM-DD, log.time is HH:mm
-              // Create ISO string for WIB (+07:00)
               const logIso = `${log.date}T${log.time}:00+07:00`;
               const logDateObj = new Date(logIso);
               const cutoffDate = new Date('2026-02-18T15:00:00+07:00');
@@ -3614,7 +3599,7 @@ function LecturerLogbookView({ user, logbooks, students, showToast, onRefresh })
                 detectionStatus = 'automatic';
               }
             } catch (e) {
-              console.error("Date parse error", e);
+              // Ignore
             }
           }
 
