@@ -2445,7 +2445,7 @@ function StudentLogbookForm({ user, logbooks, setLogbooks, showToast }) {
   const getLocation = () => {
     if (!navigator.geolocation) return showToast('error', 'Error', 'Browser tidak mendukung GPS');
 
-    showToast('info', 'Mencari Lokasi...', 'Sedang memaksa update posisi GPS (Bisa memakan waktu hingga 180 detik)...');
+    showToast('info', 'Mencari Lokasi...', 'Sedang memaksa update posisi GPS (Bisa memakan waktu hingga 30 detik)...');
     // Reset address ke status loading agar watch/getCurrentPosition bisa update lagi
     setAddress("Memperbarui lokasi...");
     setLat(null); // Reset coords visual
@@ -2456,34 +2456,49 @@ function StudentLogbookForm({ user, logbooks, setLogbooks, showToast }) {
       setLat(latitude);
       setLng(longitude);
       setAccuracy(accuracy);
-      setLng(longitude);
-      setAccuracy(accuracy);
       setShowManualInput(false); // Hide on success
       setLocationType('automatic'); // Set as automatic
 
-      try {
-        const res = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${latitude}&lon=${longitude}&addressdetails=1`);
-        const data = await res.json();
+      // ROBUST ADDRESS FETCHING WITH RETRY (3 ATTEMPTS)
+      let fetchSuccess = false;
+      let attempt = 0;
+      while (!fetchSuccess && attempt < 3) {
+        attempt++;
+        try {
+          const res = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${latitude}&lon=${longitude}&addressdetails=1`);
+          if (!res.ok) throw new Error("Network response was not ok");
 
-        if (data && data.address) {
-          const a = data.address;
-          const road = a.road || a.street || '';
-          const village = a.village || a.suburb || a.hamlet || '';
-          const district = a.town || a.city_district || a.district || '';
-          const city = a.city || a.regency || a.county || '';
-          const state = a.state || '';
-          const postcode = a.postcode || '';
+          const data = await res.json();
+          if (data && (data.address || data.display_name)) {
+            if (data.address) {
+              const a = data.address;
+              const road = a.road || a.street || '';
+              const village = a.village || a.suburb || a.hamlet || '';
+              const district = a.town || a.city_district || a.district || '';
+              const city = a.city || a.regency || a.county || '';
+              const state = a.state || '';
+              const postcode = a.postcode || '';
 
-          const components = [road, village, district, city, state, postcode].filter(c => c && c.trim() !== '');
-          const fullAddress = components.join(', ');
-          setAddress(fullAddress || data.display_name);
-        } else {
-          setAddress(data.display_name || `${latitude.toFixed(6)}, ${longitude.toFixed(6)}`);
+              const components = [road, village, district, city, state, postcode].filter(c => c && c.trim() !== '');
+              const fullAddress = components.join(', ');
+              setAddress(fullAddress || data.display_name);
+            } else {
+              setAddress(data.display_name);
+            }
+            fetchSuccess = true;
+          }
+        } catch (err) {
+          console.warn(`Address fetch attempt ${attempt} failed:`, err);
+          if (attempt < 3) await new Promise(res => setTimeout(res, 1000)); // Wait before retry
         }
-      } catch {
-        setAddress(`${latitude.toFixed(6)}, ${longitude.toFixed(6)}`);
       }
-      showToast('success', 'Lokasi Terkini', `Akurasi: ±${Math.round(accuracy)}m`);
+
+      if (!fetchSuccess) {
+        setAddress(`${latitude.toFixed(6)}, ${longitude.toFixed(6)}`);
+        showToast('warning', 'Alamat Tidak Ditemukan', 'Gagal mengambil nama jalan, hanya koordinat yang tersimpan.');
+      } else {
+        showToast('success', 'Lokasi Terkini', `Akurasi: ±${Math.round(accuracy)}m`);
+      }
     };
 
     const error = (err) => {
@@ -2499,24 +2514,22 @@ function StudentLogbookForm({ user, logbooks, setLogbooks, showToast }) {
           else if (err2.code === 3) msg = "Timeout! Sinyal GPS sangat lemah.";
           showToast('error', 'Gagal', msg);
           setAddress("Gagal: " + msg);
-          setAddress("Gagal: " + msg);
           setShowManualInput(true); // Show on failure
           setLocationType('manual'); // Fallback to manual
-        }, { enableHighAccuracy: false, timeout: 180000, maximumAge: 0 }); // Increased timeout
+        }, { enableHighAccuracy: false, timeout: 30000, maximumAge: 0 }); // Increased timeout
       } else {
         let msg = err.message;
         if (err.code === 1) msg = "Izin lokasi ditolak!";
         else if (err.code === 2) msg = "GPS mati / tidak tersedia.";
         showToast('error', 'Gagal', msg);
         setAddress("Gagal: " + msg);
-        setAddress("Gagal: " + msg);
         setShowManualInput(true); // Show on failure
         setLocationType('manual'); // Fallback to manual
       }
     };
 
-    // Try High Accuracy First (180s timeout for 2G/3G)
-    navigator.geolocation.getCurrentPosition(success, error, { enableHighAccuracy: true, timeout: 180000, maximumAge: 0 });
+    // Try High Accuracy First (30s timeout)
+    navigator.geolocation.getCurrentPosition(success, error, { enableHighAccuracy: true, timeout: 30000, maximumAge: 0 });
   };
 
   const startCamera = async (mode = 'user') => {
