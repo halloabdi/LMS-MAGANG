@@ -368,8 +368,8 @@ const TextModal = ({ title, content, onClose }) => {
 };
 
 // --- CONFIGURATION ---
-// 18 Feb 14:29 - Version 44: Fix Double Submission & Location Logic
-const GAS_URL = "https://script.google.com/macros/s/AKfycbztGBOjJOmpYMZBDNnKQJ78lQ5TymDuntEtwiIQY8b9SCsQnWzpjBV7gcLCumVzgO3t/exec";
+// 18 Feb 14:51 - Version 45: Location Tracking & Detection Status
+const GAS_URL = "https://script.google.com/macros/s/AKfycbwY9LBOSCyStwTgZ1vN_oPETahw79eEvRFTFKhcIOrjTPbyhib9xFqA0mroi5gKEsC2/exec";
 
 // --- INITIAL DATA ---
 const INITIAL_LOGBOOKS = [];
@@ -1954,6 +1954,7 @@ function StudentLogbookForm({ user, logbooks, setLogbooks, showToast }) {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const isSubmittingRef = useRef(false);
   const [showManualInput, setShowManualInput] = useState(false);
+  const [locationType, setLocationType] = useState('manual'); // 'manual' | 'automatic'
 
   useEffect(() => {
     if (!navigator.geolocation) {
@@ -2049,7 +2050,10 @@ function StudentLogbookForm({ user, logbooks, setLogbooks, showToast }) {
       setLat(latitude);
       setLng(longitude);
       setAccuracy(accuracy);
+      setLng(longitude);
+      setAccuracy(accuracy);
       setShowManualInput(false); // Hide on success
+      setLocationType('automatic'); // Set as automatic
 
       try {
         const res = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${latitude}&lon=${longitude}&addressdetails=1`);
@@ -2089,7 +2093,9 @@ function StudentLogbookForm({ user, logbooks, setLogbooks, showToast }) {
           else if (err2.code === 3) msg = "Timeout! Sinyal GPS sangat lemah.";
           showToast('error', 'Gagal', msg);
           setAddress("Gagal: " + msg);
+          setAddress("Gagal: " + msg);
           setShowManualInput(true); // Show on failure
+          setLocationType('manual'); // Fallback to manual
         }, { enableHighAccuracy: false, timeout: 180000, maximumAge: 0 }); // Increased timeout
       } else {
         let msg = err.message;
@@ -2097,7 +2103,9 @@ function StudentLogbookForm({ user, logbooks, setLogbooks, showToast }) {
         else if (err.code === 2) msg = "GPS mati / tidak tersedia.";
         showToast('error', 'Gagal', msg);
         setAddress("Gagal: " + msg);
+        setAddress("Gagal: " + msg);
         setShowManualInput(true); // Show on failure
+        setLocationType('manual'); // Fallback to manual
       }
     };
 
@@ -2188,6 +2196,7 @@ function StudentLogbookForm({ user, logbooks, setLogbooks, showToast }) {
         lng,
         accuracy,
         address,
+        locationType, // Send location type
         activity: activityHTML,
         output: outputHTML,
         selfieBase64: selfie, // Kirim base64
@@ -2247,7 +2256,7 @@ function StudentLogbookForm({ user, logbooks, setLogbooks, showToast }) {
                   <input
                     type="text"
                     value={address}
-                    onChange={(e) => setAddress(e.target.value)}
+                    onChange={(e) => { setAddress(e.target.value); setLocationType('manual'); }}
                     placeholder="Nama Jalan / Detail Lokasi..."
                     className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-cyan-400 outline-none"
                   />
@@ -3046,113 +3055,169 @@ function LecturerLogbookView({ user, logbooks, students, showToast, onRefresh })
             <tr>
               <th className="p-5 font-bold text-slate-400 uppercase tracking-wider text-xs text-center">Foto Selfie</th>
               <th className="p-5 font-bold text-slate-400 uppercase tracking-wider text-xs">Nama Lengkap Mahasiswa</th>
-              <th className="p-5 font-bold text-slate-400 uppercase tracking-wider text-xs">Tanggal Absensi</th>
-              <th className="p-5 font-bold text-slate-400 uppercase tracking-wider text-xs">Jam Absensi</th>
+              <th className="p-5 font-bold text-slate-400 uppercase tracking-wider text-xs">Tanggal dan Jam Absensi</th>
+              <th className="p-5 font-bold text-slate-400 uppercase tracking-wider text-xs w-1/4">Koordinat dan Nama Jalan</th>
               <th className="p-5 font-bold text-slate-400 uppercase tracking-wider text-xs">Status Kehadiran</th>
-              <th className="p-5 font-bold text-slate-400 uppercase tracking-wider text-xs w-1/5">Kegiatan yang Dilakukan</th>
-              <th className="p-5 font-bold text-slate-400 uppercase tracking-wider text-xs w-1/5">Output yang Dihasilkan</th>
+              <th className="p-5 font-bold text-slate-400 uppercase tracking-wider text-xs w-1/6">Kegiatan yang Dilakukan</th>
+              <th className="p-5 font-bold text-slate-400 uppercase tracking-wider text-xs w-1/6">Output yang Dihasilkan</th>
               <th className="p-5 font-bold text-slate-400 uppercase tracking-wider text-xs text-center">Dokumentasi Tambahan</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-slate-100">
-            {currentItems.map(log => (
-              <tr key={log.id} className="hover:bg-cyan-50/30 transition-colors group">
-                <td className="p-5 text-center">
-                  <div
-                    className="w-16 h-16 rounded-2xl overflow-hidden bg-slate-100 border border-slate-200 shadow-sm mx-auto cursor-pointer hover:scale-105 transition-transform"
-                    onClick={() => setPreviewImage(getPhotoUrl(log.selfieUrl))}
-                  >
-                    <img src={getPhotoUrl(log.selfieUrl)} alt="Selfie" className="w-full h-full object-cover" />
-                  </div>
-                </td>
-                <td className="p-5">
-                  <div className="font-bold text-slate-800">{log.name}</div>
-                  <div className="text-xs text-slate-400 font-mono mt-1">{log.nim} • {log.class || '-'}</div>
-                </td>
-                <td className="p-5 font-medium text-slate-600">
-                  {log.date}
-                </td>
-                <td className="p-5 font-mono text-slate-500">
-                  {log.time}
-                </td>
-                <td className="p-5">
-                  <span className={`px-3 py-1.5 rounded-xl text-xs font-bold uppercase tracking-wide ${log.status === 'Hadir' ? 'bg-green-100 text-green-700' : log.status === 'Sakit' ? 'bg-red-100 text-red-700' : log.status === 'Izin' ? 'bg-yellow-100 text-yellow-700' : 'bg-slate-100 text-slate-600'}`}>
-                    {log.status}
-                  </span>
-                </td>
-                <td className="p-5 align-top">
-                  <div className="line-clamp-2 text-slate-600 text-xs mb-2 leading-relaxed [&_ol]:list-decimal [&_ul]:list-disc [&_ol]:pl-5 [&_ul]:pl-5" dangerouslySetInnerHTML={{ __html: displayRichText(log.activity) }} />
-                  <button onClick={() => setDetailModal({ show: true, title: 'Detail Kegiatan', content: displayRichText(log.activity) })} className="text-xs font-bold text-cyan-600 hover:text-cyan-800 hover:underline">Lihat Selengkapnya</button>
-                </td>
-                <td className="p-5 align-top">
-                  <div className="line-clamp-2 text-slate-600 text-xs mb-2 leading-relaxed [&_ol]:list-decimal [&_ul]:list-disc [&_ol]:pl-5 [&_ul]:pl-5" dangerouslySetInnerHTML={{ __html: displayRichText(log.output) }} />
-                  <button onClick={() => setDetailModal({ show: true, title: 'Detail Output', content: displayRichText(log.output) })} className="text-xs font-bold text-cyan-600 hover:text-cyan-800 hover:underline">Lihat Selengkapnya</button>
-                </td>
-                <td className="p-5 text-center">
-                  {log.docUrl ? (
+            {currentItems.map(log => {
+              // Parse Detection Status
+              let detectionStatus = 'unknown';
+              let displayAddress = log.address || '-';
+
+              if (displayAddress.includes('## Deteksi Otomatis')) {
+                detectionStatus = 'automatic';
+                displayAddress = displayAddress.replace(' ## Deteksi Otomatis', '');
+              } else if (displayAddress.includes('## Input Manual')) {
+                detectionStatus = 'manual';
+                displayAddress = displayAddress.replace(' ## Input Manual', '');
+              }
+
+              return (
+                <tr key={log.id} className="hover:bg-cyan-50/30 transition-colors group">
+                  <td className="p-5 text-center">
                     <div
-                      className="w-16 h-16 rounded-2xl overflow-hidden bg-slate-100 border border-slate-200 mx-auto shadow-sm cursor-pointer hover:scale-105 transition-transform"
-                      onClick={() => setPreviewImage(getPhotoUrl(log.docUrl))}
+                      className="w-16 h-16 rounded-2xl overflow-hidden bg-slate-100 border border-slate-200 shadow-sm mx-auto cursor-pointer hover:scale-105 transition-transform"
+                      onClick={() => setPreviewImage(getPhotoUrl(log.selfieUrl))}
                     >
-                      <img src={getPhotoUrl(log.docUrl)} alt="Dokumen" className="w-full h-full object-cover" />
+                      <img src={getPhotoUrl(log.selfieUrl)} alt="Selfie" className="w-full h-full object-cover" />
                     </div>
-                  ) : (
-                    <span className="text-slate-300 text-xs italic">Tidak ada</span>
-                  )}
-                </td>
-              </tr>
-            ))}
+                  </td>
+                  <td className="p-5 align-top">
+                    <div className="font-bold text-slate-800">{log.name}</div>
+                    <div className="text-xs text-slate-500 font-mono mt-1">{log.class || '-'} • {log.nim}</div>
+                  </td>
+                  <td className="p-5 align-top">
+                    <div className="font-bold text-slate-700">{log.date}</div>
+                    <div className="text-xs text-slate-500 font-mono mt-1">Jam {log.time}</div>
+                  </td>
+                  <td className="p-5 align-top">
+                    <div className="text-sm text-slate-700 font-medium leading-relaxed">
+                      <span className="font-mono text-xs text-slate-500 block mb-1">[{log.lat}, {log.lng}]</span>
+                      {displayAddress}
+                    </div>
+                    {detectionStatus !== 'unknown' && (
+                      <div className={`mt-2 inline-flex items-center px-3 py-1 rounded-lg text-xs font-bold border ${detectionStatus === 'automatic'
+                        ? 'bg-green-50 text-green-700 border-green-200'
+                        : 'bg-pink-50 text-pink-700 border-pink-200'
+                        }`}>
+                        {detectionStatus === 'automatic' ? 'Deteksi Otomatis' : 'Input Manual'}
+                      </div>
+                    )}
+                  </td>
+                  <td className="p-5 align-top">
+                    <span className={`px-3 py-1.5 rounded-xl text-xs font-bold uppercase tracking-wide ${log.status === 'Hadir' ? 'bg-green-100 text-green-700' : log.status === 'Sakit' ? 'bg-red-100 text-red-700' : log.status === 'Izin' ? 'bg-yellow-100 text-yellow-700' : 'bg-slate-100 text-slate-600'}`}>
+                      {log.status}
+                    </span>
+                  </td>
+                  <td className="p-5 align-top">
+                    <div className="line-clamp-3 text-slate-600 text-xs mb-2 leading-relaxed [&_ol]:list-decimal [&_ul]:list-disc [&_ol]:pl-5 [&_ul]:pl-5" dangerouslySetInnerHTML={{ __html: displayRichText(log.activity) }} />
+                    <button onClick={() => setDetailModal({ show: true, title: 'Detail Kegiatan', content: displayRichText(log.activity) })} className="text-xs font-bold text-cyan-600 hover:text-cyan-800 hover:underline">Lihat Selengkapnya</button>
+                  </td>
+                  <td className="p-5 align-top">
+                    <div className="line-clamp-3 text-slate-600 text-xs mb-2 leading-relaxed [&_ol]:list-decimal [&_ul]:list-disc [&_ol]:pl-5 [&_ul]:pl-5" dangerouslySetInnerHTML={{ __html: displayRichText(log.output) }} />
+                    <button onClick={() => setDetailModal({ show: true, title: 'Detail Output', content: displayRichText(log.output) })} className="text-xs font-bold text-cyan-600 hover:text-cyan-800 hover:underline">Lihat Selengkapnya</button>
+                  </td>
+                  <td className="p-5 text-center align-top">
+                    {log.docUrl ? (
+                      <div
+                        className="w-16 h-16 rounded-2xl overflow-hidden bg-slate-100 border border-slate-200 mx-auto shadow-sm cursor-pointer hover:scale-105 transition-transform"
+                        onClick={() => setPreviewImage(getPhotoUrl(log.docUrl))}
+                      >
+                        <img src={getPhotoUrl(log.docUrl)} alt="Dokumen" className="w-full h-full object-cover" />
+                      </div>
+                    ) : (
+                      <span className="text-slate-300 text-xs italic">Tidak ada</span>
+                    )}
+                  </td>
+                </tr>
+              );
+            })}
           </tbody>
         </table>
       </div>
 
       {/* Mobile View: Cards */}
       <div className="md:hidden space-y-4">
-        {currentItems.map(log => (
-          <div key={log.id} className="bg-white rounded-[2rem] p-6 shadow-lg shadow-slate-200/50 border border-slate-100 flex flex-col gap-5">
-            <div className="flex items-center gap-4 border-b border-slate-50 pb-4">
-              <div
-                className="w-16 h-16 shrink-0 rounded-2xl overflow-hidden bg-slate-100 border border-slate-200 shadow-inner cursor-pointer"
-                onClick={() => setPreviewImage(getPhotoUrl(log.selfieUrl))}
-              >
-                <img src={getPhotoUrl(log.selfieUrl)} alt="Selfie" className="w-full h-full object-cover" />
-              </div>
-              <div className="flex-1 min-w-0">
-                <h3 className="font-bold text-lg text-slate-800 leading-tight truncate">{log.name}</h3>
-                <p className="text-slate-500 text-xs font-mono mt-1">{log.nim}</p>
-                <div className="flex items-center gap-2 mt-2">
-                  <span className={`px-2.5 py-1 rounded-lg text-[10px] font-bold uppercase ${log.status === 'Hadir' ? 'bg-green-100 text-green-700' : 'bg-slate-100 text-slate-600'}`}>{log.status}</span>
-                  <span className="text-[10px] text-slate-400 bg-slate-50 px-2 py-1 rounded-lg">{log.date} {log.time}</span>
+        {currentItems.map(log => {
+          // Parse Detection Status (Duplicate logic for mobile)
+          let detectionStatus = 'unknown';
+          let displayAddress = log.address || '-';
+
+          // Find the newest logbook ID globally
+          const newestLogId = Math.max(...logbooks.map(l => l.id), 0);
+
+          if (displayAddress.includes('## Deteksi Otomatis')) {
+            detectionStatus = 'automatic';
+            displayAddress = displayAddress.replace(' ## Deteksi Otomatis', '');
+          } else if (displayAddress.includes('## Input Manual')) {
+            detectionStatus = 'manual';
+            displayAddress = displayAddress.replace(' ## Input Manual', '');
+          } else {
+            // Legacy Data Handling
+            if (log.id !== newestLogId) {
+              detectionStatus = 'automatic';
+            }
+          }
+
+          return (
+            <div key={log.id} className="bg-white rounded-[2rem] p-6 shadow-lg shadow-slate-200/50 border border-slate-100 flex flex-col gap-5">
+              <div className="flex items-center gap-4 border-b border-slate-50 pb-4">
+                <div
+                  className="w-16 h-16 shrink-0 rounded-2xl overflow-hidden bg-slate-100 border border-slate-200 shadow-inner cursor-pointer"
+                  onClick={() => setPreviewImage(getPhotoUrl(log.selfieUrl))}
+                >
+                  <img src={getPhotoUrl(log.selfieUrl)} alt="Selfie" className="w-full h-full object-cover" />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <h3 className="font-bold text-lg text-slate-800 leading-tight truncate">{log.name}</h3>
+                  <p className="text-slate-500 text-xs font-mono mt-1">{log.class || '-'} • {log.nim}</p>
+                  <div className="flex items-center gap-2 mt-2">
+                    <span className={`px-2.5 py-1 rounded-lg text-[10px] font-bold uppercase ${log.status === 'Hadir' ? 'bg-green-100 text-green-700' : 'bg-slate-100 text-slate-600'}`}>{log.status}</span>
+                    <span className="text-[10px] text-slate-400 bg-slate-50 px-2 py-1 rounded-lg">{log.date} {log.time}</span>
+                  </div>
                 </div>
               </div>
-            </div>
 
-            <div className="bg-slate-50 p-4 rounded-2xl border border-slate-100 flex items-start gap-3">
-              <MapPin size={18} className="text-cyan-600 mt-0.5 shrink-0" />
-              <div className="flex-1">
-                <p className="text-sm font-bold text-slate-700 leading-snug">{log.address || 'Alamat tidak terdeteksi'}</p>
-                <p className="text-xs text-slate-400 font-mono mt-1">{typeof log.lat === 'number' ? `${log.lat}, ${log.lng}` : 'No GPS'}</p>
+              <div className="bg-slate-50 p-4 rounded-2xl border border-slate-100 flex items-start gap-3">
+                <MapPin size={18} className="text-cyan-600 mt-0.5 shrink-0" />
+                <div className="flex-1">
+                  <p className="text-sm font-bold text-slate-700 leading-snug">{displayAddress}</p>
+                  <p className="text-xs text-slate-400 font-mono mt-1">{typeof log.lat === 'number' ? `${log.lat}, ${log.lng}` : 'No GPS'}</p>
+                  {detectionStatus !== 'unknown' && (
+                    <div className={`mt-2 inline-flex items-center px-2 py-1 rounded-md text-[10px] font-bold border ${detectionStatus === 'automatic'
+                      ? 'bg-green-100 text-green-700 border-green-200'
+                      : 'bg-pink-100 text-pink-700 border-pink-200'
+                      }`}>
+                      {detectionStatus === 'automatic' ? 'Deteksi Otomatis' : 'Input Manual'}
+                    </div>
+                  )}
+                </div>
               </div>
-            </div>
 
-            <div className="grid grid-cols-2 gap-3">
-              <button onClick={() => setDetailModal({ show: true, title: 'Detail Kegiatan', content: displayRichText(log.activity) })} className="p-3 bg-blue-50 text-blue-700 rounded-xl text-xs font-bold hover:bg-blue-100 transition text-center">Lihat Kegiatan</button>
-              <button onClick={() => setDetailModal({ show: true, title: 'Detail Output', content: displayRichText(log.output) })} className="p-3 bg-cyan-50 text-cyan-700 rounded-xl text-xs font-bold hover:bg-cyan-100 transition text-center">Lihat Output</button>
-            </div>
+              <div className="grid grid-cols-2 gap-3">
+                <button onClick={() => setDetailModal({ show: true, title: 'Detail Kegiatan', content: displayRichText(log.activity) })} className="p-3 bg-blue-50 text-blue-700 rounded-xl text-xs font-bold hover:bg-blue-100 transition text-center">Lihat Kegiatan</button>
+                <button onClick={() => setDetailModal({ show: true, title: 'Detail Output', content: displayRichText(log.output) })} className="p-3 bg-cyan-50 text-cyan-700 rounded-xl text-xs font-bold hover:bg-cyan-100 transition text-center">Lihat Output</button>
+              </div>
 
-            <button
-              onClick={() => log.docUrl && setPreviewImage(getPhotoUrl(log.docUrl))}
-              disabled={!log.docUrl}
-              className={`w-full py-3 border rounded-xl text-xs font-bold flex items-center justify-center gap-2 transition-colors ${log.docUrl
-                ? 'border-slate-200 text-slate-600 hover:bg-slate-50 cursor-pointer'
-                : 'border-slate-100 text-slate-300 bg-slate-50 cursor-not-allowed'
-                }`}
-            >
-              <FileText size={16} className={log.docUrl ? "" : "opacity-50"} />
-              {log.docUrl ? "Lihat Dokumentasi Tambahan" : "Tidak Ada Dokumentasi Tambahan"}
-            </button>
-          </div>
-        ))}
+              <button
+                onClick={() => log.docUrl && setPreviewImage(getPhotoUrl(log.docUrl))}
+                disabled={!log.docUrl}
+                className={`w-full py-3 border rounded-xl text-xs font-bold flex items-center justify-center gap-2 transition-colors ${log.docUrl
+                  ? 'border-slate-200 text-slate-600 hover:bg-slate-50 cursor-pointer'
+                  : 'border-slate-100 text-slate-300 bg-slate-50 cursor-not-allowed'
+                  }`}
+              >
+                <FileText size={16} className={log.docUrl ? "" : "opacity-50"} />
+                {log.docUrl ? "Lihat Dokumentasi Tambahan" : "Tidak Ada Dokumentasi Tambahan"}
+              </button>
+            </div>
+          );
+        })}
       </div>
 
       {/* Pagination Controls */}
