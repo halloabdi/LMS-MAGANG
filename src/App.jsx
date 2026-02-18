@@ -368,8 +368,8 @@ const TextModal = ({ title, content, onClose }) => {
 };
 
 // --- CONFIGURATION ---
-// 16 Feb 05:31 - Version 42: Strict Link Folder Validation & Bio Column Override
-const GAS_URL = "https://script.google.com/macros/s/AKfycbwOEM-xtGHEFhtHa5NwN-WXTe9SS4tiTb7thghmUrB5w-BXCMAuDIg5LUHd8qZiLeed/exec";
+// 18 Feb 14:29 - Version 44: Fix Double Submission & Location Logic
+const GAS_URL = "https://script.google.com/macros/s/AKfycbztGBOjJOmpYMZBDNnKQJ78lQ5TymDuntEtwiIQY8b9SCsQnWzpjBV7gcLCumVzgO3t/exec";
 
 // --- INITIAL DATA ---
 const INITIAL_LOGBOOKS = [];
@@ -426,8 +426,17 @@ const Button = ({ children, onClick, variant = 'primary', className = '', type =
     danger: "bg-red-500 text-white hover:bg-red-600 shadow-red-500/20",
     success: "bg-emerald-500 text-white hover:bg-emerald-600"
   };
+
+  const handleClick = (e) => {
+    if (props.disabled) {
+      e.preventDefault();
+      return;
+    }
+    if (onClick) onClick(e);
+  };
+
   return (
-    <button type={type} onClick={onClick} className={`${baseStyle} ${variants[variant]} ${className}`} {...props}>
+    <button type={type} onClick={handleClick} className={`${baseStyle} ${variants[variant]} ${className}`} {...props}>
       {children}
     </button>
   );
@@ -699,6 +708,20 @@ const ToolButton = ({ onClick, icon: Icon, title, disabled }) => (
   <button onClick={(e) => { e.preventDefault(); if (!disabled) onClick(); }} disabled={disabled} className={`p-2 rounded-lg transition-colors ${disabled ? 'text-slate-300 cursor-not-allowed' : 'text-slate-500 hover:text-cyan-600 hover:bg-cyan-50'}`} title={title}><Icon size={16} /></button>
 );
 
+// --- UTILITY: GET PHOTO URL ---
+const getPhotoUrl = (url) => {
+  if (!url) return '';
+  if (typeof url !== 'string') return '';
+  // Check if it's a Drive View Link
+  if (url.includes('drive.google.com') && url.includes('/view')) {
+    const idMatch = url.match(/\/d\/(.+?)\//);
+    if (idMatch && idMatch[1]) {
+      return `https://lh3.googleusercontent.com/d/${idMatch[1]}`;
+    }
+  }
+  return url;
+};
+
 // --- PROFILE COMPONENT ---
 function ProfileSettings({ user, students, onUpdate, onCancel, showToast }) {
   // Initialize state with all necessary fields, including academic info breakdown
@@ -716,9 +739,17 @@ function ProfileSettings({ user, students, onUpdate, onCancel, showToast }) {
   });
 
   const [loading, setLoading] = useState(false);
-  const [preview, setPreview] = useState(user.photoUrl || '');
+  const isSubmittingRef = useRef(false);
   const [photoFile, setPhotoFile] = useState(null);
+  const [preview, setPreview] = useState(getPhotoUrl(user.photoUrl) || '');
   const [previewImage, setPreviewImage] = useState(null); // For viewing student photos
+
+  // Update preview when manual URL changes (and no file selected)
+  useEffect(() => {
+    if (!photoFile && formData.photoUrl) {
+      setPreview(getPhotoUrl(formData.photoUrl));
+    }
+  }, [formData.photoUrl, photoFile]);
 
   const handleChange = (e) => { setFormData({ ...formData, [e.target.name]: e.target.value }); };
 
@@ -738,7 +769,18 @@ function ProfileSettings({ user, students, onUpdate, onCancel, showToast }) {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    if (isSubmittingRef.current) return;
+
     setLoading(true);
+    isSubmittingRef.current = true;
+
+    // Minimal validation
+    if (!formData.name || !formData.email) {
+      showToast('warning', 'Validasi Gagal', 'Nama Lengkap dan Email wajib diisi.');
+      setLoading(false);
+      isSubmittingRef.current = false;
+      return;
+    }
 
     try {
       let photoBase64 = null;
@@ -763,7 +805,8 @@ function ProfileSettings({ user, students, onUpdate, onCancel, showToast }) {
         link_folder: user.link_folder,
         // Ensure strictly formatted academic info is sent
         supervisor_internal: supervisor_internal,
-        internship_place: formData.internship_place
+        internship_place: formData.internship_place,
+        photoUrl: formData.photoUrl // Send manual URL if present
       };
 
       const result = await callAPI('updateProfile', payload);
@@ -775,12 +818,14 @@ function ProfileSettings({ user, students, onUpdate, onCancel, showToast }) {
         photoUrl: result.photoUrl || (photoBase64 ? preview : formData.photoUrl),
         supervisor_internal: supervisor_internal
       });
+
       showToast('success', 'Profil Diperbarui', 'Data profil berhasil disimpan ke database.');
     } catch (err) {
       console.error(err);
       showToast('error', 'Gagal Memperbarui Profil', err.message);
     } finally {
       setLoading(false);
+      isSubmittingRef.current = false;
     }
   };
 
@@ -813,6 +858,20 @@ function ProfileSettings({ user, students, onUpdate, onCancel, showToast }) {
               <label className="absolute bottom-0 right-0 bg-cyan-600 text-white p-2 rounded-full shadow-lg cursor-pointer hover:bg-cyan-700 transition-colors"><Camera size={16} /><input type="file" className="hidden" accept="image/*" onChange={handleFileChange} /></label>
             </div>
             <p className="text-sm text-slate-500 mt-2">Klik ikon kamera untuk ganti foto</p>
+
+            {/* Manual Photo URL Input */}
+            <div className="w-full max-w-md mt-4">
+              <label className="text-xs font-bold text-slate-500 uppercase mb-1 block">Atau Masukkan Link Google Drive (Opsional)</label>
+              <input
+                type="text"
+                name="photoUrl"
+                value={formData.photoUrl}
+                onChange={handleChange}
+                placeholder="https://drive.google.com/file/d/.../view"
+                className="w-full px-4 py-2 rounded-xl border border-slate-200 text-sm focus:ring-2 focus:ring-cyan-100 outline-none transition-all placeholder:text-slate-300"
+              />
+              <p className="text-[10px] text-slate-400 mt-1">Pastikan link Google Drive memiliki akses 'Anyone with the link' (Siapa saja yang memiliki link).</p>
+            </div>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -969,10 +1028,10 @@ function ProfileSettings({ user, students, onUpdate, onCancel, showToast }) {
                       <td className="p-4">
                         <div
                           className="w-10 h-10 rounded-full bg-slate-200 overflow-hidden mx-auto cursor-pointer hover:ring-2 hover:ring-cyan-400 transition-all"
-                          onClick={() => setPreviewImage(student.photoUrl)}
+                          onClick={() => setPreviewImage(getPhotoUrl(student.photoUrl))}
                         >
                           {student.photoUrl ? (
-                            <img src={student.photoUrl} alt={student.name} className="w-full h-full object-cover" />
+                            <img src={getPhotoUrl(student.photoUrl)} alt={student.name} className="w-full h-full object-cover" />
                           ) : (
                             <div className="w-full h-full flex items-center justify-center text-slate-400"><User size={20} /></div>
                           )}
@@ -1451,10 +1510,10 @@ function StudentOverview({ user, logbooks = [], reports = [], onEditLogbook, onR
                       <td className="p-4">
                         <div
                           className="w-16 h-16 rounded-lg bg-slate-100 border border-slate-200 overflow-hidden mx-auto cursor-pointer hover:ring-2 hover:ring-cyan-400 transition-all"
-                          onClick={() => setPreviewImage(log.selfieUrl)}
+                          onClick={() => setPreviewImage(getPhotoUrl(log.selfieUrl))}
                         >
                           {log.selfieUrl ? (
-                            <img src={log.selfieUrl} alt="Selfie" className="w-full h-full object-cover" />
+                            <img src={getPhotoUrl(log.selfieUrl)} alt="Selfie" className="w-full h-full object-cover" />
                           ) : (
                             <div className="w-full h-full flex items-center justify-center text-slate-300"><User size={20} /></div>
                           )}
@@ -1481,10 +1540,10 @@ function StudentOverview({ user, logbooks = [], reports = [], onEditLogbook, onR
                         {log.docUrl ? (
                           <div
                             className="w-12 h-12 rounded-lg bg-slate-100 border border-slate-200 overflow-hidden mx-auto cursor-pointer hover:ring-2 hover:ring-cyan-400 transition-all"
-                            onClick={() => setPreviewImage(log.docUrl)}
+                            onClick={() => setPreviewImage(getPhotoUrl(log.docUrl))}
                             title="Lihat Dokumentasi"
                           >
-                            <img src={log.docUrl} alt="Doc" onError={(e) => { e.target.onerror = null; e.target.style.display = 'none'; e.target.parentNode.innerHTML = '<span class="text-[10px] text-slate-400 flex items-center justify-center h-full">File</span>'; }} className="w-full h-full object-cover" />
+                            <img src={getPhotoUrl(log.docUrl)} alt="Doc" onError={(e) => { e.target.onerror = null; e.target.style.display = 'none'; e.target.parentNode.innerHTML = '<span class="text-[10px] text-slate-400 flex items-center justify-center h-full">File</span>'; }} className="w-full h-full object-cover" />
                           </div>
                         ) : (
                           <span className="text-slate-300">-</span>
@@ -1894,6 +1953,7 @@ function StudentLogbookForm({ user, logbooks, setLogbooks, showToast }) {
   const lastGeoUpdateRef = useRef(0);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const isSubmittingRef = useRef(false);
+  const [showManualInput, setShowManualInput] = useState(false);
 
   useEffect(() => {
     if (!navigator.geolocation) {
@@ -1978,16 +2038,18 @@ function StudentLogbookForm({ user, logbooks, setLogbooks, showToast }) {
   const getLocation = () => {
     if (!navigator.geolocation) return showToast('error', 'Error', 'Browser tidak mendukung GPS');
 
-    showToast('info', 'Mencari Lokasi...', 'Sedang memaksa update posisi GPS...');
+    showToast('info', 'Mencari Lokasi...', 'Sedang memaksa update posisi GPS (Bisa memakan waktu hingga 180 detik)...');
     // Reset address ke status loading agar watch/getCurrentPosition bisa update lagi
     setAddress("Memperbarui lokasi...");
     setLat(null); // Reset coords visual
+    setShowManualInput(false); // Hide manual input during search
 
     const success = async (pos) => {
       const { latitude, longitude, accuracy } = pos.coords;
       setLat(latitude);
       setLng(longitude);
       setAccuracy(accuracy);
+      setShowManualInput(false); // Hide on success
 
       try {
         const res = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${latitude}&lon=${longitude}&addressdetails=1`);
@@ -2018,31 +2080,61 @@ function StudentLogbookForm({ user, logbooks, setLogbooks, showToast }) {
       // If High Accuracy failed, try Low Accuracy
       if (err.code === 3 || err.message.includes("Timeout")) {
         console.warn("High accuracy timed out, trying low accuracy...");
+        showToast('info', 'Sinyal Lemah', 'Mencoba mode hemat daya/network...');
+
         navigator.geolocation.getCurrentPosition(success, (err2) => {
           let msg = err2.message;
           if (err2.code === 1) msg = "Izin lokasi ditolak!";
           else if (err2.code === 2) msg = "GPS mati / tidak tersedia.";
-          else if (err2.code === 3) msg = "Timeout! Sinyal GPS lemah.";
+          else if (err2.code === 3) msg = "Timeout! Sinyal GPS sangat lemah.";
           showToast('error', 'Gagal', msg);
           setAddress("Gagal: " + msg);
-        }, { enableHighAccuracy: false, timeout: 20000, maximumAge: 0 });
+          setShowManualInput(true); // Show on failure
+        }, { enableHighAccuracy: false, timeout: 180000, maximumAge: 0 }); // Increased timeout
       } else {
         let msg = err.message;
         if (err.code === 1) msg = "Izin lokasi ditolak!";
         else if (err.code === 2) msg = "GPS mati / tidak tersedia.";
         showToast('error', 'Gagal', msg);
         setAddress("Gagal: " + msg);
+        setShowManualInput(true); // Show on failure
       }
     };
 
-    // Try High Accuracy First (20s timeout)
-    navigator.geolocation.getCurrentPosition(success, error, { enableHighAccuracy: true, timeout: 20000, maximumAge: 0 });
+    // Try High Accuracy First (180s timeout for 2G/3G)
+    navigator.geolocation.getCurrentPosition(success, error, { enableHighAccuracy: true, timeout: 180000, maximumAge: 0 });
   };
 
-  const startCamera = async () => { setCameraActive(true); try { const stream = await navigator.mediaDevices.getUserMedia({ video: true }); if (videoRef.current) videoRef.current.srcObject = stream; } catch { showToast('error', 'Kamera Error', 'Akses kamera ditolak/gagal'); setCameraActive(false); } };
+  const startCamera = async (mode = 'user') => {
+    setCameraActive(true);
+    try {
+      if (videoRef.current && videoRef.current.srcObject) {
+        const tracks = videoRef.current.srcObject.getTracks();
+        tracks.forEach(t => t.stop());
+      }
+      const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: mode } });
+      if (videoRef.current) videoRef.current.srcObject = stream;
+    } catch {
+      showToast('error', 'Kamera Error', 'Akses kamera ditolak/gagal');
+      setCameraActive(false);
+    }
+  };
   const takePhoto = () => { const video = videoRef.current; const canvas = canvasRef.current; if (video && canvas) { canvas.width = video.videoWidth; canvas.height = video.videoHeight; canvas.getContext('2d').drawImage(video, 0, 0); setSelfie(canvas.toDataURL('image/png')); video.srcObject.getTracks().forEach(t => t.stop()); setCameraActive(false); showToast('success', 'Foto Tersimpan', 'Foto selfie berhasil diambil.'); } };
 
-  const startDocCamera = async () => { setDocCameraActive(true); try { const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment" } }); if (docVideoRef.current) docVideoRef.current.srcObject = stream; } catch { showToast('error', 'Kamera Error', 'Gagal akses kamera belakang'); setDocCameraActive(false); } };
+  const startDocCamera = async (mode = 'environment') => {
+    setDocCameraActive(true);
+    try {
+      if (docVideoRef.current && docVideoRef.current.srcObject) {
+        const tracks = docVideoRef.current.srcObject.getTracks();
+        tracks.forEach(t => t.stop());
+      }
+      const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: mode } });
+      if (docVideoRef.current) docVideoRef.current.srcObject = stream;
+    } catch {
+      showToast('error', 'Kamera Error', 'Gagal akses kamera');
+      setDocCameraActive(false);
+    }
+  };
   const takeDocPhoto = () => { const video = docVideoRef.current; const canvas = docCanvasRef.current; if (video && canvas) { canvas.width = video.videoWidth; canvas.height = video.videoHeight; canvas.getContext('2d').drawImage(video, 0, 0); const fileData = canvas.toDataURL('image/jpeg'); fetch(fileData).then(res => res.blob()).then(blob => { const file = new File([blob], "doc_camera.jpg", { type: "image/jpeg" }); setDoc(file); showToast('success', 'Dokumen Tersimpan', 'Foto dokumen berhasil diambil.'); }); video.srcObject.getTracks().forEach(t => t.stop()); setDocCameraActive(false); setDocMode(null); } };
 
   const formatHTMLToDBString = (htmlString) => {
@@ -2068,8 +2160,13 @@ function StudentLogbookForm({ user, logbooks, setLogbooks, showToast }) {
     // Prevent Double Submission
     if (isSubmittingRef.current) return;
 
-    if (!lat || !selfie || cleanActivity.length === 0 || cleanOutput.length === 0) {
-      showToast('warning', 'Data Belum Lengkap', 'Mohon lengkapi: Lokasi, Selfie, Kegiatan, dan Output.');
+    // Validation: Require Selfie, Activity, Output.
+    // Address must be valid (not Loading/Error message).
+    // Lat/Lng is optional if Address is provided manually.
+    const isAddressValid = address && !address.startsWith("Menunggu") && !address.startsWith("Gagal") && !address.startsWith("Browser") && !address.startsWith("Memuat");
+
+    if (!isAddressValid || !selfie || cleanActivity.length === 0 || cleanOutput.length === 0) {
+      showToast('warning', 'Data Belum Lengkap', 'Mohon lengkapi: Lokasi (Manual/GPS), Selfie, Kegiatan, dan Output.');
       return;
     }
 
@@ -2142,6 +2239,44 @@ function StudentLogbookForm({ user, logbooks, setLogbooks, showToast }) {
             <div className="bg-slate-50 p-1 rounded-2xl border border-slate-200 flex flex-col h-full">
               <div className="bg-white rounded-xl overflow-hidden h-64 relative z-0 flex-1"><LeafletMap lat={lat} lng={lng} setLat={setLat} setLng={setLng} setAddress={setAddress} /></div>
               <Button onClick={getLocation} variant="secondary" className="w-full mt-2 py-3 border-cyan-200 text-cyan-700 hover:bg-cyan-50 font-bold shadow-sm">↻ Refresh Lokasi</Button>
+
+              {/* Manual Location Input (For Fallback) */}
+              {showManualInput && (
+                <div className="mt-4 p-3 bg-white border border-slate-200 rounded-xl space-y-3">
+                  <label className="text-xs font-bold text-slate-500 uppercase flex items-center gap-1"><MapPin size={12} /> Input Manual (Wajib jika GPS Gagal)</label>
+                  <input
+                    type="text"
+                    value={address}
+                    onChange={(e) => setAddress(e.target.value)}
+                    placeholder="Nama Jalan / Detail Lokasi..."
+                    className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-cyan-400 outline-none"
+                  />
+                  <div className="grid grid-cols-2 gap-2">
+                    <div>
+                      <span className="text-[10px] text-slate-400 font-bold uppercase mb-1 block">Latitude (Opsional)</span>
+                      <input
+                        type="number"
+                        value={lat || ''}
+                        onChange={(e) => setLat(parseFloat(e.target.value))}
+                        placeholder="-6.xxxxx"
+                        className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-cyan-400 outline-none"
+                      />
+                    </div>
+                    <div>
+                      <span className="text-[10px] text-slate-400 font-bold uppercase mb-1 block">Longitude (Opsional)</span>
+                      <input
+                        type="number"
+                        value={lng || ''}
+                        onChange={(e) => setLng(parseFloat(e.target.value))}
+                        placeholder="106.xxxxx"
+                        className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-cyan-400 outline-none"
+                      />
+                    </div>
+                  </div>
+                  <p className="text-[10px] text-slate-400">* Pastikan nama jalan dan koordinat (jika ada) sesuai.</p>
+                </div>
+              )}
+
               <div className="p-4"><div className="flex items-start gap-3"><MapPin className="text-cyan-600 mt-1 shrink-0" size={20} /><div><p className="font-bold text-slate-700 text-sm leading-snug">{address}</p><p className="text-xs text-slate-500 mt-1 font-mono">{lat ? `${lat.toFixed(6)}, ${lng.toFixed(6)}` : "Mencari kordinat..."}</p>{accuracy && <p className="text-[10px] text-green-600">Akurasi GPS: ±{Math.round(accuracy)} meter</p>}</div></div></div>
             </div>
             <div className="bg-slate-50 border border-slate-200 rounded-2xl p-6 text-center flex flex-col justify-center h-full">
@@ -2152,14 +2287,48 @@ function StudentLogbookForm({ user, logbooks, setLogbooks, showToast }) {
                   <div className="absolute inset-0 bg-black/30 opacity-0 group-hover:opacity-100 transition-opacity rounded-xl flex items-center justify-center text-white font-bold"><Eye size={24} className="mr-2" /> Lihat Full</div>
                   <button onClick={(e) => { e.stopPropagation(); setSelfie(null); }} className="absolute top-2 right-2 bg-red-500 text-white p-1.5 rounded-full shadow hover:bg-red-600 transition"><X size={14} /></button>
                 </div>
-              ) : cameraActive ? (
-                <div className="space-y-3">
-                  <video ref={videoRef} autoPlay playsInline className="w-full h-48 bg-black rounded-xl object-cover mx-auto" />
-                  <canvas ref={canvasRef} className="hidden" />
-                  <Button onClick={takePhoto} className="w-full">Ambil Foto</Button>
-                </div>
               ) : (
-                <Button onClick={startCamera} variant="secondary" className="w-full py-12 border-dashed border-2 flex flex-col gap-2 h-full"><div className="w-16 h-16 bg-slate-100 rounded-full flex items-center justify-center mx-auto mb-2"><Camera size={32} className="text-slate-400" /></div><span className="text-slate-500 font-medium">Buka Kamera Depan</span></Button>
+                <div className="space-y-4">
+                  {/* Camera Box */}
+                  <div className="w-full h-48 bg-slate-100 rounded-xl overflow-hidden relative flex items-center justify-center">
+                    {cameraActive ? (
+                      <video ref={videoRef} autoPlay playsInline className="w-full h-full object-cover" />
+                    ) : (
+                      <div className="text-slate-400 flex flex-col items-center">
+                        <Camera size={48} className="mb-2" />
+                        <span className="text-xs">Preview Kamera</span>
+                      </div>
+                    )}
+                    <canvas ref={canvasRef} className="hidden" />
+                  </div>
+
+                  {/* Buttons Below Camera Box */}
+                  <div className="grid grid-cols-2 gap-2">
+                    {cameraActive ? (
+                      <>
+                        <Button onClick={takePhoto} className="col-span-2 py-3 text-lg font-bold shadow-lg shadow-cyan-500/30">Ambil Foto</Button>
+                        <Button onClick={() => startCamera('user')} variant="secondary" className="text-xs">Kamera Depan</Button>
+                        <Button onClick={() => startCamera('environment')} variant="secondary" className="text-xs">Kamera Belakang</Button>
+                      </>
+                    ) : (
+                      <>
+                        <Button onClick={() => startCamera('user')} variant="secondary" className="text-xs py-3">Kamera Depan</Button>
+                        <Button onClick={() => startCamera('environment')} variant="secondary" className="text-xs py-3">Kamera Belakang</Button>
+                        <label className="col-span-2 cursor-pointer bg-slate-50 hover:bg-slate-100 text-slate-600 font-bold rounded-xl flex items-center justify-center text-xs transition-colors p-3 border border-slate-200">
+                          Upload Foto
+                          <input type="file" className="hidden" accept="image/*" onChange={(e) => {
+                            const file = e.target.files[0];
+                            if (file) {
+                              const reader = new FileReader();
+                              reader.onload = (ev) => { setSelfie(ev.target.result); setPreviewSelfie(ev.target.result); };
+                              reader.readAsDataURL(file);
+                            }
+                          }} disabled={isSubmitting} />
+                        </label>
+                      </>
+                    )}
+                  </div>
+                </div>
               )}
             </div>
           </div>
@@ -2206,7 +2375,31 @@ function StudentLogbookForm({ user, logbooks, setLogbooks, showToast }) {
                   </div>
                 )}
                 {docMode === 'camera' && (
-                  <div className="text-center space-y-3">{docCameraActive ? (<><video ref={docVideoRef} autoPlay playsInline className="w-full max-h-64 bg-black rounded-lg object-cover" /><canvas ref={docCanvasRef} className="hidden" /><Button onClick={takeDocPhoto} className="w-full">Ambil Foto Dokumen</Button></>) : (<div className="py-8"><Button onClick={startDocCamera} className="w-full">Mulai Kamera Belakang</Button></div>)}</div>
+                  <div className="space-y-4">
+                    <div className="w-full h-48 bg-slate-100 rounded-xl overflow-hidden relative flex items-center justify-center">
+                      {docCameraActive ? (
+                        <video ref={docVideoRef} autoPlay playsInline className="w-full h-full object-cover" />
+                      ) : (
+                        <div className="text-slate-400 flex flex-col items-center"><Camera size={48} /><span className="text-xs">Preview Kamera</span></div>
+                      )}
+                      <canvas ref={docCanvasRef} className="hidden" />
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-2">
+                      {docCameraActive ? (
+                        <>
+                          <Button onClick={takeDocPhoto} className="col-span-2 py-3 text-lg font-bold shadow-lg shadow-cyan-500/30">Ambil Foto</Button>
+                          <Button onClick={() => startDocCamera('environment')} variant="secondary" className="text-xs">Kamera Belakang</Button>
+                          <Button onClick={() => startDocCamera('user')} variant="secondary" className="text-xs">Kamera Depan</Button>
+                        </>
+                      ) : (
+                        <>
+                          <Button onClick={() => startDocCamera('environment')} variant="secondary" className="text-xs py-3">Kamera Belakang</Button>
+                          <Button onClick={() => startDocCamera('user')} variant="secondary" className="text-xs py-3">Kamera Depan</Button>
+                        </>
+                      )}
+                    </div>
+                  </div>
                 )}
               </div>
             )}
@@ -2867,9 +3060,9 @@ function LecturerLogbookView({ user, logbooks, students, showToast, onRefresh })
                 <td className="p-5 text-center">
                   <div
                     className="w-16 h-16 rounded-2xl overflow-hidden bg-slate-100 border border-slate-200 shadow-sm mx-auto cursor-pointer hover:scale-105 transition-transform"
-                    onClick={() => setPreviewImage(log.selfieUrl)}
+                    onClick={() => setPreviewImage(getPhotoUrl(log.selfieUrl))}
                   >
-                    <img src={log.selfieUrl} alt="Selfie" className="w-full h-full object-cover" />
+                    <img src={getPhotoUrl(log.selfieUrl)} alt="Selfie" className="w-full h-full object-cover" />
                   </div>
                 </td>
                 <td className="p-5">
@@ -2899,9 +3092,9 @@ function LecturerLogbookView({ user, logbooks, students, showToast, onRefresh })
                   {log.docUrl ? (
                     <div
                       className="w-16 h-16 rounded-2xl overflow-hidden bg-slate-100 border border-slate-200 mx-auto shadow-sm cursor-pointer hover:scale-105 transition-transform"
-                      onClick={() => setPreviewImage(log.docUrl)}
+                      onClick={() => setPreviewImage(getPhotoUrl(log.docUrl))}
                     >
-                      <img src={log.docUrl} alt="Dokumen" className="w-full h-full object-cover" />
+                      <img src={getPhotoUrl(log.docUrl)} alt="Dokumen" className="w-full h-full object-cover" />
                     </div>
                   ) : (
                     <span className="text-slate-300 text-xs italic">Tidak ada</span>
@@ -2920,9 +3113,9 @@ function LecturerLogbookView({ user, logbooks, students, showToast, onRefresh })
             <div className="flex items-center gap-4 border-b border-slate-50 pb-4">
               <div
                 className="w-16 h-16 shrink-0 rounded-2xl overflow-hidden bg-slate-100 border border-slate-200 shadow-inner cursor-pointer"
-                onClick={() => setPreviewImage(log.selfieUrl)}
+                onClick={() => setPreviewImage(getPhotoUrl(log.selfieUrl))}
               >
-                <img src={log.selfieUrl} alt="Selfie" className="w-full h-full object-cover" />
+                <img src={getPhotoUrl(log.selfieUrl)} alt="Selfie" className="w-full h-full object-cover" />
               </div>
               <div className="flex-1 min-w-0">
                 <h3 className="font-bold text-lg text-slate-800 leading-tight truncate">{log.name}</h3>
@@ -2948,7 +3141,7 @@ function LecturerLogbookView({ user, logbooks, students, showToast, onRefresh })
             </div>
 
             <button
-              onClick={() => log.docUrl && setPreviewImage(log.docUrl)}
+              onClick={() => log.docUrl && setPreviewImage(getPhotoUrl(log.docUrl))}
               disabled={!log.docUrl}
               className={`w-full py-3 border rounded-xl text-xs font-bold flex items-center justify-center gap-2 transition-colors ${log.docUrl
                 ? 'border-slate-200 text-slate-600 hover:bg-slate-50 cursor-pointer'
