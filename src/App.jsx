@@ -3075,6 +3075,22 @@ function LecturerLogbookView({ user, logbooks, students, showToast, onRefresh })
               } else if (displayAddress.includes('## Input Manual')) {
                 detectionStatus = 'manual';
                 displayAddress = displayAddress.replace(' ## Input Manual', '');
+              } else {
+                // LEGACY DATA LOGIC:
+                // Cutoff: 18 Feb 2026, 15:00 WIB
+                try {
+                  // log.date is YYYY-MM-DD, log.time is HH:mm
+                  // Create ISO string for WIB (+07:00)
+                  const logIso = `${log.date}T${log.time}:00+07:00`;
+                  const logDateObj = new Date(logIso);
+                  const cutoffDate = new Date('2026-02-18T15:00:00+07:00');
+
+                  if (logDateObj < cutoffDate) {
+                    detectionStatus = 'automatic';
+                  }
+                } catch (e) {
+                  console.error("Date parse error", e);
+                }
               }
 
               return (
@@ -3096,9 +3112,18 @@ function LecturerLogbookView({ user, logbooks, students, showToast, onRefresh })
                     <div className="text-xs text-slate-500 font-mono mt-1">Jam {log.time}</div>
                   </td>
                   <td className="p-5 align-top">
-                    <div className="text-sm text-slate-700 font-medium leading-relaxed">
-                      <span className="font-mono text-xs text-slate-500 block mb-1">[{log.lat}, {log.lng}]</span>
-                      {displayAddress}
+                    <div className="flex flex-col gap-1 items-start">
+                      <a
+                        href={`https://www.google.com/maps?q=${log.lat},${log.lng}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-sm font-medium text-slate-700 hover:text-cyan-600 hover:underline transition-colors block"
+                      >
+                        [{log.lat}, {log.lng}]
+                      </a>
+                      <div className="text-sm font-medium text-slate-700 leading-relaxed">
+                        {displayAddress}
+                      </div>
                     </div>
                     {detectionStatus !== 'unknown' && (
                       <div className={`mt-2 inline-flex items-center px-3 py-1 rounded-lg text-xs font-bold border ${detectionStatus === 'automatic'
@@ -3148,9 +3173,6 @@ function LecturerLogbookView({ user, logbooks, students, showToast, onRefresh })
           let detectionStatus = 'unknown';
           let displayAddress = log.address || '-';
 
-          // Find the newest logbook ID globally
-          const newestLogId = Math.max(...logbooks.map(l => l.id), 0);
-
           if (displayAddress.includes('## Deteksi Otomatis')) {
             detectionStatus = 'automatic';
             displayAddress = displayAddress.replace(' ## Deteksi Otomatis', '');
@@ -3158,9 +3180,20 @@ function LecturerLogbookView({ user, logbooks, students, showToast, onRefresh })
             detectionStatus = 'manual';
             displayAddress = displayAddress.replace(' ## Input Manual', '');
           } else {
-            // Legacy Data Handling
-            if (log.id !== newestLogId) {
-              detectionStatus = 'automatic';
+            // LEGACY DATA LOGIC:
+            // Cutoff: 18 Feb 2026, 15:00 WIB
+            try {
+              // log.date is YYYY-MM-DD, log.time is HH:mm
+              // Create ISO string for WIB (+07:00)
+              const logIso = `${log.date}T${log.time}:00+07:00`;
+              const logDateObj = new Date(logIso);
+              const cutoffDate = new Date('2026-02-18T15:00:00+07:00');
+
+              if (logDateObj < cutoffDate) {
+                detectionStatus = 'automatic';
+              }
+            } catch (e) {
+              console.error("Date parse error", e);
             }
           }
 
@@ -3186,8 +3219,15 @@ function LecturerLogbookView({ user, logbooks, students, showToast, onRefresh })
               <div className="bg-slate-50 p-4 rounded-2xl border border-slate-100 flex items-start gap-3">
                 <MapPin size={18} className="text-cyan-600 mt-0.5 shrink-0" />
                 <div className="flex-1">
+                  <a
+                    href={`https://www.google.com/maps?q=${log.lat},${log.lng}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-sm font-bold text-slate-700 leading-snug block hover:text-cyan-600 hover:underline mb-1"
+                  >
+                    [{log.lat}, {log.lng}]
+                  </a>
                   <p className="text-sm font-bold text-slate-700 leading-snug">{displayAddress}</p>
-                  <p className="text-xs text-slate-400 font-mono mt-1">{typeof log.lat === 'number' ? `${log.lat}, ${log.lng}` : 'No GPS'}</p>
                   {detectionStatus !== 'unknown' && (
                     <div className={`mt-2 inline-flex items-center px-2 py-1 rounded-md text-[10px] font-bold border ${detectionStatus === 'automatic'
                       ? 'bg-green-100 text-green-700 border-green-200'
