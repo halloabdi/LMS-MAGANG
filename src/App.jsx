@@ -721,146 +721,404 @@ const getPhotoUrl = (url) => {
   }
   return url;
 };
-// --- IMAGE CROPPER COMPONENT ---
-const ImageCropper = ({ imageSrc, onCrop, onCancel }) => {
-  const [zoom, setZoom] = useState(1);
-  const [offset, setOffset] = useState({ x: 0, y: 0 });
-  const [isDragging, setIsDragging] = useState(false);
-  const [dragStart, setDragStart] = useState({ x: 0, y: 0 });
-  const imageRef = useRef(null);
-  const containerRef = useRef(null);
 
-  const handleMouseDown = (e) => {
-    setIsDragging(true);
-    setDragStart({ x: e.clientX - offset.x, y: e.clientY - offset.y });
+
+/*
+const canvas = document.createElement('canvas');
+const ctx = canvas.getContext('2d');
+const image = imageRef.current;
+
+// Set fixed output size (e.g., 400x400 for high quality profile)
+canvas.width = 400;
+canvas.height = 400;
+
+// Draw simple white background (optional)
+ctx.fillStyle = '#FFFFFF';
+ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+// Calculate source rectangle
+// The container is 256x256 (w-64 h-64).
+// The image scale is `zoom`.
+// The image position is `offset`.
+
+// We need to map the visible area of the image in the container to the canvas.
+// Easier approach: Draw image to canvas with transforms.
+
+const scale = zoom; // Current visual scale
+
+// We want the center of the crop box to map to the center of the canvas
+// But our offset is applied to the image relative to top-left.
+
+// Let's rely on the visual ratio.
+// Container size in pixels (approx 256px if w-64 is 16rem * 16px).
+const containerSize = 256;
+
+// Scale factor from container to output canvas
+const outputScale = canvas.width / containerSize;
+
+ctx.save();
+ctx.scale(outputScale, outputScale); // Scale drawing operations to match output size
+ctx.translate(containerSize / 2, containerSize / 2);
+ctx.translate(offset.x, offset.y);
+ctx.scale(zoom, zoom);
+ctx.drawImage(image, -image.naturalWidth / 2, -image.naturalHeight / 2);
+ctx.restore();
+
+canvas.toBlob((blob) => {
+  onCrop(blob);
+}, 'image/jpeg', 0.9);
+};
+
+return (
+  <div className="fixed inset-0 z-[100] bg-slate-900/80 backdrop-blur-sm flex items-center justify-center p-4 animate-in fade-in duration-200">
+    <div className="bg-white w-full max-w-md rounded-2xl shadow-2xl overflow-hidden flex flex-col animate-in zoom-in-95">
+      <div className="p-4 border-b border-slate-100 flex justify-between items-center">
+        <h3 className="font-bold text-lg text-slate-800">Sesuaikan Foto</h3>
+        <button onClick={onCancel} className="p-2 hover:bg-slate-100 rounded-full transition"><X size={20} /></button>
+      </div>
+
+      <div className="p-6 flex flex-col items-center">
+        <div
+          ref={containerRef}
+          className="w-64 h-64 rounded-full overflow-hidden border-4 border-cyan-500 shadow-xl relative cursor-move bg-slate-100 touch-none"
+          onMouseDown={handleMouseDown}
+          onMouseMove={handleMouseMove}
+          onMouseUp={handleMouseUp}
+          onMouseLeave={handleMouseUp}
+          onTouchStart={handleTouchStart}
+          onTouchMove={handleTouchMove}
+          onTouchEnd={handleMouseUp}
+        >
+          <img
+            ref={imageRef}
+            src={imageSrc}
+            alt="Crop Preview"
+            className="max-w-none absolute top-1/2 left-1/2 origin-center pointer-events-none select-none"
+            style={{
+              transform: `translate(-50%, -50%) translate(${offset.x}px, ${offset.y}px) scale(${zoom})`
+            }}
+            draggable={false}
+          />
+        </div>
+
+        <div className="w-full mt-6 space-y-2">
+          <div className="flex justify-between text-xs font-bold text-slate-500 uppercase">
+            <span>Zoom Out</span>
+            <span>Zoom In</span>
+          </div>
+          <input
+            type="range"
+            min="1"
+            max="3"
+            step="0.1"
+            value={zoom}
+            onChange={(e) => setZoom(parseFloat(e.target.value))}
+            className="w-full h-2 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-cyan-600"
+          />
+        </div>
+      </div>
+
+      <div className="p-4 border-t border-slate-100 bg-slate-50 flex justify-end gap-3">
+        <Button variant="secondary" onClick={onCancel}>Batal</Button>
+        <Button onClick={handleCrop} className="px-6">Simpan Foto</Button>
+      </div>
+    </div>
+  </div>
+);
+
+*/
+
+// --- IMAGE CROPPER COMPONENT (REFINED) ---
+const ImageCropper = ({ imageSrc, onCrop, onCancel }) => {
+  const [crop, setCrop] = useState({ x: 0, y: 0, size: 0 }); // coordinates in natural image pixels
+  const [naturalSize, setNaturalSize] = useState({ width: 0, height: 0 });
+  const [inputSize, setInputSize] = useState(''); // Separate state for manual input to allow typing
+
+  const imgRef = useRef(null);
+  const containerRef = useRef(null);
+  const isDraggingRef = useRef(false);
+  const isResizingRef = useRef(false);
+  const startPosRef = useRef({ x: 0, y: 0, cropX: 0, cropY: 0, cropSize: 0 });
+
+  // On Image Load: Initialize crop to max square centered
+  const onImageLoad = (e) => {
+    const { naturalWidth, naturalHeight } = e.currentTarget;
+    setNaturalSize({ width: naturalWidth, height: naturalHeight });
+
+    const size = Math.min(naturalWidth, naturalHeight);
+    const x = (naturalWidth - size) / 2;
+    const y = (naturalHeight - size) / 2;
+
+    setCrop({ x, y, size });
+    setInputSize(size.toString());
+  };
+
+  // Helper: Convert client coordinates to image natural coordinates
+  const getNaturalCoords = (clientX, clientY) => {
+    if (!imgRef.current) return { x: 0, y: 0 };
+    const rect = imgRef.current.getBoundingClientRect();
+    const scaleX = naturalSize.width / rect.width;
+    const scaleY = naturalSize.height / rect.height;
+    return {
+      x: (clientX - rect.left) * scaleX,
+      y: (clientY - rect.top) * scaleY
+    };
+  };
+
+  // Dragging Logic
+  const handleMouseDown = (e, mode) => {
+    e.preventDefault();
+    e.stopPropagation();
+
+    const coords = getNaturalCoords(e.clientX, e.clientY);
+
+    if (mode === 'drag') {
+      isDraggingRef.current = true;
+      startPosRef.current = {
+        x: coords.x,
+        y: coords.y,
+        cropX: crop.x,
+        cropY: crop.y
+      };
+    } else if (mode === 'resize') {
+      isResizingRef.current = true;
+      startPosRef.current = {
+        x: coords.x,
+        y: coords.y,
+        cropSize: crop.size
+      };
+    }
+
+    // Global listeners for smooth dragging outside container
+    document.addEventListener('mousemove', handleMouseMove);
+    document.addEventListener('mouseup', handleMouseUp);
   };
 
   const handleMouseMove = (e) => {
-    if (!isDragging) return;
-    e.preventDefault();
-    setOffset({
-      x: e.clientX - dragStart.x,
-      y: e.clientY - dragStart.y
-    });
+    const coords = getNaturalCoords(e.clientX, e.clientY);
+
+    if (isDraggingRef.current) {
+      const dx = coords.x - startPosRef.current.x;
+      const dy = coords.y - startPosRef.current.y;
+
+      let newX = startPosRef.current.cropX + dx;
+      let newY = startPosRef.current.cropY + dy;
+
+      // Bounds check
+      newX = Math.max(0, Math.min(newX, naturalSize.width - crop.size));
+      newY = Math.max(0, Math.min(newY, naturalSize.height - crop.size));
+
+      setCrop(prev => ({ ...prev, x: newX, y: newY }));
+    }
+    else if (isResizingRef.current) {
+      // Resize logic (bottom-right handle)
+      // distance moved in X direction determines size change (maintain 1:1)
+      const dx = coords.x - startPosRef.current.x;
+      // We can take max of dx/dy purely, or just dx since it's user preference usually
+
+      let newSize = startPosRef.current.cropSize + dx;
+
+      // Min size 100px
+      newSize = Math.max(100, newSize);
+
+      // Max bounds check (x + size <= w, y + size <= h)
+      const maxSize = Math.min(
+        naturalSize.width - crop.x,
+        naturalSize.height - crop.y
+      );
+      newSize = Math.min(newSize, maxSize);
+
+      setCrop(prev => {
+        const next = { ...prev, size: newSize };
+        setInputSize(Math.round(newSize).toString());
+        return next;
+      });
+    }
   };
 
-  const handleMouseUp = () => setIsDragging(false);
-
-  // Touch support
-  const handleTouchStart = (e) => {
-    setIsDragging(true);
-    setDragStart({ x: e.touches[0].clientX - offset.x, y: e.touches[0].clientY - offset.y });
+  const handleMouseUp = () => {
+    isDraggingRef.current = false;
+    isResizingRef.current = false;
+    document.removeEventListener('mousemove', handleMouseMove);
+    document.removeEventListener('mouseup', handleMouseUp);
   };
 
-  const handleTouchMove = (e) => {
-    if (!isDragging) return;
-    setOffset({
-      x: e.touches[0].clientX - dragStart.x,
-      y: e.touches[0].clientY - dragStart.y
-    });
+  // Manual Input Change
+  const handleManualInputApply = () => {
+    let val = parseInt(inputSize);
+    if (isNaN(val)) return;
+
+    // Constraints
+    val = Math.max(100, Math.min(val, naturalSize.width, naturalSize.height));
+
+    // Recenter if shrinking, or clamp to top-left if growing prevents fitting
+    let newX = crop.x;
+    let newY = crop.y;
+
+    if (newX + val > naturalSize.width) newX = naturalSize.width - val;
+    if (newY + val > naturalSize.height) newY = naturalSize.height - val;
+
+    setCrop({ x: newX, y: newY, size: val });
+    setInputSize(val.toString());
   };
 
-  const handleCrop = async () => {
+  const executeCrop = () => {
     const canvas = document.createElement('canvas');
+    // Set output size to the actual crop size (high res)
+    canvas.width = crop.size;
+    canvas.height = crop.size;
+
     const ctx = canvas.getContext('2d');
-    const image = imageRef.current;
 
-    // Set fixed output size (e.g., 400x400 for high quality profile)
-    canvas.width = 400;
-    canvas.height = 400;
-
-    // Draw simple white background (optional)
-    ctx.fillStyle = '#FFFFFF';
-    ctx.fillRect(0, 0, canvas.width, canvas.height);
-
-    // Calculate source rectangle
-    // The container is 256x256 (w-64 h-64).
-    // The image scale is `zoom`.
-    // The image position is `offset`.
-
-    // We need to map the visible area of the image in the container to the canvas.
-    // Easier approach: Draw image to canvas with transforms.
-
-    const scale = zoom; // Current visual scale
-
-    // We want the center of the crop box to map to the center of the canvas
-    // But our offset is applied to the image relative to top-left.
-
-    // Let's rely on the visual ratio.
-    // Container size in pixels (approx 256px if w-64 is 16rem * 16px).
-    const containerSize = 256;
-
-    // Scale factor from container to output canvas
-    const outputScale = canvas.width / containerSize;
-
-    ctx.save();
-    ctx.scale(outputScale, outputScale); // Scale drawing operations to match output size
-    ctx.translate(containerSize / 2, containerSize / 2);
-    ctx.translate(offset.x, offset.y);
-    ctx.scale(zoom, zoom);
-    ctx.drawImage(image, -image.naturalWidth / 2, -image.naturalHeight / 2);
-    ctx.restore();
+    // Draw cropped area
+    ctx.drawImage(
+      imgRef.current,
+      crop.x, crop.y, crop.size, crop.size, // Source
+      0, 0, crop.size, crop.size // Destination
+    );
 
     canvas.toBlob((blob) => {
       onCrop(blob);
-    }, 'image/jpeg', 0.9);
+    }, 'image/jpeg', 0.95);
+  };
+
+  // Styles for the Overlay Box
+  // We use percentages for rendering to be responsive
+  const getStyle = () => {
+    if (naturalSize.width === 0) return {};
+    return {
+      left: `${(crop.x / naturalSize.width) * 100}%`,
+      top: `${(crop.y / naturalSize.height) * 100}%`,
+      width: `${(crop.size / naturalSize.width) * 100}%`,
+      height: `${(crop.size / naturalSize.height) * 100}%`
+    };
   };
 
   return (
-    <div className="fixed inset-0 z-[100] bg-slate-900/80 backdrop-blur-sm flex items-center justify-center p-4 animate-in fade-in duration-200">
-      <div className="bg-white w-full max-w-md rounded-2xl shadow-2xl overflow-hidden flex flex-col animate-in zoom-in-95">
-        <div className="p-4 border-b border-slate-100 flex justify-between items-center">
-          <h3 className="font-bold text-lg text-slate-800">Sesuaikan Foto</h3>
-          <button onClick={onCancel} className="p-2 hover:bg-slate-100 rounded-full transition"><X size={20} /></button>
-        </div>
+    <div className="fixed inset-0 z-[100] bg-slate-900/90 backdrop-blur-sm flex items-center justify-center p-4 animate-in fade-in duration-300">
+      <div className="bg-white w-full max-w-5xl h-[90vh] rounded-[2rem] shadow-2xl overflow-hidden flex flex-col md:flex-row animate-in zoom-in-95">
 
-        <div className="p-6 flex flex-col items-center">
-          <div
-            ref={containerRef}
-            className="w-64 h-64 rounded-full overflow-hidden border-4 border-cyan-500 shadow-xl relative cursor-move bg-slate-100 touch-none"
-            onMouseDown={handleMouseDown}
-            onMouseMove={handleMouseMove}
-            onMouseUp={handleMouseUp}
-            onMouseLeave={handleMouseUp}
-            onTouchStart={handleTouchStart}
-            onTouchMove={handleTouchMove}
-            onTouchEnd={handleMouseUp}
-          >
+        {/* LEFT: Image Area */}
+        <div className="flex-1 bg-slate-900 relative flex items-center justify-center p-8 overflow-hidden">
+          <div ref={containerRef} className="relative max-w-full max-h-full shadow-2xl">
             <img
-              ref={imageRef}
+              ref={imgRef}
               src={imageSrc}
-              alt="Crop Preview"
-              className="max-w-none absolute top-1/2 left-1/2 origin-center pointer-events-none select-none"
-              style={{
-                transform: `translate(-50%, -50%) translate(${offset.x}px, ${offset.y}px) scale(${zoom})`
-              }}
+              onLoad={onImageLoad}
+              alt="Crop Source"
+              className="max-w-full max-h-[80vh] block object-contain select-none pointer-events-none"
               draggable={false}
             />
+
+            {/* Dark Overlay (Outside Crop) - Implemented via Box Shadow on the Crop Box for simplicity */}
+            {naturalSize.width > 0 && (
+              <div
+                className="absolute border-2 border-white box-content cursor-move shadow-[0_0_0_9999px_rgba(0,0,0,0.6)]"
+                style={getStyle()}
+                onMouseDown={(e) => handleMouseDown(e, 'drag')}
+              >
+                {/* Rule of Thirds Grid */}
+                <div className="absolute inset-0 grid grid-cols-3 grid-rows-3 pointer-events-none">
+                  <div className="border-r border-b border-white/30"></div>
+                  <div className="border-r border-b border-white/30"></div>
+                  <div className="border-b border-white/30"></div>
+                  <div className="border-r border-b border-white/30"></div>
+                  <div className="border-r border-b border-white/30"></div>
+                  <div className="border-b border-white/30"></div>
+                  <div className="border-r border-white/30"></div>
+                  <div className="border-r border-white/30"></div>
+                  <div></div>
+                </div>
+
+                {/* Resize Handle (Bottom Right) */}
+                <div
+                  className="absolute -bottom-2 -right-2 w-6 h-6 bg-cyan-500 border-2 border-white rounded-full cursor-se-resize shadow-md z-10 hover:scale-125 transition-transform"
+                  onMouseDown={(e) => handleMouseDown(e, 'resize')}
+                ></div>
+
+                {/* Dimensions Label */}
+                <div className="absolute -top-8 left-1/2 -translate-x-1/2 bg-black/70 text-white text-[10px] px-2 py-1 rounded-full font-mono pointer-events-none whitespace-nowrap">
+                  {Math.round(crop.size)} x {Math.round(crop.size)} px
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+
+        {/* RIGHT: Sidebar Controls */}
+        <div className="w-full md:w-80 bg-white border-l border-slate-100 flex flex-col">
+          <div className="p-6 border-b border-slate-100 flex justify-between items-center">
+            <h3 className="font-bold text-lg text-slate-800 flex items-center gap-2">
+              <Camera size={20} className="text-cyan-600" />
+              Crop Foto
+            </h3>
+            <button onClick={onCancel} className="p-2 hover:bg-slate-100 rounded-full transition text-slate-400 hover:text-red-500"><X size={20} /></button>
           </div>
 
-          <div className="w-full mt-6 space-y-2">
-            <div className="flex justify-between text-xs font-bold text-slate-500 uppercase">
-              <span>Zoom Out</span>
-              <span>Zoom In</span>
+          <div className="flex-1 p-6 space-y-6 overflow-y-auto">
+            {/* Info Box */}
+            <div className="bg-cyan-50 p-4 rounded-xl border border-cyan-100">
+              <h4 className="font-bold text-cyan-800 text-sm mb-1 flex items-center gap-2"><Lightbulb size={14} /> Pengaturan Potongan</h4>
+              <p className="text-xs text-cyan-700 leading-relaxed">Geser kotak pada gambar atau tarik sudut kanan bawah untuk mengubah ukuran. Rasio foto dikunci 1:1 (Persegi) untuk foto profil.</p>
             </div>
-            <input
-              type="range"
-              min="1"
-              max="3"
-              step="0.1"
-              value={zoom}
-              onChange={(e) => setZoom(parseFloat(e.target.value))}
-              className="w-full h-2 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-cyan-600"
-            />
+
+            {/* Manual Size Input */}
+            <div className="space-y-3">
+              <label className="text-xs font-bold text-slate-400 uppercase tracking-wider">Ukuran Manual (px)</label>
+              <div className="flex items-center gap-2">
+                <div className="relative flex-1">
+                  <input
+                    type="number"
+                    value={inputSize}
+                    onChange={(e) => setInputSize(e.target.value)}
+                    onBlur={handleManualInputApply}
+                    className="w-full pl-3 pr-8 py-2.5 bg-slate-50 border border-slate-200 rounded-xl font-mono text-sm focus:ring-2 focus:ring-cyan-400 focus:bg-white transition-all outline-none text-slate-700"
+                  />
+                  <span className="absolute right-3 top-2.5 text-xs text-slate-400 font-bold">W</span>
+                </div>
+                <span className="text-slate-300"><X size={14} /></span>
+                <div className="relative flex-1 opacity-50 cursor-not-allowed" title="Terkunci (Persegi)">
+                  <input
+                    type="number"
+                    value={inputSize}
+                    readOnly
+                    className="w-full pl-3 pr-8 py-2.5 bg-slate-50 border border-slate-200 rounded-xl font-mono text-sm text-slate-500 pointer-events-none"
+                  />
+                  <span className="absolute right-3 top-2.5 text-xs text-slate-400 font-bold">H</span>
+                </div>
+              </div>
+              <button
+                onClick={handleManualInputApply}
+                className="w-full py-2 bg-slate-100 hover:bg-slate-200 text-slate-600 text-xs font-bold rounded-lg transition-colors border border-slate-200"
+              >
+                Terapkan Ukuran
+              </button>
+            </div>
+
+            {/* Download Info (Mimicking UI) */}
+            <div className="pt-6 border-t border-slate-100">
+              <h4 className="font-bold text-slate-700 text-sm mb-2 flex items-center gap-2"><Download size={14} /> Output</h4>
+              <div className="bg-slate-50 border border-slate-100 rounded-xl p-3">
+                <div className="flex justify-between items-center mb-1">
+                  <span className="text-xs text-slate-500">Format</span>
+                  <span className="text-xs font-bold text-slate-700">JPEG (High Quality)</span>
+                </div>
+                <div className="flex justify-between items-center">
+                  <span className="text-xs text-slate-500">Resolusi</span>
+                  <span className="text-xs font-bold text-slate-700">{Math.round(crop.size)} x {Math.round(crop.size)} px</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div className="p-6 border-t border-slate-100 bg-slate-50 flex flex-col gap-3">
+            <Button onClick={executeCrop} className="w-full py-3 shadow-lg shadow-cyan-500/20 text-lg">Simpan Foto</Button>
+            <button onClick={onCancel} className="w-full py-3 text-slate-500 font-bold text-sm hover:text-slate-700 transition-colors">Batal</button>
           </div>
         </div>
 
-        <div className="p-4 border-t border-slate-100 bg-slate-50 flex justify-end gap-3">
-          <Button variant="secondary" onClick={onCancel}>Batal</Button>
-          <Button onClick={handleCrop} className="px-6">Simpan Foto</Button>
-        </div>
-      </div>
-    </div>
+      </div >
+    </div >
   );
 };
 
