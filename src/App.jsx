@@ -368,8 +368,8 @@ const TextModal = ({ title, content, onClose }) => {
 };
 
 // --- CONFIGURATION ---
-// 18 Feb 14:51 - Version 45: Location Tracking & Detection Status
-const GAS_URL = "https://script.google.com/macros/s/AKfycbxbYrIlpJAtnoEQAhOvkmIsKABO4GawC5qkaFXFqV2Gsks3vtZ94cjWbxqZkHw5ELuM/exec";
+// 19 Feb 09:55 - Version 47: Fallback Columns for Selfie/Doc
+const GAS_URL = "https://script.google.com/macros/s/AKfycbx-Gg8Gk8j7rjreKwXkfUsn0zPkG2esEcakQwqZUK0OgUoa2uDHFgkiCu0adMKhKY9-/exec";
 
 // --- INITIAL DATA ---
 const INITIAL_LOGBOOKS = [];
