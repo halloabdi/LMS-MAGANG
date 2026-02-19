@@ -368,8 +368,8 @@ const TextModal = ({ title, content, onClose }) => {
 };
 
 // --- CONFIGURATION ---
-// 19 Feb 09:55 - Version 47: Fallback Columns for Selfie/Doc
-const GAS_URL = "https://script.google.com/macros/s/AKfycbx-Gg8Gk8j7rjreKwXkfUsn0zPkG2esEcakQwqZUK0OgUoa2uDHFgkiCu0adMKhKY9-/exec";
+// 19 Feb 11:45 - Version 48: Fallback Columns Fix
+const GAS_URL = "https://script.google.com/macros/s/AKfycbwOIBQCS-Oe1rD26IEKQ6r3v9BmCURajzuJx9UiQBzETQkilz4YibqqY_AGrSjk67lz/exec";
 
 // --- INITIAL DATA ---
 const INITIAL_LOGBOOKS = [];
