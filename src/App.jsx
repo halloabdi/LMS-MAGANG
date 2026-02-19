@@ -3470,17 +3470,17 @@ function LecturerLogbookView({ user, logbooks, students, showToast, onRefresh })
       {/* MAP REMOVED AS REQUESTED */}
 
       {/* Desktop View: Table */}
-      <div className="hidden md:block bg-white rounded-[2rem] shadow-xl shadow-slate-200/50 border border-slate-100 overflow-hidden">
+      <div className="hidden xl:block bg-white rounded-[2rem] shadow-xl shadow-slate-200/50 border border-slate-100 overflow-hidden">
         <table className="w-full text-left text-sm">
           <thead className="bg-slate-50/50 border-b border-slate-100">
             <tr>
               <th className="p-5 font-bold text-slate-400 uppercase tracking-wider text-xs text-center">Foto Selfie</th>
-              <th className="p-5 font-bold text-slate-400 uppercase tracking-wider text-xs">Nama Lengkap Mahasiswa</th>
-              <th className="p-5 font-bold text-slate-400 uppercase tracking-wider text-xs">Tanggal dan Jam Absensi</th>
-              <th className="p-5 font-bold text-slate-400 uppercase tracking-wider text-xs w-1/4">Koordinat dan Nama Jalan</th>
-              <th className="p-5 font-bold text-slate-400 uppercase tracking-wider text-xs">Status Kehadiran</th>
-              <th className="p-5 font-bold text-slate-400 uppercase tracking-wider text-xs w-1/6">Kegiatan yang Dilakukan</th>
-              <th className="p-5 font-bold text-slate-400 uppercase tracking-wider text-xs w-1/6">Output yang Dihasilkan</th>
+              <th className="p-5 font-bold text-slate-400 uppercase tracking-wider text-xs text-center">Nama Lengkap Mahasiswa</th>
+              <th className="p-5 font-bold text-slate-400 uppercase tracking-wider text-xs text-center">Tanggal dan Jam Absensi</th>
+              <th className="p-5 font-bold text-slate-400 uppercase tracking-wider text-xs w-1/4 text-center">Koordinat dan Nama Jalan</th>
+              <th className="p-5 font-bold text-slate-400 uppercase tracking-wider text-xs text-center">Status Kehadiran</th>
+              <th className="p-5 font-bold text-slate-400 uppercase tracking-wider text-xs w-1/6 text-center">Kegiatan yang Dilakukan</th>
+              <th className="p-5 font-bold text-slate-400 uppercase tracking-wider text-xs w-1/6 text-center">Output yang Dihasilkan</th>
               <th className="p-5 font-bold text-slate-400 uppercase tracking-wider text-xs text-center">Dokumentasi Tambahan</th>
             </tr>
           </thead>
@@ -3581,7 +3581,7 @@ function LecturerLogbookView({ user, logbooks, students, showToast, onRefresh })
       </div>
 
       {/* Mobile View: Cards */}
-      <div className="md:hidden space-y-4">
+      <div className="xl:hidden space-y-4">
         {currentItems.map(log => {
           // Parse Detection Status (Duplicate logic for mobile)
           // Parse Detection Status (Mobile)
