@@ -3555,11 +3555,11 @@ function LecturerLogbookView({ user, logbooks, students, showToast, onRefresh })
                   </td>
                   <td className="p-5 align-top">
                     <div className="line-clamp-3 text-slate-600 text-xs mb-2 leading-relaxed [&_ol]:list-decimal [&_ul]:list-disc [&_ol]:pl-5 [&_ul]:pl-5" dangerouslySetInnerHTML={{ __html: displayRichText(log.activity) }} />
-                    <button onClick={() => setDetailModal({ show: true, title: 'Detail Kegiatan', content: displayRichText(log.activity) })} className="text-xs font-bold text-cyan-600 hover:text-cyan-800 hover:underline">Lihat Selengkapnya</button>
+                    <button onClick={() => setDetailModal({ show: true, title: 'Detail Kegiatan', content: displayRichText(log.activity) })} className="block w-full text-left text-xs font-bold text-cyan-600 hover:text-cyan-800 hover:underline">Lihat Selengkapnya</button>
                   </td>
                   <td className="p-5 align-top">
                     <div className="line-clamp-3 text-slate-600 text-xs mb-2 leading-relaxed [&_ol]:list-decimal [&_ul]:list-disc [&_ol]:pl-5 [&_ul]:pl-5" dangerouslySetInnerHTML={{ __html: displayRichText(log.output) }} />
-                    <button onClick={() => setDetailModal({ show: true, title: 'Detail Output', content: displayRichText(log.output) })} className="text-xs font-bold text-cyan-600 hover:text-cyan-800 hover:underline">Lihat Selengkapnya</button>
+                    <button onClick={() => setDetailModal({ show: true, title: 'Detail Output', content: displayRichText(log.output) })} className="block w-full text-left text-xs font-bold text-cyan-600 hover:text-cyan-800 hover:underline">Lihat Selengkapnya</button>
                   </td>
                   <td className="p-5 text-center align-top">
                     {log.docUrl ? (
