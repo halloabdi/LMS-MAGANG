@@ -2182,6 +2182,14 @@ function LogbookEditModal({ isOpen, onClose, logbook, onUpdate, showToast }) {
 
     navigator.geolocation.getCurrentPosition(async (pos) => {
       const { latitude, longitude, accuracy } = pos.coords;
+
+      if (accuracy > 5000) {
+        setLocLoading(false);
+        setUpdateLocation(false);
+        showToast('error', 'Sinyal GPS Lemah', `Lokasi tidak akurat (±${Math.round(accuracy)}m) karena menggunakan jaringan tidak stabil. Coba lagi!`);
+        return;
+      }
+
       setLat(latitude);
       setLng(longitude);
       setAccuracy(accuracy);
@@ -2399,6 +2407,11 @@ function StudentLogbookForm({ user, logbooks, setLogbooks, showToast }) {
     const successHandler = async (pos) => {
       const { latitude, longitude, accuracy } = pos.coords;
 
+      if (accuracy > 1500) {
+        errorHandler({ code: 3, message: `Timeout! GPS tidak akurat (±${Math.round(accuracy)}m).` });
+        return;
+      }
+
       // LOGIC LOCK: Jika address sudah terisi valid (bukan Menunggu/Gagal/Memuat), JANGAN update lagi otomatis.
       // Kecuali user menekan tombol Refresh (yang akan mereset address ke "Memperbarui lokasi..." dulu)
       if (address && !address.startsWith("Menunggu") && !address.startsWith("Gagal") && !address.startsWith("Memuat") && !address.startsWith("Browser")) {
@@ -2486,6 +2499,12 @@ function StudentLogbookForm({ user, logbooks, setLogbooks, showToast }) {
 
     const success = async (pos) => {
       const { latitude, longitude, accuracy } = pos.coords;
+
+      if (accuracy > 1500) {
+        error({ code: 3, message: `Timeout! GPS tidak akurat (±${Math.round(accuracy)}m).` });
+        return;
+      }
+
       setLat(latitude);
       setLng(longitude);
       setAccuracy(accuracy);
@@ -2575,7 +2594,37 @@ function StudentLogbookForm({ user, logbooks, setLogbooks, showToast }) {
       setCameraActive(false);
     }
   };
-  const takePhoto = () => { const video = videoRef.current; const canvas = canvasRef.current; if (video && canvas) { canvas.width = video.videoWidth; canvas.height = video.videoHeight; canvas.getContext('2d').drawImage(video, 0, 0); setSelfie(canvas.toDataURL('image/png')); video.srcObject.getTracks().forEach(t => t.stop()); setCameraActive(false); showToast('success', 'Foto Tersimpan', 'Foto selfie berhasil diambil.'); } };
+  const takePhoto = () => {
+    const video = videoRef.current;
+    const canvas = canvasRef.current;
+    if (video && canvas) {
+      let width = video.videoWidth;
+      let height = video.videoHeight;
+      const ctx = canvas.getContext('2d');
+
+      const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+      const isPortrait = window.innerHeight > window.innerWidth;
+      const videoIsLandscape = width > height;
+
+      if (isMobile && isPortrait && videoIsLandscape) {
+        // Fix for Android/Mobile devices that don't rotate the raw video stream automatically
+        canvas.width = height;
+        canvas.height = width;
+        ctx.translate(height / 2, width / 2);
+        ctx.rotate(Math.PI / 2);
+        ctx.drawImage(video, -width / 2, -height / 2, width, height);
+      } else {
+        canvas.width = width;
+        canvas.height = height;
+        ctx.drawImage(video, 0, 0, width, height);
+      }
+
+      setSelfie(canvas.toDataURL('image/png'));
+      video.srcObject.getTracks().forEach(t => t.stop());
+      setCameraActive(false);
+      showToast('success', 'Foto Tersimpan', 'Foto selfie berhasil diambil.');
+    }
+  };
 
   const startDocCamera = async (mode = 'environment') => {
     setDocCameraActive(true);
@@ -2591,7 +2640,41 @@ function StudentLogbookForm({ user, logbooks, setLogbooks, showToast }) {
       setDocCameraActive(false);
     }
   };
-  const takeDocPhoto = () => { const video = docVideoRef.current; const canvas = docCanvasRef.current; if (video && canvas) { canvas.width = video.videoWidth; canvas.height = video.videoHeight; canvas.getContext('2d').drawImage(video, 0, 0); const fileData = canvas.toDataURL('image/jpeg'); fetch(fileData).then(res => res.blob()).then(blob => { const file = new File([blob], "doc_camera.jpg", { type: "image/jpeg" }); setDoc(file); showToast('success', 'Dokumen Tersimpan', 'Foto dokumen berhasil diambil.'); }); video.srcObject.getTracks().forEach(t => t.stop()); setDocCameraActive(false); setDocMode(null); } };
+  const takeDocPhoto = () => {
+    const video = docVideoRef.current;
+    const canvas = docCanvasRef.current;
+    if (video && canvas) {
+      let width = video.videoWidth;
+      let height = video.videoHeight;
+      const ctx = canvas.getContext('2d');
+
+      const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+      const isPortrait = window.innerHeight > window.innerWidth;
+      const videoIsLandscape = width > height;
+
+      if (isMobile && isPortrait && videoIsLandscape) {
+        canvas.width = height;
+        canvas.height = width;
+        ctx.translate(height / 2, width / 2);
+        ctx.rotate(Math.PI / 2);
+        ctx.drawImage(video, -width / 2, -height / 2, width, height);
+      } else {
+        canvas.width = width;
+        canvas.height = height;
+        ctx.drawImage(video, 0, 0, width, height);
+      }
+
+      const fileData = canvas.toDataURL('image/jpeg');
+      fetch(fileData).then(res => res.blob()).then(blob => {
+        const file = new File([blob], "doc_camera.jpg", { type: "image/jpeg" });
+        setDoc(file);
+        showToast('success', 'Dokumen Tersimpan', 'Foto dokumen berhasil diambil.');
+      });
+      video.srcObject.getTracks().forEach(t => t.stop());
+      setDocCameraActive(false);
+      setDocMode(null);
+    }
+  };
 
   const formatHTMLToDBString = (htmlString) => {
     if (!htmlString) return '';
