@@ -2777,8 +2777,8 @@ function StudentLogbookForm({ user, logbooks, setLogbooks, showToast }) {
         <div className="space-y-8">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div className="flex flex-col gap-4">
-              <div className="bg-slate-50 p-1 rounded-2xl border border-slate-200 flex flex-col h-full">
-                <div className="bg-white rounded-xl overflow-hidden h-64 relative z-0 flex-1"><LeafletMap lat={lat} lng={lng} setLat={setLat} setLng={setLng} setAddress={setAddress} /></div>
+              <div className="bg-slate-50 p-1 rounded-2xl border border-slate-200 flex flex-col">
+                <div className="bg-white rounded-xl overflow-hidden h-[250px] relative z-0 w-full"><LeafletMap lat={lat} lng={lng} setLat={setLat} setLng={setLng} setAddress={setAddress} /></div>
                 <Button onClick={getLocation} variant="secondary" className="w-full mt-2 py-3 border-cyan-200 text-cyan-700 hover:bg-cyan-50 font-bold shadow-sm">↻ Refresh Lokasi</Button>
                 <div className="p-4"><div className="flex items-start gap-3"><MapPin className="text-cyan-600 mt-1 shrink-0" size={20} /><div><p className="font-bold text-slate-700 text-sm leading-snug">{address}</p><p className="text-xs text-slate-500 mt-1 font-mono">{lat ? `${lat.toFixed(6)}, ${lng.toFixed(6)}` : "Mencari kordinat..."}</p>{accuracy && <p className="text-[10px] text-green-600">Akurasi GPS: ±{Math.round(accuracy)} meter</p>}</div></div></div>
               </div>
