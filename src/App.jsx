@@ -386,6 +386,30 @@ const TextModal = ({ title, content, onClose }) => {
   );
 };
 
+// --- ALERTS/WARNING MODAL ---
+const AlertModal = ({ title, content, onClose }) => {
+  if (!content) return null;
+  return (
+    <div className="fixed inset-0 z-[1000] bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4 animate-in fade-in duration-200" onClick={onClose}>
+      <div className="bg-white w-full max-w-2xl rounded-2xl shadow-2xl overflow-hidden flex flex-col max-h-[80vh] animate-in zoom-in-95 border border-red-200" onClick={e => e.stopPropagation()}>
+        <div className="p-4 border-b border-red-100 flex justify-between items-center bg-red-50">
+          <h3 className="font-bold text-lg text-red-800 flex items-center gap-2">
+            <AlertTriangle size={20} className="text-red-600" />
+            {title}
+          </h3>
+          <button onClick={onClose} className="p-2 hover:bg-red-200 text-red-600 rounded-full transition-colors"><X size={20} /></button>
+        </div>
+        <div className="p-6 overflow-y-auto text-slate-700 leading-relaxed bg-white">
+          <div dangerouslySetInnerHTML={{ __html: content }} className="prose prose-slate max-w-none [&_ol]:list-decimal [&_ul]:list-disc [&_ol]:pl-5 [&_ul]:pl-5 selection:bg-red-200" />
+        </div>
+        <div className="p-4 border-t border-slate-100 bg-slate-50 flex justify-end">
+          <Button variant="danger" onClick={onClose}>Mengerti & Tutup</Button>
+        </div>
+      </div>
+    </div>
+  );
+};
+
 // --- CONFIGURATION ---
 // 19 Feb 11:45 - Version 48: Fallback Columns Fix
 const GAS_URL = "https://script.google.com/macros/s/AKfycbwOIBQCS-Oe1rD26IEKQ6r3v9BmCURajzuJx9UiQBzETQkilz4YibqqY_AGrSjk67lz/exec";
@@ -2271,7 +2295,7 @@ function LogbookEditModal({ isOpen, onClose, logbook, onUpdate, showToast }) {
 
   return (
     <>
-      {locationAlert && <TextModal title="Peringatan Lokasi" content={locationAlert} onClose={() => setLocationAlert(null)} />}
+      {locationAlert && <AlertModal title="Peringatan Lokasi" content={locationAlert} onClose={() => setLocationAlert(null)} />}
       <div className="fixed inset-0 z-[1000] bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4 animate-in fade-in duration-200">
         <div className="bg-white w-full max-w-4xl rounded-2xl shadow-xl flex flex-col max-h-[90vh] animate-in zoom-in-95">
           <div className="p-4 border-b border-slate-100 flex justify-between items-center bg-slate-50/50 rounded-t-2xl">
@@ -2777,7 +2801,7 @@ function StudentLogbookForm({ user, logbooks, setLogbooks, showToast }) {
 
   return (
     <div className="max-w-4xl mx-auto animate-in fade-in slide-in-from-bottom-4 duration-500">
-      {locationAlert && <TextModal title="Peringatan Lokasi" content={locationAlert} onClose={() => setLocationAlert(null)} />}
+      {locationAlert && <AlertModal title="Peringatan Lokasi" content={locationAlert} onClose={() => setLocationAlert(null)} />}
       {previewImage && <ImageModal src={previewImage} onClose={() => setPreviewImage(null)} />}
       <Card title="Formulir Logbook Harian">
         <div className="space-y-8">
