@@ -2500,7 +2500,7 @@ function StudentLogbookForm({ user, logbooks, setLogbooks, showToast }) {
     const success = async (pos) => {
       const { latitude, longitude, accuracy } = pos.coords;
 
-      if (accuracy > 1500) {
+      if (accuracy > 2500) {
         error({ code: 3, message: `Timeout! GPS tidak akurat (±${Math.round(accuracy)}m).` });
         return;
       }
