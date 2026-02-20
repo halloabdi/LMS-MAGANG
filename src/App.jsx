@@ -78,8 +78,7 @@ class ErrorBoundary extends React.Component {
   }
 }
 
-// --- CUSTOM TOAST NOTIFICATION SYSTEM ---
-// Styled perfectly matching the requested UI reference
+// --- CUSTOM TOAST NOTIFICATION SYSTEM (MODERN UI) ---
 const ToastMessage = ({ id, type, title, message, onClose }) => {
   const [isClosing, setIsClosing] = useState(false);
 
@@ -94,25 +93,45 @@ const ToastMessage = ({ id, type, title, message, onClose }) => {
   };
 
   const styles = {
-    success: { border: 'border-green-400', iconBg: 'bg-green-400', icon: <Check size={18} className="text-white" /> },
-    info: { border: 'border-blue-400', iconBg: 'bg-blue-400', icon: <Lightbulb size={18} className="text-white" /> },
-    warning: { border: 'border-amber-400', iconBg: 'bg-amber-400', icon: <AlertTriangle size={18} className="text-white" /> },
-    error: { border: 'border-red-400', iconBg: 'bg-red-400', icon: <X size={18} className="text-white" /> }
+    success: {
+      wrapper: 'from-emerald-500/10 to-emerald-500/5 border-emerald-500/30',
+      iconBg: 'bg-gradient-to-br from-emerald-400 to-emerald-600 shadow-emerald-500/40',
+      icon: <Check size={16} className="text-white drop-shadow-md" />,
+      text: 'text-emerald-800'
+    },
+    info: {
+      wrapper: 'from-blue-500/10 to-blue-500/5 border-blue-500/30',
+      iconBg: 'bg-gradient-to-br from-blue-400 to-blue-600 shadow-blue-500/40',
+      icon: <Lightbulb size={16} className="text-white drop-shadow-md" />,
+      text: 'text-blue-800'
+    },
+    warning: {
+      wrapper: 'from-amber-500/10 to-amber-500/5 border-amber-500/30',
+      iconBg: 'bg-gradient-to-br from-amber-400 to-amber-600 shadow-amber-500/40',
+      icon: <AlertTriangle size={16} className="text-white drop-shadow-md" />,
+      text: 'text-amber-800'
+    },
+    error: {
+      wrapper: 'from-rose-500/10 to-rose-500/5 border-rose-500/30',
+      iconBg: 'bg-gradient-to-br from-rose-400 to-rose-600 shadow-rose-500/40',
+      icon: <X size={16} className="text-white drop-shadow-md" />,
+      text: 'text-rose-800'
+    }
   };
 
   const currentStyle = styles[type] || styles.info;
 
   return (
-    <div className={`mb-3 w-80 sm:w-96 bg-white/95 backdrop-blur-md rounded-xl p-4 shadow-xl border ${currentStyle.border} flex items-start gap-4 transition-all duration-300 transform ${isClosing ? 'translate-x-full opacity-0' : 'translate-x-0 opacity-100'}`}>
-      <div className={`w-8 h-8 shrink-0 rounded-full flex items-center justify-center mt-0.5 ${currentStyle.iconBg}`}>
+    <div className={`mb-3 w-[calc(100vw-2rem)] sm:w-96 bg-white/80 backdrop-blur-xl rounded-2xl p-4 shadow-2xl shadow-slate-200/50 border bg-gradient-to-br ${currentStyle.wrapper} flex items-start gap-4 transition-all duration-300 transform ${isClosing ? 'translate-x-[120%] opacity-0 scale-95' : 'translate-x-0 opacity-100 scale-100'} hover:scale-[1.02]`}>
+      <div className={`w-10 h-10 shrink-0 rounded-2xl flex items-center justify-center mt-0.5 shadow-lg ${currentStyle.iconBg}`}>
         {currentStyle.icon}
       </div>
       <div className="flex-1 min-w-0 pt-0.5">
-        <h4 className="font-bold text-slate-800 text-sm leading-tight mb-1">{title}</h4>
-        <p className="text-xs text-slate-500 leading-relaxed">{message}</p>
+        <h4 className={`font-extrabold text-sm leading-tight mb-1 ${currentStyle.text}`}>{title}</h4>
+        <p className="text-xs text-slate-600 font-medium leading-relaxed drop-shadow-sm">{message}</p>
       </div>
-      <button onClick={handleClose} className="shrink-0 p-1 text-slate-400 hover:bg-slate-100 hover:text-slate-600 rounded-md transition-colors">
-        <X size={16} />
+      <button onClick={handleClose} className="shrink-0 p-1.5 text-slate-400 hover:bg-slate-200 hover:text-slate-700 rounded-xl transition-all active:scale-95" title="Tutup">
+        <X size={16} strokeWidth={2.5} />
       </button>
     </div>
   );
@@ -2182,7 +2201,16 @@ function LogbookEditModal({ isOpen, onClose, logbook, onUpdate, showToast }) {
       showToast('success', 'Lokasi Update', `Akurasi: ±${Math.round(accuracy)}m`);
     }, (err) => {
       setLocLoading(false);
-      showToast('error', 'Gagal GPS', err.message);
+
+      let msg = err.message;
+      if (err.code === 1) {
+        msg = "Izin lokasi ditolak!";
+        alert("PENTING: Izin lokasi Anda ditolak!\n\nUntuk memperbarui lokasi, mohon berikan izin lokasi di pengaturan browser/perangkat Anda, lalu coba lagi.");
+      } else if (err.code === 3 || err.message.includes("Timeout")) {
+        msg = "Timeout! Sinyal GPS lemah.";
+      }
+
+      showToast('error', 'Gagal GPS', msg);
       setUpdateLocation(false);
       // Revert to old location if failed? 
       // Better to keep user aware that update failed.
@@ -2427,7 +2455,10 @@ function StudentLogbookForm({ user, logbooks, setLogbooks, showToast }) {
       if (address && !address.startsWith("Menunggu") && !address.startsWith("Gagal") && !address.startsWith("Memuat")) return;
 
       let msg = "Gagal mengambil lokasi.";
-      if (err.code === 1) msg = "Izin lokasi ditolak. Mohon aktifkan izin lokasi di browser.";
+      if (err.code === 1) {
+        msg = "Izin lokasi ditolak. Mohon aktifkan izin lokasi di browser.";
+        alert("PENTING: Izin lokasi ditolak!\n\nFitur absensi mewajibkan deteksi lokasi yang akurat.\nMohon ubah pengaturan browser/perangkat Anda untuk MENGIZINKAN lokasi (Allow/Grant), lalu refresh halaman ini.");
+      }
       else if (err.code === 2) msg = "Sinyal GPS tidak tersedia.";
       else if (err.code === 3) msg = "Waktu permintaan GPS habis (Timeout).";
 
@@ -2504,33 +2535,29 @@ function StudentLogbookForm({ user, logbooks, setLogbooks, showToast }) {
     };
 
     const error = (err) => {
-      // If High Accuracy failed, try Low Accuracy
-      if (err.code === 3 || err.message.includes("Timeout")) {
-        console.warn("High accuracy timed out, trying low accuracy...");
-        showToast('info', 'Sinyal Lemah', 'Mencoba mode hemat daya/network...');
-
-        navigator.geolocation.getCurrentPosition(success, (err2) => {
-          let msg = err2.message;
-          if (err2.code === 1) msg = "Izin lokasi ditolak!";
-          else if (err2.code === 2) msg = "GPS mati / tidak tersedia.";
-          else if (err2.code === 3) msg = "Timeout! Sinyal GPS sangat lemah.";
-          showToast('error', 'Gagal', msg);
-          setAddress("Gagal: " + msg);
-          setShowManualInput(true); // Show on failure
-          setLocationType('manual'); // Fallback to manual
-        }, { enableHighAccuracy: false, timeout: 30000, maximumAge: 0 }); // Increased timeout
-      } else {
-        let msg = err.message;
-        if (err.code === 1) msg = "Izin lokasi ditolak!";
-        else if (err.code === 2) msg = "GPS mati / tidak tersedia.";
-        showToast('error', 'Gagal', msg);
-        setAddress("Gagal: " + msg);
+      // TIDAK ADA FALLBACK KE LOW ACCURACY. PAKSA HIGH ACCURACY.
+      let msg = err.message;
+      if (err.code === 1) {
+        msg = "Izin lokasi ditolak!";
+        alert("PENTING: Akses lokasi ditolak!\n\nUntuk melakukan absensi, Anda WAJIB memberikan izin lokasi secara akurat.\n\nCara memperbaiki:\n- iPhone/iPad: Buka Settings > Privacy & Security > Location Services > Safari/Chrome > Pilih 'While Using the App' & aktifkan 'Precise Location'.\n- Android: Masuk ke Settings > Apps > Chrome/Browser > Permissions > Location > Pilih 'Allow only while using the app' & aktifkan 'Use precise location'.\n- Laptop/PC: Klik ikon gembok di URL bar > Ubah izin Lokasi menjadi 'Allow'.\n\nSetelah mengubah izin, silakan REFRESH halaman ini.");
+      }
+      else if (err.code === 2) {
+        msg = "GPS mati / tidak tersedia. Pastikan GPS menyala.";
+      }
+      else if (err.code === 3 || err.message.includes("Timeout")) {
+        msg = "Timeout! Sinyal GPS sangat lemah. Mohon pindah ke area terbuka.";
         setShowManualInput(true); // Show on failure
         setLocationType('manual'); // Fallback to manual
+      } else {
+        setShowManualInput(false);
       }
+
+      showToast('error', 'Gagal', msg);
+      if (err.code !== 3 && !err.message.includes("Timeout")) setAddress("Gagal: " + msg);
+      else setAddress(""); // Kosongkan agar user sadar harus isi
     };
 
-    // Try High Accuracy First (30s timeout)
+    // Try High Accuracy (Strict GPS)
     navigator.geolocation.getCurrentPosition(success, error, { enableHighAccuracy: true, timeout: 30000, maximumAge: 0 });
   };
 
@@ -2666,48 +2693,52 @@ function StudentLogbookForm({ user, logbooks, setLogbooks, showToast }) {
       <Card title="Formulir Logbook Harian">
         <div className="space-y-8">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div className="bg-slate-50 p-1 rounded-2xl border border-slate-200 flex flex-col h-full">
-              <div className="bg-white rounded-xl overflow-hidden h-64 relative z-0 flex-1"><LeafletMap lat={lat} lng={lng} setLat={setLat} setLng={setLng} setAddress={setAddress} /></div>
-              <Button onClick={getLocation} variant="secondary" className="w-full mt-2 py-3 border-cyan-200 text-cyan-700 hover:bg-cyan-50 font-bold shadow-sm">↻ Refresh Lokasi</Button>
+            <div className="flex flex-col gap-4">
+              <div className="bg-slate-50 p-1 rounded-2xl border border-slate-200 flex flex-col h-full">
+                <div className="bg-white rounded-xl overflow-hidden h-64 relative z-0 flex-1"><LeafletMap lat={lat} lng={lng} setLat={setLat} setLng={setLng} setAddress={setAddress} /></div>
+                <Button onClick={getLocation} variant="secondary" className="w-full mt-2 py-3 border-cyan-200 text-cyan-700 hover:bg-cyan-50 font-bold shadow-sm">↻ Refresh Lokasi</Button>
+                <div className="p-4"><div className="flex items-start gap-3"><MapPin className="text-cyan-600 mt-1 shrink-0" size={20} /><div><p className="font-bold text-slate-700 text-sm leading-snug">{address}</p><p className="text-xs text-slate-500 mt-1 font-mono">{lat ? `${lat.toFixed(6)}, ${lng.toFixed(6)}` : "Mencari kordinat..."}</p>{accuracy && <p className="text-[10px] text-green-600">Akurasi GPS: ±{Math.round(accuracy)} meter</p>}</div></div></div>
+              </div>
 
               {/* Manual Location Input (For Fallback) */}
               {showManualInput && (
-                <div className="mt-4 p-3 bg-white border border-slate-200 rounded-xl space-y-3">
-                  <label className="text-xs font-bold text-slate-500 uppercase flex items-center gap-1"><MapPin size={12} /> Input Manual (Wajib jika GPS Gagal)</label>
-                  <input
-                    type="text"
-                    value={address}
-                    onChange={(e) => { setAddress(e.target.value); setLocationType('manual'); }}
-                    placeholder="Nama Jalan / Detail Lokasi..."
-                    className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-cyan-400 outline-none"
-                  />
-                  <div className="grid grid-cols-2 gap-2">
+                <div className="p-4 bg-white border border-slate-200 rounded-2xl shadow-sm space-y-3 animate-in fade-in slide-in-from-top-2">
+                  <label className="text-sm font-bold text-slate-700 flex items-center gap-2"><MapPin size={16} className="text-amber-500" /> Input Manual (Wajib karena Sinyal Lemah)</label>
+                  <div>
+                    <span className="text-xs text-slate-500 font-bold uppercase mb-1 block">Alamat Lengkap (Wajib)</span>
+                    <input
+                      type="text"
+                      value={address}
+                      onChange={(e) => { setAddress(e.target.value); setLocationType('manual'); }}
+                      placeholder="Nama Jalan / Detail Lokasi..."
+                      className="w-full px-4 py-3 border border-slate-300 rounded-xl text-sm focus:ring-2 focus:ring-cyan-400 outline-none transition-shadow"
+                    />
+                  </div>
+                  <div className="grid grid-cols-2 gap-3">
                     <div>
-                      <span className="text-[10px] text-slate-400 font-bold uppercase mb-1 block">Latitude (Opsional)</span>
+                      <span className="text-xs text-slate-500 font-bold uppercase mb-1 block">Latitude (Opsional)</span>
                       <input
                         type="number"
                         value={lat || ''}
                         onChange={(e) => setLat(parseFloat(e.target.value))}
                         placeholder="-6.xxxxx"
-                        className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-cyan-400 outline-none"
+                        className="w-full px-4 py-3 border border-slate-300 rounded-xl text-sm focus:ring-2 focus:ring-cyan-400 outline-none transition-shadow font-mono"
                       />
                     </div>
                     <div>
-                      <span className="text-[10px] text-slate-400 font-bold uppercase mb-1 block">Longitude (Opsional)</span>
+                      <span className="text-xs text-slate-500 font-bold uppercase mb-1 block">Longitude (Opsional)</span>
                       <input
                         type="number"
                         value={lng || ''}
                         onChange={(e) => setLng(parseFloat(e.target.value))}
                         placeholder="106.xxxxx"
-                        className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-cyan-400 outline-none"
+                        className="w-full px-4 py-3 border border-slate-300 rounded-xl text-sm focus:ring-2 focus:ring-cyan-400 outline-none transition-shadow font-mono"
                       />
                     </div>
                   </div>
-                  <p className="text-[10px] text-slate-400">* Pastikan nama jalan dan koordinat (jika ada) sesuai.</p>
+                  <p className="text-[10px] text-amber-600 font-medium">* Data ini akan dikirim ke "Alamat Lengkap" dan "Titik Koordinat".</p>
                 </div>
               )}
-
-              <div className="p-4"><div className="flex items-start gap-3"><MapPin className="text-cyan-600 mt-1 shrink-0" size={20} /><div><p className="font-bold text-slate-700 text-sm leading-snug">{address}</p><p className="text-xs text-slate-500 mt-1 font-mono">{lat ? `${lat.toFixed(6)}, ${lng.toFixed(6)}` : "Mencari kordinat..."}</p>{accuracy && <p className="text-[10px] text-green-600">Akurasi GPS: ±{Math.round(accuracy)} meter</p>}</div></div></div>
             </div>
             <div className="bg-slate-50 border border-slate-200 rounded-2xl p-6 text-center flex flex-col justify-center h-full">
               <h4 className="font-bold text-slate-700 mb-4 flex items-center justify-center gap-2"><Camera size={18} /> Foto Selfie (Wajib)</h4>
