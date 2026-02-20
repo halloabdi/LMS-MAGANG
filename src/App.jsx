@@ -2155,6 +2155,7 @@ function LogbookEditModal({ isOpen, onClose, logbook, onUpdate, showToast }) {
   const [cameraActive, setCameraActive] = useState(false);
   const videoRef = useRef(null);
   const canvasRef = useRef(null);
+  const [locationAlert, setLocationAlert] = useState(null);
 
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -2213,7 +2214,7 @@ function LogbookEditModal({ isOpen, onClose, logbook, onUpdate, showToast }) {
       let msg = err.message;
       if (err.code === 1) {
         msg = "Izin lokasi ditolak!";
-        alert("PENTING: Izin lokasi Anda ditolak!\n\nUntuk memperbarui lokasi, mohon berikan izin lokasi di pengaturan browser/perangkat Anda, lalu coba lagi.");
+        setLocationAlert("PENTING: Izin lokasi Anda ditolak!<br/><br/>Untuk memperbarui lokasi, mohon berikan izin lokasi di pengaturan browser/perangkat Anda, lalu coba lagi.");
       } else if (err.code === 3 || err.message.includes("Timeout")) {
         msg = "Timeout! Sinyal GPS lemah.";
       }
@@ -2269,111 +2270,114 @@ function LogbookEditModal({ isOpen, onClose, logbook, onUpdate, showToast }) {
   };
 
   return (
-    <div className="fixed inset-0 z-[1000] bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4 animate-in fade-in duration-200">
-      <div className="bg-white w-full max-w-4xl rounded-2xl shadow-xl flex flex-col max-h-[90vh] animate-in zoom-in-95">
-        <div className="p-4 border-b border-slate-100 flex justify-between items-center bg-slate-50/50 rounded-t-2xl">
-          <h3 className="font-bold text-lg text-slate-800 flex items-center gap-2"><Edit3 size={20} /> Edit Logbook</h3>
-          <button onClick={onClose} disabled={isSubmitting} className="p-2 hover:bg-slate-200 rounded-full transition-colors"><X size={20} /></button>
-        </div>
+    <>
+      {locationAlert && <TextModal title="Peringatan Lokasi" content={locationAlert} onClose={() => setLocationAlert(null)} />}
+      <div className="fixed inset-0 z-[1000] bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4 animate-in fade-in duration-200">
+        <div className="bg-white w-full max-w-4xl rounded-2xl shadow-xl flex flex-col max-h-[90vh] animate-in zoom-in-95">
+          <div className="p-4 border-b border-slate-100 flex justify-between items-center bg-slate-50/50 rounded-t-2xl">
+            <h3 className="font-bold text-lg text-slate-800 flex items-center gap-2"><Edit3 size={20} /> Edit Logbook</h3>
+            <button onClick={onClose} disabled={isSubmitting} className="p-2 hover:bg-slate-200 rounded-full transition-colors"><X size={20} /></button>
+          </div>
 
-        <div className="overflow-y-auto p-6 space-y-6">
-          {/* Location Section */}
-          <div className="bg-slate-50 p-4 rounded-xl border border-slate-200">
-            <label className="block text-sm font-bold text-slate-700 mb-2">Lokasi (Lat, Lng)</label>
-            <div className="flex gap-4 items-start">
-              <div className="flex-1">
-                <div className="font-mono text-xs bg-white p-2 border rounded mb-1">{lat}, {lng}</div>
-                <div className="text-sm text-slate-600">{address}</div>
+          <div className="overflow-y-auto p-6 space-y-6">
+            {/* Location Section */}
+            <div className="bg-slate-50 p-4 rounded-xl border border-slate-200">
+              <label className="block text-sm font-bold text-slate-700 mb-2">Lokasi (Lat, Lng)</label>
+              <div className="flex gap-4 items-start">
+                <div className="flex-1">
+                  <div className="font-mono text-xs bg-white p-2 border rounded mb-1">{lat}, {lng}</div>
+                  <div className="text-sm text-slate-600">{address}</div>
+                </div>
+                <Button onClick={getLocation} disabled={locLoading || isSubmitting} variant="secondary" className="whitespace-nowrap flex items-center gap-2">
+                  <MapPin size={16} /> {locLoading ? 'Mencari...' : 'Perbarui Lokasi'}
+                </Button>
               </div>
-              <Button onClick={getLocation} disabled={locLoading || isSubmitting} variant="secondary" className="whitespace-nowrap flex items-center gap-2">
-                <MapPin size={16} /> {locLoading ? 'Mencari...' : 'Perbarui Lokasi'}
-              </Button>
+              {updateLocation && <p className="text-xs text-amber-600 mt-2 font-bold">* Lokasi akan diperbarui ke posisi saat ini.</p>}
             </div>
-            {updateLocation && <p className="text-xs text-amber-600 mt-2 font-bold">* Lokasi akan diperbarui ke posisi saat ini.</p>}
+
+            {/* Date/Time/Status */}
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div className="p-3 bg-white border border-slate-200 rounded-xl relative z-40">
+                <label className="text-xs font-bold text-slate-400 uppercase block mb-1">Tanggal</label>
+                <CustomDatePicker value={date} onChange={setDate} />
+              </div>
+              <div className="p-3 bg-white border border-slate-200 rounded-xl relative z-30">
+                <label className="text-xs font-bold text-slate-400 uppercase block mb-1">Jam</label>
+                <CustomTimePicker value={time || '00:00'} onChange={setTime} />
+              </div>
+              <div className="p-3 bg-white border border-slate-200 rounded-xl relative z-20">
+                <label className="text-xs font-bold text-slate-400 uppercase block mb-1">Status</label>
+                <CustomStatusSelect value={status} onChange={setStatus} />
+              </div>
+            </div>
+
+            {/* Activity & Output */}
+            <div className="space-y-4">
+              <div><label className="block text-sm font-bold text-slate-700 mb-2">Kegiatan</label><RichEditor value={activity} onChange={setActivity} disabled={isSubmitting} /></div>
+              <div><label className="block text-sm font-bold text-slate-700 mb-2">Output</label><RichEditor value={output} onChange={setOutput} disabled={isSubmitting} /></div>
+            </div>
+
+            {/* Selfie & Doc */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div className="border border-slate-200 rounded-xl p-4">
+                <label className="block text-sm font-bold text-slate-700 mb-2">Foto Selfie</label>
+                {previewSelfie ? (
+                  <div className="relative group">
+                    <img src={previewSelfie} className="w-full h-48 object-cover rounded-lg" alt="Selfie" />
+                    <button onClick={() => { setSelfie(null); setPreviewSelfie(null); }} className="absolute top-2 right-2 bg-red-500 text-white p-1 rounded-full opacity-0 group-hover:opacity-100 transition-opacity" disabled={isSubmitting}><X size={14} /></button>
+                  </div>
+                ) : cameraActive ? (
+                  <div className="space-y-2">
+                    <video ref={videoRef} autoPlay playsInline className="w-full h-48 bg-black rounded-lg object-cover" />
+                    <canvas ref={canvasRef} className="hidden" />
+                    <Button onClick={takePhoto} className="w-full text-xs">Ambil Foto</Button>
+                  </div>
+                ) : (
+                  <div className="flex gap-2">
+                    <Button onClick={startCamera} variant="secondary" className="flex-1 text-xs" disabled={isSubmitting}>Kamera</Button>
+                    <label className="flex-1 cursor-pointer bg-slate-100 hover:bg-slate-200 text-slate-600 font-bold rounded-xl flex items-center justify-center text-xs transition-colors p-2">
+                      Upload
+                      <input type="file" className="hidden" accept="image/*" onChange={(e) => {
+                        const file = e.target.files[0];
+                        if (file) {
+                          const reader = new FileReader();
+                          reader.onload = (ev) => { setSelfie(ev.target.result); setPreviewSelfie(ev.target.result); };
+                          reader.readAsDataURL(file);
+                        }
+                      }} disabled={isSubmitting} />
+                    </label>
+                  </div>
+                )}
+              </div>
+
+              <div className="border border-slate-200 rounded-xl p-4">
+                <label className="block text-sm font-bold text-slate-700 mb-2">Dokumen (Opsional)</label>
+                {doc ? (
+                  <div className="flex items-center justify-between p-3 bg-green-50 text-green-700 rounded-lg border border-green-200">
+                    <span className="text-sm truncate font-bold">{doc.name}</span>
+                    <button onClick={() => setDoc(null)} className="text-red-500 hover:bg-red-50 p-1 rounded" disabled={isSubmitting}><X size={16} /></button>
+                  </div>
+                ) : (
+                  <div className="flex gap-2 h-full items-end pb-1">
+                    <label className="w-full cursor-pointer bg-slate-100 hover:bg-slate-200 text-slate-600 font-bold rounded-xl flex items-center justify-center text-xs transition-colors p-3 border-2 border-dashed border-slate-300">
+                      <Upload size={16} className="mr-2" /> Pilih Dokumen Baru
+                      <input type="file" className="hidden" onChange={(e) => setDoc(e.target.files[0])} disabled={isSubmitting} />
+                    </label>
+                  </div>
+                )}
+              </div>
+            </div>
           </div>
 
-          {/* Date/Time/Status */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <div className="p-3 bg-white border border-slate-200 rounded-xl relative z-40">
-              <label className="text-xs font-bold text-slate-400 uppercase block mb-1">Tanggal</label>
-              <CustomDatePicker value={date} onChange={setDate} />
-            </div>
-            <div className="p-3 bg-white border border-slate-200 rounded-xl relative z-30">
-              <label className="text-xs font-bold text-slate-400 uppercase block mb-1">Jam</label>
-              <CustomTimePicker value={time || '00:00'} onChange={setTime} />
-            </div>
-            <div className="p-3 bg-white border border-slate-200 rounded-xl relative z-20">
-              <label className="text-xs font-bold text-slate-400 uppercase block mb-1">Status</label>
-              <CustomStatusSelect value={status} onChange={setStatus} />
-            </div>
+          <div className="p-4 border-t border-slate-100 bg-slate-50 rounded-b-2xl flex justify-end gap-3">
+            <Button variant="secondary" onClick={onClose} disabled={isSubmitting}>Batal</Button>
+            <Button onClick={handleSubmit} disabled={isSubmitting}>
+              {isSubmitting ? 'Menyimpan...' : 'Simpan Perubahan'}
+            </Button>
           </div>
-
-          {/* Activity & Output */}
-          <div className="space-y-4">
-            <div><label className="block text-sm font-bold text-slate-700 mb-2">Kegiatan</label><RichEditor value={activity} onChange={setActivity} disabled={isSubmitting} /></div>
-            <div><label className="block text-sm font-bold text-slate-700 mb-2">Output</label><RichEditor value={output} onChange={setOutput} disabled={isSubmitting} /></div>
-          </div>
-
-          {/* Selfie & Doc */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div className="border border-slate-200 rounded-xl p-4">
-              <label className="block text-sm font-bold text-slate-700 mb-2">Foto Selfie</label>
-              {previewSelfie ? (
-                <div className="relative group">
-                  <img src={previewSelfie} className="w-full h-48 object-cover rounded-lg" alt="Selfie" />
-                  <button onClick={() => { setSelfie(null); setPreviewSelfie(null); }} className="absolute top-2 right-2 bg-red-500 text-white p-1 rounded-full opacity-0 group-hover:opacity-100 transition-opacity" disabled={isSubmitting}><X size={14} /></button>
-                </div>
-              ) : cameraActive ? (
-                <div className="space-y-2">
-                  <video ref={videoRef} autoPlay playsInline className="w-full h-48 bg-black rounded-lg object-cover" />
-                  <canvas ref={canvasRef} className="hidden" />
-                  <Button onClick={takePhoto} className="w-full text-xs">Ambil Foto</Button>
-                </div>
-              ) : (
-                <div className="flex gap-2">
-                  <Button onClick={startCamera} variant="secondary" className="flex-1 text-xs" disabled={isSubmitting}>Kamera</Button>
-                  <label className="flex-1 cursor-pointer bg-slate-100 hover:bg-slate-200 text-slate-600 font-bold rounded-xl flex items-center justify-center text-xs transition-colors p-2">
-                    Upload
-                    <input type="file" className="hidden" accept="image/*" onChange={(e) => {
-                      const file = e.target.files[0];
-                      if (file) {
-                        const reader = new FileReader();
-                        reader.onload = (ev) => { setSelfie(ev.target.result); setPreviewSelfie(ev.target.result); };
-                        reader.readAsDataURL(file);
-                      }
-                    }} disabled={isSubmitting} />
-                  </label>
-                </div>
-              )}
-            </div>
-
-            <div className="border border-slate-200 rounded-xl p-4">
-              <label className="block text-sm font-bold text-slate-700 mb-2">Dokumen (Opsional)</label>
-              {doc ? (
-                <div className="flex items-center justify-between p-3 bg-green-50 text-green-700 rounded-lg border border-green-200">
-                  <span className="text-sm truncate font-bold">{doc.name}</span>
-                  <button onClick={() => setDoc(null)} className="text-red-500 hover:bg-red-50 p-1 rounded" disabled={isSubmitting}><X size={16} /></button>
-                </div>
-              ) : (
-                <div className="flex gap-2 h-full items-end pb-1">
-                  <label className="w-full cursor-pointer bg-slate-100 hover:bg-slate-200 text-slate-600 font-bold rounded-xl flex items-center justify-center text-xs transition-colors p-3 border-2 border-dashed border-slate-300">
-                    <Upload size={16} className="mr-2" /> Pilih Dokumen Baru
-                    <input type="file" className="hidden" onChange={(e) => setDoc(e.target.files[0])} disabled={isSubmitting} />
-                  </label>
-                </div>
-              )}
-            </div>
-          </div>
-        </div>
-
-        <div className="p-4 border-t border-slate-100 bg-slate-50 rounded-b-2xl flex justify-end gap-3">
-          <Button variant="secondary" onClick={onClose} disabled={isSubmitting}>Batal</Button>
-          <Button onClick={handleSubmit} disabled={isSubmitting}>
-            {isSubmitting ? 'Menyimpan...' : 'Simpan Perubahan'}
-          </Button>
         </div>
       </div>
-    </div>
+    </>
   );
 }
 
@@ -2397,6 +2401,7 @@ function StudentLogbookForm({ user, logbooks, setLogbooks, showToast }) {
   const isSubmittingRef = useRef(false);
   const [showManualInput, setShowManualInput] = useState(false);
   const [locationType, setLocationType] = useState('manual'); // 'manual' | 'automatic'
+  const [locationAlert, setLocationAlert] = useState(null);
 
   useEffect(() => {
     if (!navigator.geolocation) {
@@ -2470,7 +2475,7 @@ function StudentLogbookForm({ user, logbooks, setLogbooks, showToast }) {
       let msg = "Gagal mengambil lokasi.";
       if (err.code === 1) {
         msg = "Izin lokasi ditolak. Mohon aktifkan izin lokasi di browser.";
-        alert("PENTING: Izin lokasi ditolak!\n\nFitur absensi mewajibkan deteksi lokasi yang akurat.\nMohon ubah pengaturan browser/perangkat Anda untuk MENGIZINKAN lokasi (Allow/Grant), lalu refresh halaman ini.");
+        setLocationAlert("PENTING: Izin lokasi ditolak!<br/><br/>Fitur absensi mewajibkan deteksi lokasi yang akurat.<br/>Mohon ubah pengaturan browser/perangkat Anda untuk MENGIZINKAN lokasi (Allow/Grant), lalu refresh halaman ini.");
       }
       else if (err.code === 2) msg = "Sinyal GPS tidak tersedia.";
       else if (err.code === 3) msg = "Waktu permintaan GPS habis (Timeout).";
@@ -2558,7 +2563,7 @@ function StudentLogbookForm({ user, logbooks, setLogbooks, showToast }) {
       let msg = err.message;
       if (err.code === 1) {
         msg = "Izin lokasi ditolak!";
-        alert("PENTING: Akses lokasi ditolak!\n\nUntuk melakukan absensi, Anda WAJIB memberikan izin lokasi secara akurat.\n\nCara memperbaiki:\n- iPhone/iPad: Buka Settings > Privacy & Security > Location Services > Safari/Chrome > Pilih 'While Using the App' & aktifkan 'Precise Location'.\n- Android: Masuk ke Settings > Apps > Chrome/Browser > Permissions > Location > Pilih 'Allow only while using the app' & aktifkan 'Use precise location'.\n- Laptop/PC: Klik ikon gembok di URL bar > Ubah izin Lokasi menjadi 'Allow'.\n\nSetelah mengubah izin, silakan REFRESH halaman ini.");
+        setLocationAlert("PENTING: Akses lokasi ditolak!<br/><br/>Untuk melakukan absensi, Anda WAJIB memberikan izin lokasi secara akurat.<br/><br/><strong>Cara memperbaiki:</strong><ul><li><strong>iPhone/iPad:</strong> Buka Settings &gt; Privacy &amp; Security &gt; Location Services &gt; Safari/Chrome &gt; Pilih 'While Using the App' &amp; aktifkan 'Precise Location'.</li><li><strong>Android:</strong> Masuk ke Settings &gt; Apps &gt; Chrome/Browser &gt; Permissions &gt; Location &gt; Pilih 'Allow only while using the app' &amp; aktifkan 'Use precise location'.</li><li><strong>Laptop/PC:</strong> Klik ikon gembok di URL bar &gt; Ubah izin Lokasi menjadi 'Allow'.</li></ul>Setelah mengubah izin, silakan <strong>REFRESH</strong> halaman ini.");
       }
       else if (err.code === 2) {
         msg = "GPS mati / tidak tersedia. Pastikan GPS menyala.";
@@ -2772,6 +2777,7 @@ function StudentLogbookForm({ user, logbooks, setLogbooks, showToast }) {
 
   return (
     <div className="max-w-4xl mx-auto animate-in fade-in slide-in-from-bottom-4 duration-500">
+      {locationAlert && <TextModal title="Peringatan Lokasi" content={locationAlert} onClose={() => setLocationAlert(null)} />}
       {previewImage && <ImageModal src={previewImage} onClose={() => setPreviewImage(null)} />}
       <Card title="Formulir Logbook Harian">
         <div className="space-y-8">
