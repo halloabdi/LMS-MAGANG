@@ -537,11 +537,15 @@ const LeafletMap = ({ lat, lng, setLat, setLng, setAddress, readOnly = false, ma
   useEffect(() => {
     // Inject Script if not present
     if (!window.L) {
-      const script = document.createElement("script");
-      script.src = "https://unpkg.com/leaflet@1.9.4/dist/leaflet.js";
-      script.async = true;
-      script.onload = () => initMap();
-      document.body.appendChild(script);
+      let script = document.getElementById("leaflet-script");
+      if (!script) {
+        script = document.createElement("script");
+        script.id = "leaflet-script";
+        script.src = "https://unpkg.com/leaflet@1.9.4/dist/leaflet.js";
+        script.async = true;
+        document.body.appendChild(script);
+      }
+      script.addEventListener("load", initMap);
     } else {
       initMap();
     }
@@ -552,6 +556,8 @@ const LeafletMap = ({ lat, lng, setLat, setLng, setAddress, readOnly = false, ma
         mapInstanceRef.current.remove();
         mapInstanceRef.current = null;
       }
+      const script = document.getElementById("leaflet-script");
+      if (script) script.removeEventListener("load", initMap);
     };
   }, []); // Empty dependency array to run only once
 
@@ -1812,7 +1818,15 @@ function StudentOverview({ user, logbooks = [], reports = [], onEditLogbook, onR
   const [previewImage, setPreviewImage] = useState(null);
   const [viewLogDetail, setViewLogDetail] = useState(null);
   const [isRefreshing, setIsRefreshing] = useState(false);
-  const itemsPerPage = 5;
+  const [itemsPerPage, setItemsPerPage] = useState(window.innerWidth < 768 ? 3 : 5);
+
+  useEffect(() => {
+    const handleResize = () => {
+      setItemsPerPage(window.innerWidth < 768 ? 3 : 5);
+    };
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
 
   const submittedLogbooks = safeLogbooks.length;
   const submittedReports = safeReports.length;
