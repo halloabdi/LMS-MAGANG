@@ -761,15 +761,23 @@ const ToolButton = ({ onClick, icon: Icon, title, disabled }) => (
 const getPhotoUrl = (url) => {
   if (!url) return '';
   if (typeof url !== 'string') return '';
-  // Check if it's a Drive View Link
-  if (url.includes('drive.google.com') && url.includes('/view')) {
-    const idMatch = url.match(/\/d\/(.+?)\//);
-    if (idMatch && idMatch[1]) {
-      // Menggunakan API thumbnail Google Drive untuk memperbaiki issue orientasi (EXIF) 
-      // yang sering diabaikan oleh direct link lh3.googleusercontent.com
-      return `https://drive.google.com/thumbnail?id=${idMatch[1]}&sz=w1000`;
-    }
+  if (url.startsWith('data:image')) return url; // Ignore Base64
+
+  let fileId = null;
+  const dMatch = url.match(/\/d\/([-\w]{25,})/);
+  const idParamMatch = url.match(/[?&]id=([-\w]{25,})/);
+
+  if (dMatch && dMatch[1]) {
+    fileId = dMatch[1];
+  } else if (idParamMatch && idParamMatch[1]) {
+    fileId = idParamMatch[1];
   }
+
+  if (fileId) {
+    // API thumbnail Google Drive selalu merender EXIF-orientation dengan benar
+    return `https://drive.google.com/thumbnail?id=${fileId}&sz=w1000`;
+  }
+
   return url;
 };
 
@@ -2044,10 +2052,10 @@ function StudentOverview({ user, logbooks = [], reports = [], onEditLogbook, onR
                   <div className="flex items-center gap-3">
                     <div
                       className="w-12 h-12 rounded-lg bg-slate-100 overflow-hidden border border-slate-200 cursor-pointer"
-                      onClick={() => setPreviewImage(log.selfieUrl)}
+                      onClick={() => setPreviewImage(getPhotoUrl(log.selfieUrl))}
                     >
                       {log.selfieUrl ? (
-                        <img src={log.selfieUrl} alt="Selfie" className="w-full h-full object-cover" />
+                        <img src={getPhotoUrl(log.selfieUrl)} alt="Selfie" className="w-full h-full object-cover" />
                       ) : (
                         <div className="flex items-center justify-center h-full text-slate-300"><User size={16} /></div>
                       )}
@@ -2083,9 +2091,9 @@ function StudentOverview({ user, logbooks = [], reports = [], onEditLogbook, onR
                     <div className="font-semibold text-xs text-slate-400 uppercase mb-2">Dokumentasi Tambahan</div>
                     <div
                       className="w-full h-32 rounded-lg bg-slate-100 overflow-hidden border border-slate-200 cursor-pointer relative group"
-                      onClick={() => setPreviewImage(log.docUrl)}
+                      onClick={() => setPreviewImage(getPhotoUrl(log.docUrl))}
                     >
-                      <img src={log.docUrl} alt="Dokumentasi" className="w-full h-full object-cover transition-transform group-hover:scale-105" onError={(e) => { e.target.onerror = null; e.target.style.display = 'none'; e.target.parentNode.innerHTML = '<span class="text-xs text-slate-400 absolute inset-0 flex items-center justify-center">Bukan Gambar / Gagal Load</span>'; }} />
+                      <img src={getPhotoUrl(log.docUrl)} alt="Dokumentasi" className="w-full h-full object-cover transition-transform group-hover:scale-105" onError={(e) => { e.target.onerror = null; e.target.style.display = 'none'; e.target.parentNode.innerHTML = '<span class="text-xs text-slate-400 absolute inset-0 flex items-center justify-center">Bukan Gambar / Gagal Load</span>'; }} />
                       <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-colors flex items-center justify-center">
                         <Maximize2 className="text-white opacity-0 group-hover:opacity-100 transition-opacity drop-shadow-md" size={24} />
                       </div>
