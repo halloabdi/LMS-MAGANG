@@ -759,7 +759,9 @@ const getPhotoUrl = (url) => {
   if (url.includes('drive.google.com') && url.includes('/view')) {
     const idMatch = url.match(/\/d\/(.+?)\//);
     if (idMatch && idMatch[1]) {
-      return `https://lh3.googleusercontent.com/d/${idMatch[1]}`;
+      // Menggunakan API thumbnail Google Drive untuk memperbaiki issue orientasi (EXIF) 
+      // yang sering diabaikan oleh direct link lh3.googleusercontent.com
+      return `https://drive.google.com/thumbnail?id=${idMatch[1]}&sz=w1000`;
     }
   }
   return url;
