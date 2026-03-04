@@ -536,7 +536,26 @@ const LeafletMap = ({ lat, lng, setLat, setLng, setAddress, readOnly = false, ma
   const markersGroupRef = useRef([]);
 
   useEffect(() => {
-    // Inject Script if not present
+    // Inject CSS if not present
+    if (!document.getElementById("leaflet-css")) {
+      const link = document.createElement("link");
+      link.id = "leaflet-css";
+      link.rel = "stylesheet";
+      link.href = "https://unpkg.com/leaflet@1.9.4/dist/leaflet.css";
+      document.head.appendChild(link);
+    }
+
+    // Inject Script & Init Map
+    let checkInterval;
+    const attemptInit = () => {
+      if (window.L && mapRef.current) {
+        if (!mapInstanceRef.current) initMap();
+        if (checkInterval) clearInterval(checkInterval);
+        return true;
+      }
+      return false;
+    };
+
     if (!window.L) {
       let script = document.getElementById("leaflet-script");
       if (!script) {
@@ -546,19 +565,18 @@ const LeafletMap = ({ lat, lng, setLat, setLng, setAddress, readOnly = false, ma
         script.async = true;
         document.body.appendChild(script);
       }
-      script.addEventListener("load", initMap);
+      // Check periodically if Leaflet is ready
+      checkInterval = setInterval(attemptInit, 200);
     } else {
-      initMap();
+      attemptInit();
     }
 
     return () => {
-      // Clean up map instance
+      if (checkInterval) clearInterval(checkInterval);
       if (mapInstanceRef.current) {
         mapInstanceRef.current.remove();
         mapInstanceRef.current = null;
       }
-      const script = document.getElementById("leaflet-script");
-      if (script) script.removeEventListener("load", initMap);
     };
   }, []); // Empty dependency array to run only once
 
@@ -1934,9 +1952,9 @@ function StudentOverview({ user, logbooks = [], reports = [], onEditLogbook, onR
 
         {/* MAP - Desktop Order: 2nd Column */}
         <div className="hidden md:block lg:col-span-2 h-full">
-          <Card title="Lokasi Terakhir" className="h-[300px] min-h-[300px]">
+          <Card title="Lokasi Terakhir" className="h-full">
             <ErrorBoundary>
-              <div className="h-full bg-slate-100 rounded-2xl overflow-hidden relative border border-slate-200">
+              <div className="h-[250px] w-full bg-slate-100 rounded-2xl overflow-hidden relative border border-slate-200">
                 {lastLocation && (
                   <LeafletMap
                     readOnly={true}
