@@ -3340,9 +3340,25 @@ function LecturerDashboard({ user, onLogout, logbooks, setLogbooks, reports, onU
 function LecturerOverview({ students, logbooks, reports, onDetailClick }) {
   const submitted = reports.length; const total = students.length;
 
+  // Add date filter state initialized to today
+  const getTodayDate = () => {
+    const today = new Date();
+    // Use local timezone to avoid UTC offset issues when comparing dates
+    const year = today.getFullYear();
+    const month = String(today.getMonth() + 1).padStart(2, '0');
+    const day = String(today.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
+  };
+  const [mapDate, setMapDate] = useState(getTodayDate());
+
   const studentMarkers = students.map(s => {
     // Matching with NIM instead of id, since logbooks use nim
-    const studentLogbooks = logbooks.filter(l => l.nim === s.username || l.studentId === s.id);
+    // Filter specifically by the selected date
+    const studentLogbooks = logbooks.filter(l =>
+      (l.nim === s.username || l.studentId === s.id) &&
+      (l.date === mapDate)
+    );
+
     if (!studentLogbooks || studentLogbooks.length === 0) return null;
 
     // Logbooks are already sorted newest first in fetchData, but just in case:
@@ -3368,7 +3384,23 @@ function LecturerOverview({ students, logbooks, reports, onDetailClick }) {
   return (
     <div className="space-y-8 animate-in fade-in duration-500">
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <Card className="md:col-span-2 relative overflow-visible" title="Peta Sebaran Mahasiswa">
+        <Card
+          className="md:col-span-2 relative overflow-visible"
+          title={
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between w-full">
+              <span>Peta Sebaran Mahasiswa</span>
+              <div className="mt-2 sm:mt-0 flex items-center bg-white border border-slate-200 rounded-lg px-2 py-1 focus-within:ring-2 focus-within:ring-cyan-500/20">
+                <Calendar size={16} className="text-slate-400 mr-2" />
+                <input
+                  type="date"
+                  value={mapDate}
+                  onChange={(e) => setMapDate(e.target.value)}
+                  className="text-xs text-slate-600 bg-transparent border-none outline-none focus:ring-0 cursor-pointer p-0"
+                />
+              </div>
+            </div>
+          }
+        >
           <div className="h-80 bg-slate-100 rounded-2xl overflow-hidden relative border border-slate-200">
             <LeafletMap readOnly={true} markers={studentMarkers} onMarkerAction={onDetailClick} />
           </div>
@@ -3845,12 +3877,12 @@ function LecturerLogbookView({ user, logbooks, students, showToast, onRefresh })
                     </span>
                   </td>
                   <td className="p-5 align-top">
-                    <div className="line-clamp-3 text-slate-600 text-xs mb-2 leading-relaxed [&_ol]:list-decimal [&_ul]:list-disc [&_ol]:pl-5 [&_ul]:pl-5" dangerouslySetInnerHTML={{ __html: displayRichText(log.activity) }} />
-                    <button onClick={() => setDetailModal({ show: true, title: 'Detail Kegiatan', content: displayRichText(log.activity) })} className="block w-full text-left text-xs font-bold text-cyan-600 hover:text-cyan-800 hover:underline">Lihat Selengkapnya</button>
+                    <div className="line-clamp-3 text-slate-700 font-medium text-sm mb-2 leading-relaxed [&_ol]:list-decimal [&_ul]:list-disc [&_ol]:pl-5 [&_ul]:pl-5" dangerouslySetInnerHTML={{ __html: displayRichText(log.activity) }} />
+                    <button onClick={() => setDetailModal({ show: true, title: 'Detail Kegiatan', content: displayRichText(log.activity) })} className="block w-full text-left text-sm font-bold text-cyan-600 hover:text-cyan-800 hover:underline">Lihat Selengkapnya</button>
                   </td>
                   <td className="p-5 align-top">
-                    <div className="line-clamp-3 text-slate-600 text-xs mb-2 leading-relaxed [&_ol]:list-decimal [&_ul]:list-disc [&_ol]:pl-5 [&_ul]:pl-5" dangerouslySetInnerHTML={{ __html: displayRichText(log.output) }} />
-                    <button onClick={() => setDetailModal({ show: true, title: 'Detail Output', content: displayRichText(log.output) })} className="block w-full text-left text-xs font-bold text-cyan-600 hover:text-cyan-800 hover:underline">Lihat Selengkapnya</button>
+                    <div className="line-clamp-3 text-slate-700 font-medium text-sm mb-2 leading-relaxed [&_ol]:list-decimal [&_ul]:list-disc [&_ol]:pl-5 [&_ul]:pl-5" dangerouslySetInnerHTML={{ __html: displayRichText(log.output) }} />
+                    <button onClick={() => setDetailModal({ show: true, title: 'Detail Output', content: displayRichText(log.output) })} className="block w-full text-left text-sm font-bold text-cyan-600 hover:text-cyan-800 hover:underline">Lihat Selengkapnya</button>
                   </td>
                   <td className="p-5 text-center align-top">
                     {log.docUrl ? (
