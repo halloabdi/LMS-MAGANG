@@ -1876,11 +1876,15 @@ function StudentDashboard({ user, onLogout, logbooks, setLogbooks, reports, setR
           </button>
           <button onClick={() => setActiveTab('logbook')} className={`flex flex-col items-center justify-center py-2 px-1 mx-1 rounded-2xl min-w-[4.5rem] flex-1 transition-all duration-300 ${activeTab === 'logbook' ? 'bg-gradient-to-r from-cyan-500 to-blue-600 text-white shadow-lg shadow-cyan-500/30 font-bold scale-105' : 'text-slate-400 hover:text-cyan-600 hover:bg-slate-50'}`}>
             <MapPin size={22} className="mb-1" />
-            <span className="text-[11px] font-bold text-center leading-tight">Isi<br />Logbook</span>
+            <span className="text-[12px] font-bold text-center leading-tight">Isi<br />Logbook</span>
           </button>
           <button onClick={() => setActiveTab('report')} className={`flex flex-col items-center justify-center py-2 px-1 mx-1 rounded-2xl min-w-[4.5rem] flex-1 transition-all duration-300 ${activeTab === 'report' ? 'bg-gradient-to-r from-cyan-500 to-blue-600 text-white shadow-lg shadow-cyan-500/30 font-bold scale-105' : 'text-slate-400 hover:text-cyan-600 hover:bg-slate-50'}`}>
             <FileText size={22} className="mb-1" />
-            <span className="text-[11px] font-bold text-center leading-tight">Kerjakan<br />Laporan</span>
+            <span className="text-[12px] font-bold text-center leading-tight">Kerjakan<br />Laporan</span>
+          </button>
+          <button onClick={onLogout} className="flex flex-col items-center justify-center py-2 px-1 mx-1 rounded-2xl min-w-[4.5rem] flex-1 transition-all duration-300 text-red-400 hover:text-red-600 hover:bg-red-50">
+            <LogOut size={22} className="mb-1" />
+            <span className="text-[12px] font-bold text-center leading-tight">Keluar</span>
           </button>
         </div>
       </div>
@@ -3346,15 +3350,19 @@ function LecturerDashboard({ user, onLogout, logbooks, setLogbooks, reports, onU
         <div className="flex justify-around items-center">
           <button onClick={() => setActiveTab('overview')} className={`flex flex-col items-center justify-center py-2 px-1 mx-1 rounded-2xl min-w-[4.5rem] flex-1 transition-all duration-300 ${activeTab === 'overview' ? 'bg-gradient-to-r from-cyan-500 to-blue-600 text-white shadow-lg shadow-cyan-500/30 font-bold scale-105' : 'text-slate-400 hover:text-cyan-600 hover:bg-slate-50'}`}>
             <LayoutDashboard size={22} className="mb-1" />
-            <span className="text-[11px] font-bold text-center leading-tight">Overview</span>
+            <span className="text-[12px] font-bold text-center leading-tight">Overview</span>
           </button>
           <button onClick={() => setActiveTab('logbooks')} className={`flex flex-col items-center justify-center py-2 px-1 mx-1 rounded-2xl min-w-[4.5rem] flex-1 transition-all duration-300 ${activeTab === 'logbooks' ? 'bg-gradient-to-r from-cyan-500 to-blue-600 text-white shadow-lg shadow-cyan-500/30 font-bold scale-105' : 'text-slate-400 hover:text-cyan-600 hover:bg-slate-50'}`}>
             <MapPin size={22} className="mb-1" />
-            <span className="text-[11px] font-bold text-center leading-tight">Logbook<br />Mahasiswa</span>
+            <span className="text-[12px] font-bold text-center leading-tight">Logbook<br />Mahasiswa</span>
           </button>
           <button onClick={() => setActiveTab('grading')} className={`flex flex-col items-center justify-center py-2 px-1 mx-1 rounded-2xl min-w-[4.5rem] flex-1 transition-all duration-300 ${activeTab === 'grading' ? 'bg-gradient-to-r from-cyan-500 to-blue-600 text-white shadow-lg shadow-cyan-500/30 font-bold scale-105' : 'text-slate-400 hover:text-cyan-600 hover:bg-slate-50'}`}>
             <FileText size={22} className="mb-1" />
-            <span className="text-[11px] font-bold text-center leading-tight">Nilai<br />Tugas</span>
+            <span className="text-[12px] font-bold text-center leading-tight">Nilai<br />Tugas</span>
+          </button>
+          <button onClick={onLogout} className="flex flex-col items-center justify-center py-2 px-1 mx-1 rounded-2xl min-w-[4.5rem] flex-1 transition-all duration-300 text-red-400 hover:text-red-600 hover:bg-red-50">
+            <LogOut size={22} className="mb-1" />
+            <span className="text-[12px] font-bold text-center leading-tight">Keluar</span>
           </button>
         </div>
       </div>
@@ -3863,7 +3871,7 @@ function LecturerLogbookView({ user, logbooks, students, showToast, onRefresh })
                       className="w-16 h-16 rounded-2xl overflow-hidden bg-slate-100 border border-slate-200 shadow-sm mx-auto cursor-pointer hover:scale-105 transition-transform"
                       onClick={() => setPreviewImage(getPhotoUrl(log.selfieUrl))}
                     >
-                      <img src={getPhotoUrl(log.selfieUrl)} alt="Selfie" className="w-full h-full object-cover" />
+                      <img src={getPhotoUrl(log.selfieUrl)} alt="Selfie" className="w-full h-full object-cover" style={{ imageOrientation: 'from-image' }} />
                     </div>
                   </td>
                   <td className="p-5 align-top">
@@ -3959,7 +3967,7 @@ function LecturerLogbookView({ user, logbooks, students, showToast, onRefresh })
                   className="w-16 h-16 shrink-0 rounded-2xl overflow-hidden bg-slate-100 border border-slate-200 shadow-inner cursor-pointer"
                   onClick={() => setPreviewImage(getPhotoUrl(log.selfieUrl))}
                 >
-                  <img src={getPhotoUrl(log.selfieUrl)} alt="Selfie" className="w-full h-full object-cover" />
+                  <img src={getPhotoUrl(log.selfieUrl)} alt="Selfie" className="w-full h-full object-cover" style={{ imageOrientation: 'from-image' }} />
                 </div>
                 <div className="flex-1 min-w-0">
                   <h3 className="font-bold text-lg text-slate-800 leading-tight truncate">{log.name}</h3>
