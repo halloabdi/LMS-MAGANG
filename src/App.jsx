@@ -208,10 +208,17 @@ const CustomStatusSelect = ({ value, onChange }) => {
 };
 
 // --- CUSTOM DATE PICKER COMPONENT ---
-const CustomDatePicker = ({ value, onChange }) => {
+const CustomDatePicker = ({ value, onChange, forceOpen, onForceOpenConsume }) => {
   const [show, setShow] = useState(false);
   const [currentDate, setCurrentDate] = useState(new Date(value || new Date()));
   const containerRef = useRef(null);
+
+  useEffect(() => {
+    if (forceOpen) {
+      setShow(true);
+      if (onForceOpenConsume) onForceOpenConsume();
+    }
+  }, [forceOpen]);
 
   useEffect(() => {
     const handleClickOutside = (event) => {
@@ -3463,6 +3470,7 @@ const UnsubmittedModal = ({ user, showToast, onClose }) => {
   const [students, setStudents] = useState([]);
   const [loading, setLoading] = useState(false);
   const [filterType, setFilterType] = useState('hari_ini');
+  const [isManualSelecting, setIsManualSelecting] = useState(false);
 
   const getTodayDate = () => {
     const today = new Date();
@@ -3620,15 +3628,15 @@ const UnsubmittedModal = ({ user, showToast, onClose }) => {
                 <button onClick={() => handleFilterChange('hari_ini')} className={`px-4 py-2 rounded-lg text-sm font-bold transition-all ${filterType === 'hari_ini' ? 'bg-cyan-500 text-white shadow-md' : 'bg-slate-50 text-slate-600 hover:bg-slate-100'}`}>Hari Ini</button>
                 <button onClick={() => handleFilterChange('triwulan')} className={`px-4 py-2 rounded-lg text-sm font-bold transition-all ${filterType === 'triwulan' ? 'bg-cyan-500 text-white shadow-md' : 'bg-slate-50 text-slate-600 hover:bg-slate-100'}`}>Triwulan Semester</button>
                 <button onClick={() => handleFilterChange('tahun_ini')} className={`px-4 py-2 rounded-lg text-sm font-bold transition-all ${filterType === 'tahun_ini' ? 'bg-cyan-500 text-white shadow-md' : 'bg-slate-50 text-slate-600 hover:bg-slate-100'}`}>Tahun Ini</button>
-                <button onClick={() => handleFilterChange('custom')} className={`px-4 py-2 rounded-lg text-sm font-bold transition-all ${filterType === 'custom' ? 'bg-cyan-500 text-white shadow-md' : 'bg-slate-50 text-slate-600 hover:bg-slate-100'}`}>Pilih Manual</button>
+                <button onClick={() => { handleFilterChange('custom'); setIsManualSelecting(true); }} className={`px-4 py-2 rounded-lg text-sm font-bold transition-all ${filterType === 'custom' ? 'bg-cyan-500 text-white shadow-md' : 'bg-slate-50 text-slate-600 hover:bg-slate-100'}`}>Pilih Manual</button>
               </div>
 
-              <div className="flex items-center gap-2">
-                <div className="relative">
-                  <CustomDatePicker value={startDate} onChange={(val) => { setStartDate(val); setFilterType('custom'); }} />
+              <div className="flex flex-wrap items-center justify-between gap-2 w-full md:w-auto mt-2 md:mt-0">
+                <div className="relative flex-1 min-w-[130px]">
+                  <CustomDatePicker value={startDate} onChange={(val) => { setStartDate(val); setFilterType('custom'); }} forceOpen={isManualSelecting} onForceOpenConsume={() => setIsManualSelecting(false)} />
                 </div>
-                <span className="text-slate-400 font-medium">s/d</span>
-                <div className="relative">
+                <span className="text-slate-400 font-medium px-1">s/d</span>
+                <div className="relative flex-1 min-w-[130px]">
                   <CustomDatePicker value={endDate} onChange={(val) => { setEndDate(val); setFilterType('custom'); }} />
                 </div>
               </div>
@@ -3664,9 +3672,9 @@ const UnsubmittedModal = ({ user, showToast, onClose }) => {
                 <th className="p-4 border-b text-xs uppercase tracking-wider text-center">Tindakan</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-slate-100 flex flex-col md:table-row-group">
+            <tbody className="divide-y md:divide-slate-100 flex flex-col md:table-row-group p-4 md:p-0 gap-4 md:gap-0 bg-slate-50/50 md:bg-transparent">
               {students.map((s, i) => (
-                <tr key={i} className="flex flex-col md:table-row hover:bg-slate-50 transition-colors p-4 md:p-0 gap-3 md:gap-0 bg-white md:bg-transparent">
+                <tr key={i} className="flex flex-col md:table-row transition-colors p-5 md:p-0 gap-3 md:gap-0 bg-white border border-slate-200 md:border-0 rounded-2xl md:rounded-none shadow-sm md:shadow-none hover:bg-slate-50 relative">
                   <td className="p-0 md:p-4 block md:table-cell">
                     <span className="text-[10px] font-bold text-slate-400 mb-1 block md:hidden uppercase tracking-wider">Nama Lengkap</span>
                     <div className="font-bold text-slate-800 text-base md:text-sm">{s.name}</div>
@@ -3675,14 +3683,14 @@ const UnsubmittedModal = ({ user, showToast, onClose }) => {
                     <span className="text-[10px] font-bold text-slate-400 mb-1 block md:hidden uppercase tracking-wider">NIM Kelas</span>
                     {s.nim} - {s.class}
                   </td>
-                  <td className="p-0 md:p-4 block md:table-cell border-t border-slate-50 pt-3 md:border-0 md:pt-4">
-                    <span className="text-[10px] font-bold text-slate-400 mb-1 block md:hidden uppercase tracking-wider">Tanggal Belum Logbook</span>
-                    <div className="flex flex-wrap gap-1 mt-1">
+                  <td className="p-0 md:p-4 block md:table-cell border-t border-slate-100 pt-3 md:border-0 md:pt-4">
+                    <span className="text-[10px] font-bold text-slate-400 mb-2 block md:hidden uppercase tracking-wider">Tanggal Belum Logbook</span>
+                    <div className="flex flex-col md:flex-row md:flex-wrap gap-1.5 md:gap-1 mt-1">
                       {(s.missingDates || []).slice(0, 10).map((d, idx) => (
-                        <span key={idx} className="px-2 py-0.5 bg-red-50 text-red-600 rounded text-[11px] font-bold border border-red-100 whitespace-nowrap">{formatTanggalIndo(d)}</span>
+                        <span key={idx} className="px-2 py-1 md:py-0.5 bg-red-50 text-red-600 rounded-md md:rounded text-[12px] md:text-[11px] font-bold border border-red-100 md:whitespace-nowrap w-fit md:w-auto">{formatTanggalIndo(d)}</span>
                       ))}
                       {(s.missingDates || []).length > 10 && (
-                        <span className="px-2 py-0.5 bg-slate-100 text-slate-600 rounded text-[11px] font-bold border border-slate-200">+{s.missingDates.length - 10} hari</span>
+                        <span className="px-2 py-1 md:py-0.5 bg-slate-100 text-slate-600 rounded-md md:rounded text-[12px] md:text-[11px] font-bold border border-slate-200 w-fit md:w-auto">+{s.missingDates.length - 10} hari</span>
                       )}
                     </div>
                   </td>
