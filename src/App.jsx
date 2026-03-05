@@ -4416,8 +4416,8 @@ const ExportLogbookModal = ({ logbooks, onClose, showToast }) => {
 
   return (
     <div className="fixed inset-0 z-[1000] bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4 animate-in fade-in duration-200" onClick={onClose}>
-      <div className="bg-white w-full max-w-2xl rounded-2xl shadow-2xl overflow-hidden flex flex-col animate-in zoom-in-95" onClick={e => e.stopPropagation()}>
-        <div className="p-5 border-b border-slate-100 flex justify-between items-start bg-slate-50/50">
+      <div className="bg-white w-full max-w-2xl rounded-2xl shadow-2xl flex flex-col animate-in zoom-in-95 relative" onClick={e => e.stopPropagation()}>
+        <div className="p-5 border-b border-slate-100 flex justify-between items-start bg-slate-50/50 rounded-t-2xl">
           <div>
             <h3 className="font-black text-2xl text-slate-800 tracking-tight flex items-center gap-2"><FileSpreadsheet className="text-emerald-500" /> Ekspor Excel Logbook</h3>
             <p className="text-sm font-medium text-slate-500 mt-1">Pilih rentang waktu untuk diekspor</p>
@@ -4446,7 +4446,7 @@ const ExportLogbookModal = ({ logbooks, onClose, showToast }) => {
           </div>
         </div>
 
-        <div className="p-4 border-t border-slate-100 bg-slate-50 flex justify-end gap-3">
+        <div className="p-4 border-t border-slate-100 bg-slate-50 flex justify-end gap-3 rounded-b-2xl">
           <Button variant="secondary" onClick={onClose}>Batal</Button>
           <Button onClick={doExport} className="bg-emerald-500 hover:bg-emerald-600 shadow-emerald-500/30 text-white flex items-center gap-2">
             <Download size={18} /> Ekspor File .xls
