@@ -3516,17 +3516,23 @@ const UnsubmittedModal = ({ user, showToast, onClose }) => {
 
   const fetchUnsubmitted = async () => {
     setLoading(true);
+    showToast('info', 'Memuat Data...', `Mengambil Data Logbook Mahasiswa yang belum mengerjakan.`);
     try {
       const url = `${GAS_URL}?action=getUnsubmitted&startDate=${startDate}&endDate=${endDate}&userId=${user.username}&role=${user.role}`;
       const res = await fetch(url);
       const json = await res.json();
       if (json.status === 'success') {
         setStudents(json.data);
+        if (json.data.length === 0) {
+          showToast('success', 'Selesai', 'Semua mahasiswa sudah mengisi logbook pada rentang waktu ini.');
+        } else {
+          showToast('success', 'Selesai', `Ditemukan ${json.data.length} mahasiswa belum absen.`);
+        }
       } else {
-        showToast('error', 'Gagal', json.message);
+        showToast('error', 'Gagal', json.message || 'Terjadi kesalahan sistem.');
       }
     } catch (e) {
-      showToast('error', 'Error', 'Gagal mengambil data mahasiswa belum logbook.');
+      showToast('error', 'Error', 'Gagal mengambil data mahasiswa belum logbook. Periksa koneksi Anda.');
     } finally {
       setLoading(false);
     }
@@ -3639,12 +3645,13 @@ const UnsubmittedModal = ({ user, showToast, onClose }) => {
           </span>
         </div>
 
-        <div className="flex-1 overflow-y-auto p-0 relative">
+        <div className="flex-1 overflow-y-auto p-0 relative min-h-[200px]">
           {loading && (
-            <div className="absolute inset-0 bg-white/80 backdrop-blur-sm z-10 flex items-center justify-center">
-              <div className="text-center">
-                <RefreshCw size={32} className="animate-spin text-cyan-500 mx-auto mb-3" />
-                <p className="font-bold text-slate-600">Menganalisis Data...</p>
+            <div className="absolute inset-0 bg-white/60 backdrop-blur-[2px] z-30 flex items-center justify-center">
+              <div className="text-center p-6 bg-white rounded-2xl shadow-xl border border-slate-100 mb-10">
+                <RefreshCw size={36} className="animate-spin text-cyan-500 mx-auto mb-4" />
+                <p className="font-bold text-slate-700 text-lg">Menganalisis Data...</p>
+                <p className="text-slate-500 text-sm mt-1">Sistem mencari jadwal kosong mahasiswa</p>
               </div>
             </div>
           )}
@@ -3687,7 +3694,17 @@ const UnsubmittedModal = ({ user, showToast, onClose }) => {
                 </tr>
               ))}
               {!loading && students.length === 0 && (
-                <tr><td colSpan="4" className="p-12 text-center text-slate-400 text-lg">Semua mahasiswa sudah mengisi logbook pada rentang waktu ini 🎉.</td></tr>
+                <tr>
+                  <td colSpan="4" className="p-16">
+                    <div className="flex flex-col items-center justify-center text-center">
+                      <div className="w-16 h-16 bg-emerald-50 text-emerald-500 rounded-full flex items-center justify-center mb-4">
+                        <CheckCircle size={32} />
+                      </div>
+                      <h4 className="text-lg font-bold text-slate-800 mb-1">Semua Mengisi Logbook</h4>
+                      <p className="text-slate-500">Semua mahasiswa sudah rajin mengisi logbook pada rentang waktu ini 🎉</p>
+                    </div>
+                  </td>
+                </tr>
               )}
             </tbody>
           </table>
