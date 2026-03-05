@@ -3622,7 +3622,17 @@ function LecturerLogbookView({ user, logbooks, students, showToast, onRefresh })
   const [unsubmittedList, setUnsubmittedList] = useState([]);
   const [showUnsubmitted, setShowUnsubmitted] = useState(false);
   const [loadingUnsubmitted, setLoadingUnsubmitted] = useState(false);
+  const [isRefreshing, setIsRefreshing] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
+
+  const handleRefresh = async () => {
+    setIsRefreshing(true);
+    try {
+      if (onRefresh) await onRefresh();
+    } finally {
+      setIsRefreshing(false);
+    }
+  };
 
   // Listen for search term events from Map Popup
   useEffect(() => {
@@ -3749,13 +3759,13 @@ function LecturerLogbookView({ user, logbooks, students, showToast, onRefresh })
         <div>
           <h2 className="text-3xl font-black text-slate-800 tracking-tight mb-2 flex items-center gap-3">
             Logbook Mahasiswa
-            <button onClick={onRefresh} className="p-2 bg-slate-100 hover:bg-slate-200 text-slate-600 rounded-full transition-colors" title="Refresh Data">
-              <RefreshCw size={20} />
+            <button onClick={handleRefresh} disabled={isRefreshing} className="p-2 bg-slate-100 hover:bg-slate-200 text-slate-600 rounded-full transition-colors" title="Refresh Data">
+              <RefreshCw size={20} className={isRefreshing ? "animate-spin text-cyan-500" : ""} />
             </button>
           </h2>
           <div className="flex flex-wrap items-center gap-2">
             <span className="px-4 py-1.5 bg-cyan-50 rounded-full border border-cyan-100 text-sm font-bold text-cyan-700">{filteredLogbooks.length} Entri</span>
-            <button onClick={handleCheckUnsubmitted} disabled={loadingUnsubmitted} className="px-4 py-1.5 bg-red-50 hover:bg-red-100 text-red-600 rounded-full border border-red-100 text-sm font-bold transition-colors flex items-center gap-1">
+            <button onClick={handleCheckUnsubmitted} disabled={loadingUnsubmitted} className="hidden md:flex px-4 py-1.5 bg-red-50 hover:bg-red-100 text-red-600 rounded-full border border-red-100 text-sm font-bold transition-colors items-center gap-1">
               {loadingUnsubmitted ? 'Memuat...' : 'Lihat Mahasiswa Belum Logbook'}
             </button>
             <span className="text-slate-400 text-sm ml-2">Halaman {currentPage} dari {totalPages || 1}</span>
@@ -3798,8 +3808,8 @@ function LecturerLogbookView({ user, logbooks, students, showToast, onRefresh })
           <button onClick={handleCheckUnsubmitted} disabled={loadingUnsubmitted} className="w-full py-3 bg-white border border-red-100 text-red-600 rounded-2xl font-bold shadow-sm hover:bg-red-50 transition-colors">
             {loadingUnsubmitted ? 'Memuat...' : 'Lihat Mahasiswa Belum Logbook'}
           </button>
-          <button onClick={onRefresh} className="w-full py-3 bg-white border border-slate-200 text-slate-600 rounded-2xl font-bold shadow-sm hover:bg-slate-50 transition-colors flex items-center justify-center gap-2">
-            <RefreshCw size={18} /> Refresh Data
+          <button onClick={handleRefresh} disabled={isRefreshing} className="w-full py-3 bg-white border border-slate-200 text-slate-600 rounded-2xl font-bold shadow-sm hover:bg-slate-50 transition-colors flex items-center justify-center gap-2">
+            <RefreshCw size={18} className={isRefreshing ? "animate-spin text-cyan-500" : ""} /> Refresh Data
           </button>
         </div>
       </div>
