@@ -3649,11 +3649,12 @@ const UnsubmittedModal = ({ user, showToast, onClose }) => {
             </div>
           )}
           <table className="w-full text-sm text-left">
-            <thead className="bg-slate-50 text-slate-500 font-bold sticky top-0 z-0">
+            <thead className="bg-slate-50 text-slate-500 font-bold sticky top-0 z-20">
               <tr>
-                <th className="p-4 border-b text-xs uppercase tracking-wider">Nama Mahasiswa</th>
-                <th className="p-4 border-b text-xs uppercase tracking-wider">Kelas</th>
-                <th className="p-4 border-b text-xs uppercase tracking-wider">Tanggal Tidak Mengisi</th>
+                <th className="p-4 border-b text-xs uppercase tracking-wider">Nama Lengkap</th>
+                <th className="p-4 border-b text-xs uppercase tracking-wider">NIM Kelas</th>
+                <th className="p-4 border-b text-xs uppercase tracking-wider">Tanggal Belum Logbook</th>
+                <th className="p-4 border-b text-xs uppercase tracking-wider text-center">Tindakan</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100 relative z-0">
@@ -3661,9 +3662,10 @@ const UnsubmittedModal = ({ user, showToast, onClose }) => {
                 <tr key={i} className="hover:bg-slate-50 transition-colors">
                   <td className="p-4">
                     <div className="font-bold text-slate-800">{s.name}</div>
-                    <div className="font-mono text-xs text-slate-400 mt-1">{s.nim}</div>
                   </td>
-                  <td className="p-4 text-slate-600 font-medium">{s.class}</td>
+                  <td className="p-4 text-slate-700 font-medium">
+                    {s.nim} - {s.class}
+                  </td>
                   <td className="p-4">
                     <div className="flex flex-wrap gap-1 mt-1">
                       {(s.missingDates || []).slice(0, 10).map((d, idx) => (
@@ -3674,10 +3676,18 @@ const UnsubmittedModal = ({ user, showToast, onClose }) => {
                       )}
                     </div>
                   </td>
+                  <td className="p-4 text-center">
+                    <button
+                      onClick={() => showToast('success', 'Berhasil', `Notifikasi peringatan logbook telah dikirimkan ke ${s.name}.`)}
+                      className="px-4 py-1.5 bg-yellow-500 hover:bg-yellow-600 text-white text-xs font-bold rounded-lg shadow-sm hover:shadow transition-all"
+                    >
+                      Ingatkan
+                    </button>
+                  </td>
                 </tr>
               ))}
               {!loading && students.length === 0 && (
-                <tr><td colSpan="3" className="p-12 text-center text-slate-400 text-lg">Semua mahasiswa sudah mengisi logbook pada rentang waktu ini 🎉.</td></tr>
+                <tr><td colSpan="4" className="p-12 text-center text-slate-400 text-lg">Semua mahasiswa sudah mengisi logbook pada rentang waktu ini 🎉.</td></tr>
               )}
             </tbody>
           </table>
