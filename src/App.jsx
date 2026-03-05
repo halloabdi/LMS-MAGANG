@@ -311,10 +311,10 @@ const CustomDatePicker = ({ value, onChange }) => {
       <button
         type="button"
         onClick={() => setShow(!show)}
-        className={`w-full flex items-center justify-between px-4 py-2.5 rounded-xl border-2 transition-all font-bold text-sm ${show ? 'border-cyan-400 text-cyan-700 bg-cyan-50/30' : 'border-slate-200 text-slate-700 hover:border-cyan-400 hover:text-cyan-700'}`}
+        className={`w-full min-w-[180px] flex items-center justify-between gap-2 px-4 py-3 bg-white border rounded-2xl shadow-sm transition-all focus:ring-4 focus:ring-cyan-100 group font-bold text-sm ${show ? 'border-cyan-400 text-cyan-700' : 'border-slate-200 text-slate-700 hover:border-cyan-400 hover:text-cyan-700'}`}
       >
-        <span>{formatDateDisplay(value)}</span>
-        <Calendar size={18} className={show ? 'text-cyan-500' : 'text-slate-400 group-hover:text-cyan-500'} />
+        <span className="flex-1 text-left">{formatDateDisplay(value)}</span>
+        <Calendar size={18} className={`transition-colors ${show ? 'text-cyan-500' : 'text-slate-400 group-hover:text-cyan-500'}`} />
       </button>
 
       {show && (
@@ -3775,7 +3775,7 @@ function LecturerLogbookView({ user, logbooks, students, showToast, onRefresh })
           </div>
 
           {/* Custom Date Picker - Modern UI mapped to selected date */}
-          <div className="w-full sm:w-48 md:w-56 relative z-50">
+          <div className="relative z-50 flex-1 sm:flex-none">
             <CustomDatePicker value={dateFilter} onChange={setDateFilter} />
           </div>
 
