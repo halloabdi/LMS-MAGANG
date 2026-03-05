@@ -3501,17 +3501,11 @@ const UnsubmittedModal = ({ user, showToast, onClose }) => {
       newStart = todayStr;
       newEnd = todayStr;
     } else if (type === 'triwulan') {
-      const today = new Date();
-      const startD = new Date(today.getTime() - (today.getTimezoneOffset() * 60000));
-      startD.setMonth(startD.getMonth() - 2);
-      startD.setDate(1);
-      newStart = startD.toISOString().split('T')[0];
+      // Triwulan / Semester currently requested to start from Jan 1st of current year
+      newStart = `${new Date().getFullYear()}-01-01`;
       newEnd = todayStr;
     } else if (type === 'tahun_ini') {
-      const today = new Date();
-      const startD = new Date(today.getTime() - (today.getTimezoneOffset() * 60000));
-      startD.setMonth(0, 1);
-      newStart = startD.toISOString().split('T')[0];
+      newStart = `${new Date().getFullYear()}-01-01`;
       newEnd = todayStr;
     } else if (type === 'custom') {
       newStart = startDate;
@@ -3686,12 +3680,9 @@ const UnsubmittedModal = ({ user, showToast, onClose }) => {
                   <td className="p-0 md:p-4 block md:table-cell border-t border-slate-100 pt-3 md:border-0 md:pt-4">
                     <span className="text-[10px] font-bold text-slate-400 mb-2 block md:hidden uppercase tracking-wider">Tanggal Belum Logbook</span>
                     <div className="flex flex-col md:flex-row md:flex-wrap gap-1.5 md:gap-1 mt-1">
-                      {(s.missingDates || []).slice(0, 10).map((d, idx) => (
+                      {(s.missingDates || []).map((d, idx) => (
                         <span key={idx} className="px-2 py-1 md:py-0.5 bg-red-50 text-red-600 rounded-md md:rounded text-[12px] md:text-[11px] font-bold border border-red-100 md:whitespace-nowrap w-fit md:w-auto">{formatTanggalIndo(d)}</span>
                       ))}
-                      {(s.missingDates || []).length > 10 && (
-                        <span className="px-2 py-1 md:py-0.5 bg-slate-100 text-slate-600 rounded-md md:rounded text-[12px] md:text-[11px] font-bold border border-slate-200 w-fit md:w-auto">+{s.missingDates.length - 10} hari</span>
-                      )}
                     </div>
                   </td>
                   <td className="p-0 md:p-4 text-left md:text-center block md:table-cell border-t border-slate-50 pt-3 md:border-0 md:pt-4 mt-1 md:mt-0">
