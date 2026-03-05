@@ -1802,17 +1802,17 @@ function StudentDashboard({ user, onLogout, logbooks, setLogbooks, reports, setR
       {/* Bottom Navigation Mobile */}
       <div className="md:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-slate-200 shadow-[0_-4px_20px_rgba(0,0,0,0.05)] z-50 px-2 pb-safe pt-2">
         <div className="flex justify-around items-center">
-          <button onClick={() => setActiveTab('overview')} className={`flex flex-col items-center p-2 min-w-[4rem] flex-1 transition-colors ${activeTab === 'overview' ? 'text-cyan-600' : 'text-slate-400 hover:text-cyan-600'}`}>
-            <LayoutDashboard size={24} className="mb-1" />
-            <span className="text-[10px] font-bold text-center leading-tight">Overview</span>
+          <button onClick={() => setActiveTab('overview')} className={`flex flex-col items-center justify-center py-2 px-1 mx-1 rounded-2xl min-w-[4.5rem] flex-1 transition-all duration-300 ${activeTab === 'overview' ? 'bg-gradient-to-r from-cyan-500 to-blue-600 text-white shadow-lg shadow-cyan-500/30 font-bold scale-105' : 'text-slate-400 hover:text-cyan-600 hover:bg-slate-50'}`}>
+            <LayoutDashboard size={22} className="mb-1" />
+            <span className="text-[12px] font-bold text-center leading-tight">Overview</span>
           </button>
-          <button onClick={() => setActiveTab('logbook')} className={`flex flex-col items-center p-2 min-w-[4rem] flex-1 transition-colors ${activeTab === 'logbook' ? 'text-cyan-600' : 'text-slate-400 hover:text-cyan-600'}`}>
-            <MapPin size={24} className="mb-1" />
-            <span className="text-[10px] font-bold text-center leading-tight">Isi<br />Logbook</span>
+          <button onClick={() => setActiveTab('logbook')} className={`flex flex-col items-center justify-center py-2 px-1 mx-1 rounded-2xl min-w-[4.5rem] flex-1 transition-all duration-300 ${activeTab === 'logbook' ? 'bg-gradient-to-r from-cyan-500 to-blue-600 text-white shadow-lg shadow-cyan-500/30 font-bold scale-105' : 'text-slate-400 hover:text-cyan-600 hover:bg-slate-50'}`}>
+            <MapPin size={22} className="mb-1" />
+            <span className="text-[11px] font-bold text-center leading-tight">Isi<br />Logbook</span>
           </button>
-          <button onClick={() => setActiveTab('report')} className={`flex flex-col items-center p-2 min-w-[4rem] flex-1 transition-colors ${activeTab === 'report' ? 'text-cyan-600' : 'text-slate-400 hover:text-cyan-600'}`}>
-            <FileText size={24} className="mb-1" />
-            <span className="text-[10px] font-bold text-center leading-tight">Kerjakan<br />Laporan</span>
+          <button onClick={() => setActiveTab('report')} className={`flex flex-col items-center justify-center py-2 px-1 mx-1 rounded-2xl min-w-[4.5rem] flex-1 transition-all duration-300 ${activeTab === 'report' ? 'bg-gradient-to-r from-cyan-500 to-blue-600 text-white shadow-lg shadow-cyan-500/30 font-bold scale-105' : 'text-slate-400 hover:text-cyan-600 hover:bg-slate-50'}`}>
+            <FileText size={22} className="mb-1" />
+            <span className="text-[11px] font-bold text-center leading-tight">Kerjakan<br />Laporan</span>
           </button>
         </div>
       </div>
@@ -3276,17 +3276,17 @@ function LecturerDashboard({ user, onLogout, logbooks, setLogbooks, reports, onU
       {/* Bottom Navigation Mobile */}
       <div className="md:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-slate-200 shadow-[0_-4px_20px_rgba(0,0,0,0.05)] z-50 px-2 pb-safe pt-2">
         <div className="flex justify-around items-center">
-          <button onClick={() => setActiveTab('overview')} className={`flex flex-col items-center p-2 min-w-[4rem] flex-1 transition-colors ${activeTab === 'overview' ? 'text-cyan-600' : 'text-slate-400 hover:text-cyan-600'}`}>
-            <LayoutDashboard size={24} className="mb-1" />
-            <span className="text-[10px] font-bold text-center leading-tight">Overview</span>
+          <button onClick={() => setActiveTab('overview')} className={`flex flex-col items-center justify-center py-2 px-1 mx-1 rounded-2xl min-w-[4.5rem] flex-1 transition-all duration-300 ${activeTab === 'overview' ? 'bg-gradient-to-r from-cyan-500 to-blue-600 text-white shadow-lg shadow-cyan-500/30 font-bold scale-105' : 'text-slate-400 hover:text-cyan-600 hover:bg-slate-50'}`}>
+            <LayoutDashboard size={22} className="mb-1" />
+            <span className="text-[11px] font-bold text-center leading-tight">Overview</span>
           </button>
-          <button onClick={() => setActiveTab('logbooks')} className={`flex flex-col items-center p-2 min-w-[4rem] flex-1 transition-colors ${activeTab === 'logbooks' ? 'text-cyan-600' : 'text-slate-400 hover:text-cyan-600'}`}>
-            <MapPin size={24} className="mb-1" />
-            <span className="text-[10px] font-bold text-center leading-tight">Logbook<br />Mahasiswa</span>
+          <button onClick={() => setActiveTab('logbooks')} className={`flex flex-col items-center justify-center py-2 px-1 mx-1 rounded-2xl min-w-[4.5rem] flex-1 transition-all duration-300 ${activeTab === 'logbooks' ? 'bg-gradient-to-r from-cyan-500 to-blue-600 text-white shadow-lg shadow-cyan-500/30 font-bold scale-105' : 'text-slate-400 hover:text-cyan-600 hover:bg-slate-50'}`}>
+            <MapPin size={22} className="mb-1" />
+            <span className="text-[11px] font-bold text-center leading-tight">Logbook<br />Mahasiswa</span>
           </button>
-          <button onClick={() => setActiveTab('grading')} className={`flex flex-col items-center p-2 min-w-[4rem] flex-1 transition-colors ${activeTab === 'grading' ? 'text-cyan-600' : 'text-slate-400 hover:text-cyan-600'}`}>
-            <FileText size={24} className="mb-1" />
-            <span className="text-[10px] font-bold text-center leading-tight">Nilai<br />Tugas</span>
+          <button onClick={() => setActiveTab('grading')} className={`flex flex-col items-center justify-center py-2 px-1 mx-1 rounded-2xl min-w-[4.5rem] flex-1 transition-all duration-300 ${activeTab === 'grading' ? 'bg-gradient-to-r from-cyan-500 to-blue-600 text-white shadow-lg shadow-cyan-500/30 font-bold scale-105' : 'text-slate-400 hover:text-cyan-600 hover:bg-slate-50'}`}>
+            <FileText size={22} className="mb-1" />
+            <span className="text-[11px] font-bold text-center leading-tight">Nilai<br />Tugas</span>
           </button>
         </div>
       </div>
