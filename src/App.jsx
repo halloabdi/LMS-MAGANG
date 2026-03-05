@@ -327,7 +327,7 @@ const CustomDatePicker = ({ value, onChange, forceOpen, onForceOpenConsume }) =>
       </button>
 
       {show && (
-        <div className="absolute right-0 mt-2 bg-white rounded-2xl shadow-[0_10px_40px_rgba(0,0,0,0.12)] border border-slate-100 z-[100] overflow-hidden animate-in fade-in slide-in-from-top-2 duration-200 origin-top-right">
+        <div className="absolute right-0 mt-2 max-w-[90vw] bg-white rounded-2xl shadow-[0_10px_40px_rgba(0,0,0,0.12)] border border-slate-100 z-[100] overflow-hidden animate-in fade-in slide-in-from-top-2 duration-200 origin-top-right">
           {renderCalendar()}
         </div>
       )}
@@ -3799,6 +3799,7 @@ function LecturerLogbookView({ user, logbooks, students, showToast, onRefresh })
   const [loadingUnsubmitted, setLoadingUnsubmitted] = useState(false);
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
+  const [showExportModal, setShowExportModal] = useState(false);
 
   const handleRefresh = async () => {
     setIsRefreshing(true);
@@ -3923,6 +3924,9 @@ function LecturerLogbookView({ user, logbooks, students, showToast, onRefresh })
             <span className="px-4 py-1.5 bg-cyan-50 rounded-full border border-cyan-100 text-sm font-bold text-cyan-700">{filteredLogbooks.length} Entri</span>
             <button onClick={handleOpenUnsubmitted} className="hidden md:flex px-4 py-1.5 bg-red-50 hover:bg-red-100 text-red-600 rounded-full border border-red-100 text-sm font-bold transition-colors items-center gap-1">
               Lihat Mahasiswa Belum Logbook
+            </button>
+            <button onClick={() => setShowExportModal(true)} className="hidden md:flex px-4 py-1.5 bg-emerald-50 hover:bg-emerald-100 text-emerald-600 rounded-full border border-emerald-100 text-sm font-bold transition-colors items-center gap-1 shadow-sm">
+              <Download size={16} /> Ekspor Excel
             </button>
             <span className="text-slate-400 text-sm ml-2">Halaman {currentPage} dari {totalPages || 1}</span>
           </div>
@@ -4083,8 +4087,8 @@ function LecturerLogbookView({ user, logbooks, students, showToast, onRefresh })
         </table>
       </div>
 
-      {/* Mobile View: Cards */}
-      <div className="xl:hidden space-y-4">
+      {/* Mobile/Tablet View: Cards */}
+      <div className="xl:hidden grid grid-cols-1 md:grid-cols-2 gap-4">
         {currentItems.map(log => {
           // Parse Detection Status (Duplicate logic for mobile)
           // Parse Detection Status (Mobile)
@@ -4232,4 +4236,203 @@ function LecturerGrading({ reports, showToast }) {
     </div>
   );
 }
-// End of file
+
+// --- EXPORT LOGBOOK MODAL ---
+const ExportLogbookModal = ({ logbooks, onClose, showToast }) => {
+  const [filterType, setFilterType] = useState('hari_ini');
+  const [isManualSelecting, setIsManualSelecting] = useState(false);
+  const [showMobileDates, setShowMobileDates] = useState(false);
+
+  const getTodayDate = () => {
+    const today = new Date();
+    const year = today.getFullYear();
+    const month = String(today.getMonth() + 1).padStart(2, '0');
+    const day = String(today.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
+  };
+
+  const [startDate, setStartDate] = useState(getTodayDate());
+  const [endDate, setEndDate] = useState(getTodayDate());
+
+  const handleFilterChange = (type) => {
+    setFilterType(type);
+    const todayStr = getTodayDate();
+    let newStart = todayStr;
+    let newEnd = todayStr;
+
+    if (type === 'hari_ini') {
+      newStart = todayStr;
+      newEnd = todayStr;
+    } else if (type === 'triwulan') {
+      const today = new Date();
+      const currentQuarter = Math.floor(today.getMonth() / 3);
+      const startQuarterDate = new Date(today.getFullYear(), currentQuarter * 3, 1);
+      newStart = `${startQuarterDate.getFullYear()}-${String(startQuarterDate.getMonth() + 1).padStart(2, '0')}-${String(startQuarterDate.getDate()).padStart(2, '0')}`;
+      newEnd = todayStr;
+    } else if (type === 'tahun_ini') {
+      newStart = `${new Date().getFullYear()}-01-01`;
+      newEnd = todayStr;
+    } else if (type === 'custom') {
+      newStart = startDate;
+      newEnd = endDate;
+      setShowMobileDates(true);
+    }
+
+    setStartDate(newStart);
+    setEndDate(newEnd);
+  };
+
+  const cleanHTML = (htmlString) => {
+    if (!htmlString) return "-";
+    // Convert 1. 2. 3. ol and li items into clean text
+    let text = htmlString
+      .replace(/<ol[^>]*>/gi, '')
+      .replace(/<\/ol>/gi, '')
+      .replace(/<ul[^>]*>/gi, '')
+      .replace(/<\/ul>/gi, '')
+      .replace(/<li[^>]*>/gi, '- ')
+      .replace(/<\/li>/gi, '\n')
+      .replace(/<br\s*\/?>/gi, '\n')
+      .replace(/<p[^>]*>/gi, '')
+      .replace(/<\/p>/gi, '\n')
+      .replace(/<[^>]+>/g, '') // remove all other tags
+      .replace(/&nbsp;/ig, ' ')
+      .replace(/&amp;/ig, '&');
+
+    // Remove leading/trailing new lines & extra spaces
+    text = text.replace(/(^\n+|\n+$)/g, '').trim();
+    // In excel, to force a line break in a cell via HTML, it needs style white-space: normal,
+    // and we can output `&#10;` or actual `<br>` if we export an HTML table.
+    // Since we export HTML table to xls:
+    return text.replace(/\n/g, '<br style="mso-data-placement:same-cell;" />');
+  };
+
+  const doExport = () => {
+    // 1. Filter logbooks based on date range
+    const filtered = logbooks.filter(log => {
+      if (!log.date) return false;
+      const logTime = new Date(log.date).getTime();
+      const sTime = new Date(startDate).getTime();
+      const eTime = new Date(endDate).getTime();
+      return logTime >= sTime && logTime <= eTime;
+    });
+
+    if (filtered.length === 0) {
+      showToast('warning', 'Tidak ada data', 'Tidak ada logbook pada rentang waktu tersebut.');
+      return;
+    }
+
+    // Sort by timestamp (Oldest to Newest)
+    const sorted = [...filtered].sort((a, b) => {
+      const timeA = new Date(a.date + ' ' + (a.time || '00:00')).getTime();
+      const timeB = new Date(b.date + ' ' + (b.time || '00:00')).getTime();
+      return timeA - timeB;
+    });
+
+    // 2. Build HTML Table for Excel
+    const tableHTML = `
+      <html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:x="urn:schemas-microsoft-com:office:excel" xmlns="http://www.w3.org/TR/REC-html40">
+      <head>
+        <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+        <style>
+          table { border-collapse: collapse; }
+          th, td { border: 1.5pt solid black; vertical-align: top; text-align: left; padding: 5px; font-family: sans-serif; }
+          th { background-color: #f3f4f6; font-weight: bold; }
+          /* Autofit hint - forces cell text to wrap but cells to size */
+          td.kegiatan, td.output { white-space: normal; }
+          .img-cell { text-align: center; vertical-align: middle; }
+        </style>
+      </head>
+      <body>
+        <table>
+          <thead>
+            <tr>
+              <th>Foto Selfie (Gambar/Thumbnail)</th>
+              <th>Tanggal Logbook</th>
+              <th>Nama Lengkap Mahasiswa</th>
+              <th>NIM</th>
+              <th>Status Kehadiran</th>
+              <th>Koordinat</th>
+              <th>Kegiatan yang Dilakukan</th>
+              <th>Output yang Dihasilkan</th>
+              <th>Dokumentasi Tambahan (Link)</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${sorted.map(log => `
+              <tr>
+                <td class="img-cell">
+                  ${log.selfieUrl ? `<img src="${getPhotoUrl(log.selfieUrl)}" width="80" height="auto" />` : '-'}
+                </td>
+                <td>${log.date || ''} ${log.time || ''}</td>
+                <td>${log.name || ''}</td>
+                <td style="mso-number-format:'\@'">${log.nim || ''}</td>
+                <td>${log.status || ''}</td>
+                <td>${log.lat ? `${log.lat}, ${log.lng}` : '-'}</td>
+                <td class="kegiatan">${cleanHTML(log.activity)}</td>
+                <td class="output">${cleanHTML(log.output)}</td>
+                <td>${log.docUrl ? `<a href="${log.docUrl}">Lihat Dokumen</a>` : '-'}</td>
+              </tr>
+            `).join('')}
+          </tbody>
+        </table>
+      </body>
+      </html>
+    `;
+
+    const blob = new Blob([tableHTML], { type: 'application/vnd.ms-excel' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `Logbook_Export_${startDate}_to_${endDate}.xls`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+
+    showToast('success', 'Berhasil', `${sorted.length} Logbook berhasil diekspor.`);
+    onClose();
+  };
+
+  return (
+    <div className="fixed inset-0 z-[1000] bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4 animate-in fade-in duration-200" onClick={onClose}>
+      <div className="bg-white w-full max-w-2xl rounded-2xl shadow-2xl overflow-hidden flex flex-col animate-in zoom-in-95" onClick={e => e.stopPropagation()}>
+        <div className="p-5 border-b border-slate-100 flex justify-between items-start bg-slate-50/50">
+          <div>
+            <h3 className="font-black text-2xl text-slate-800 tracking-tight flex items-center gap-2"><FileSpreadsheet className="text-emerald-500" /> Ekspor Excel Logbook</h3>
+            <p className="text-sm font-medium text-slate-500 mt-1">Pilih rentang waktu untuk diekspor</p>
+          </div>
+          <button onClick={onClose} className="p-2 hover:bg-slate-200 text-slate-500 rounded-full transition-colors"><X size={24} /></button>
+        </div>
+
+        <div className="p-6">
+          <div className="flex flex-col md:flex-row gap-4 items-start md:items-center justify-between mb-4">
+            <div className="flex flex-wrap gap-2">
+              <button onClick={() => handleFilterChange('hari_ini')} className={`px-4 py-2 rounded-lg text-sm font-bold transition-all ${filterType === 'hari_ini' ? 'bg-cyan-500 text-white shadow-md' : 'bg-slate-50 text-slate-600 hover:bg-slate-100'}`}>Hari Ini</button>
+              <button onClick={() => handleFilterChange('triwulan')} className={`px-4 py-2 rounded-lg text-sm font-bold transition-all ${filterType === 'triwulan' ? 'bg-cyan-500 text-white shadow-md' : 'bg-slate-50 text-slate-600 hover:bg-slate-100'}`}>Triwulan</button>
+              <button onClick={() => handleFilterChange('tahun_ini')} className={`px-4 py-2 rounded-lg text-sm font-bold transition-all ${filterType === 'tahun_ini' ? 'bg-cyan-500 text-white shadow-md' : 'bg-slate-50 text-slate-600 hover:bg-slate-100'}`}>Tahun Ini</button>
+              <button onClick={() => { handleFilterChange('custom'); setIsManualSelecting(true); }} className={`px-4 py-2 rounded-lg text-sm font-bold transition-all ${filterType === 'custom' ? 'bg-cyan-500 text-white shadow-md' : 'bg-slate-50 text-slate-600 hover:bg-slate-100'}`}>Pilih Manual</button>
+            </div>
+          </div>
+
+          <div className={`flex-col sm:flex-row items-center gap-3 w-full lg:w-auto p-4 bg-slate-50 rounded-xl border border-slate-200 ${filterType === 'custom' && showMobileDates ? 'flex' : 'hidden md:flex'}`}>
+            <div className="relative w-full sm:flex-1">
+              <CustomDatePicker value={startDate} onChange={(val) => { setStartDate(val); setFilterType('custom'); setShowMobileDates(true); }} forceOpen={isManualSelecting} onForceOpenConsume={() => setIsManualSelecting(false)} />
+            </div>
+            <span className="text-slate-400 font-bold shrink-0">s/d</span>
+            <div className="relative w-full sm:flex-1">
+              <CustomDatePicker value={endDate} onChange={(val) => { setEndDate(val); setFilterType('custom'); setShowMobileDates(true); }} />
+            </div>
+          </div>
+        </div>
+
+        <div className="p-4 border-t border-slate-100 bg-slate-50 flex justify-end gap-3">
+          <Button variant="secondary" onClick={onClose}>Batal</Button>
+          <Button onClick={doExport} className="bg-emerald-500 hover:bg-emerald-600 shadow-emerald-500/30 text-white flex items-center gap-2">
+            <Download size={18} /> Ekspor File .xls
+          </Button>
+        </div>
+      </div>
+    </div>
+  );
+};
