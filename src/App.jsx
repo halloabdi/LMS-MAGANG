@@ -270,23 +270,55 @@ const CustomDatePicker = ({ value, onChange }) => {
             </button>
           ))}
         </div>
+        <div className="flex justify-between items-center mt-3 pt-3 border-t border-slate-100">
+          <button
+            onClick={(e) => {
+              e.preventDefault();
+              onChange("");
+              setShow(false);
+            }}
+            className="text-xs font-bold text-slate-500 hover:text-cyan-600 transition-colors"
+          >
+            Semua Waktu
+          </button>
+          <button
+            onClick={(e) => {
+              e.preventDefault();
+              const today = new Date();
+              const todayStr = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
+              onChange(todayStr);
+              setShow(false);
+            }}
+            className="text-xs font-bold text-cyan-600 hover:text-cyan-800 transition-colors"
+          >
+            Hari Ini
+          </button>
+        </div>
       </div>
     );
   };
 
   const displayDate = new Date(value).toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' });
+  const formatDateDisplay = (dateStr) => {
+    if (!dateStr || dateStr === "all") return "Semua Waktu";
+    const d = new Date(dateStr);
+    if (isNaN(d.getTime())) return "Semua Waktu";
+    return `${d.getDate()} ${monthNames[d.getMonth()]} ${d.getFullYear()}`;
+  };
 
   return (
     <div className="relative" ref={containerRef}>
       <button
-        onClick={(e) => { e.preventDefault(); setShow(!show) }}
-        className="w-full flex items-center justify-between px-4 py-3 bg-white/50 backdrop-blur-sm border border-slate-200 rounded-xl text-left hover:border-cyan-400 focus:ring-2 focus:ring-cyan-200 transition-all group shadow-sm"
+        type="button"
+        onClick={() => setShow(!show)}
+        className={`w-full flex items-center justify-between px-4 py-2.5 rounded-xl border-2 transition-all font-bold text-sm ${show ? 'border-cyan-400 text-cyan-700 bg-cyan-50/30' : 'border-slate-200 text-slate-700 hover:border-cyan-400 hover:text-cyan-700'}`}
       >
-        <span className="font-bold text-slate-700">{displayDate}</span>
-        <Calendar size={18} className="text-slate-400 group-hover:text-cyan-500 transition-colors" />
+        <span>{formatDateDisplay(value)}</span>
+        <Calendar size={18} className={show ? 'text-cyan-500' : 'text-slate-400 group-hover:text-cyan-500'} />
       </button>
+
       {show && (
-        <div className="absolute top-full left-0 mt-2 bg-white/90 backdrop-blur-xl border border-white/50 rounded-2xl shadow-2xl z-50 animate-in fade-in zoom-in-95 duration-200">
+        <div className="absolute right-0 mt-2 bg-white rounded-2xl shadow-[0_10px_40px_rgba(0,0,0,0.12)] border border-slate-100 z-[100] overflow-hidden animate-in fade-in slide-in-from-top-2 duration-200 origin-top-right">
           {renderCalendar()}
         </div>
       )}
@@ -3353,10 +3385,10 @@ function LecturerOverview({ students, logbooks, reports, onDetailClick }) {
 
   const studentMarkers = students.map(s => {
     // Matching with NIM instead of id, since logbooks use nim
-    // Filter specifically by the selected date
+    // Filter specifically by the selected date, or all if empty
     const studentLogbooks = logbooks.filter(l =>
       (l.nim === s.username || l.studentId === s.id) &&
-      (l.date === mapDate)
+      (!mapDate || l.date === mapDate)
     );
 
     if (!studentLogbooks || studentLogbooks.length === 0) return null;
@@ -3602,7 +3634,14 @@ function LecturerLogbookView({ user, logbooks, students, showToast, onRefresh })
   }, []);
 
   const [sortOrder, setSortOrder] = useState('newest');
-  const [dateFilter, setDateFilter] = useState('today'); // Default: Hari Ini (Updated per request)
+  const getTodayDate = () => {
+    const today = new Date();
+    const year = today.getFullYear();
+    const month = String(today.getMonth() + 1).padStart(2, '0');
+    const day = String(today.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
+  };
+  const [dateFilter, setDateFilter] = useState(getTodayDate());
 
   // Pagination State
   const [currentPage, setCurrentPage] = useState(1);
@@ -3650,22 +3689,8 @@ function LecturerLogbookView({ user, logbooks, students, showToast, onRefresh })
 
     // 2. Filter Date Range
     let matchesDate = true;
-    if (dateFilter !== 'all') {
-      const logDate = new Date(log.date);
-      const today = new Date();
-      today.setHours(0, 0, 0, 0);
-
-      if (isNaN(logDate.getTime())) {
-        matchesDate = false;
-      } else {
-        logDate.setHours(0, 0, 0, 0);
-        const diffTime = Math.abs(today - logDate);
-        const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-
-        if (dateFilter === 'today') matchesDate = diffDays === 0;
-        else if (dateFilter === '3days') matchesDate = diffDays <= 3;
-        else if (dateFilter === '7days') matchesDate = diffDays <= 7;
-      }
+    if (dateFilter) {
+      matchesDate = log.date === dateFilter;
     }
 
     return matchesSearch && matchesDate;
@@ -3749,18 +3774,10 @@ function LecturerLogbookView({ user, logbooks, students, showToast, onRefresh })
             <div className="absolute left-4 top-3.5 text-slate-400 group-focus-within:text-cyan-500 transition-colors"><Search size={20} /></div>
           </div>
 
-          {/* Custom Dropdown - Date */}
-          <CustomDropdown
-            value={dateFilter}
-            onChange={setDateFilter}
-            icon={Calendar}
-            options={[
-              { value: 'today', label: 'Hari Ini' },
-              { value: '3days', label: '3 Hari Terakhir' },
-              { value: '7days', label: '7 Hari Terakhir' },
-              { value: 'all', label: 'Semua Waktu' }
-            ]}
-          />
+          {/* Custom Date Picker - Modern UI mapped to selected date */}
+          <div className="w-full sm:w-48 md:w-56 relative z-50">
+            <CustomDatePicker value={dateFilter} onChange={setDateFilter} />
+          </div>
 
           {/* Custom Dropdown - Sort */}
           <CustomDropdown
