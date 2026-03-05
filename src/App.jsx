@@ -225,9 +225,10 @@ const CustomDatePicker = ({ value, onChange }) => {
   const firstDayOfMonth = (month, year) => new Date(year, month, 1).getDay();
 
   const handleDayClick = (day) => {
-    const newDate = new Date(currentDate.getFullYear(), currentDate.getMonth(), day);
-    const dateString = newDate.toISOString().split('T')[0];
-    onChange(dateString);
+    const year = currentDate.getFullYear();
+    const month = String(currentDate.getMonth() + 1).padStart(2, '0');
+    const dayStr = String(day).padStart(2, '0');
+    onChange(`${year}-${month}-${dayStr}`);
     setShow(false);
   };
 
@@ -245,7 +246,7 @@ const CustomDatePicker = ({ value, onChange }) => {
     const startDay = firstDayOfMonth(month, year);
     const blanks = Array(startDay).fill(null);
     const days = Array.from({ length: totalDays }, (_, i) => i + 1);
-    const selected = new Date(value);
+    const selected = new Date(value && !value.includes('T') ? `${value}T00:00:00` : value);
     const isSelected = (d) => selected.getDate() === d && selected.getMonth() === month && selected.getFullYear() === year;
 
     return (
@@ -301,7 +302,8 @@ const CustomDatePicker = ({ value, onChange }) => {
   const displayDate = new Date(value).toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' });
   const formatDateDisplay = (dateStr) => {
     if (!dateStr || dateStr === "all") return "Semua Waktu";
-    const d = new Date(dateStr);
+    const parseTime = dateStr.includes('T') ? dateStr : `${dateStr}T00:00:00`;
+    const d = new Date(parseTime);
     if (isNaN(d.getTime())) return "Semua Waktu";
     return `${d.getDate()} ${monthNames[d.getMonth()]} ${d.getFullYear()}`;
   };
