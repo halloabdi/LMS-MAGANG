@@ -869,7 +869,7 @@ const getPhotoUrl = (url) => {
 
   if (fileId) {
     // API thumbnail Google Drive selalu merender EXIF-orientation dengan benar
-    return `https://drive.google.com/thumbnail?id=${fileId}&sz=w1000`;
+    return `https://drive.google.com/thumbnail?id=${fileId}&sz=w000`;
   }
 
   return url;
