@@ -3471,6 +3471,7 @@ const UnsubmittedModal = ({ user, showToast, onClose }) => {
   const [loading, setLoading] = useState(false);
   const [filterType, setFilterType] = useState('hari_ini');
   const [isManualSelecting, setIsManualSelecting] = useState(false);
+  const [showMobileDates, setShowMobileDates] = useState(false);
 
   const getTodayDate = () => {
     const today = new Date();
@@ -3510,6 +3511,7 @@ const UnsubmittedModal = ({ user, showToast, onClose }) => {
     } else if (type === 'custom') {
       newStart = startDate;
       newEnd = endDate;
+      setShowMobileDates(true);
     }
 
     setStartDate(newStart);
@@ -3537,6 +3539,7 @@ const UnsubmittedModal = ({ user, showToast, onClose }) => {
       showToast('error', 'Error', 'Gagal mengambil data mahasiswa belum logbook. Periksa koneksi Anda.');
     } finally {
       setLoading(false);
+      if (filterType === 'custom') setShowMobileDates(false);
     }
   };
 
@@ -3625,13 +3628,13 @@ const UnsubmittedModal = ({ user, showToast, onClose }) => {
                 <button onClick={() => { handleFilterChange('custom'); setIsManualSelecting(true); }} className={`px-4 py-2 rounded-lg text-sm font-bold transition-all ${filterType === 'custom' ? 'bg-cyan-500 text-white shadow-md' : 'bg-slate-50 text-slate-600 hover:bg-slate-100'}`}>Pilih Manual</button>
               </div>
 
-              <div className="flex flex-col sm:flex-row items-center gap-3 w-full lg:w-auto mt-4 md:mt-0">
+              <div className={`flex-col sm:flex-row items-center gap-3 w-full lg:w-auto mt-4 md:mt-0 ${filterType === 'custom' && showMobileDates ? 'flex' : 'hidden md:flex'}`}>
                 <div className="relative w-full sm:flex-1 md:w-[180px]">
-                  <CustomDatePicker value={startDate} onChange={(val) => { setStartDate(val); setFilterType('custom'); }} forceOpen={isManualSelecting} onForceOpenConsume={() => setIsManualSelecting(false)} />
+                  <CustomDatePicker value={startDate} onChange={(val) => { setStartDate(val); setFilterType('custom'); setShowMobileDates(true); }} forceOpen={isManualSelecting} onForceOpenConsume={() => setIsManualSelecting(false)} />
                 </div>
                 <span className="text-slate-400 font-bold shrink-0">s/d</span>
                 <div className="relative w-full sm:flex-1 md:w-[180px]">
-                  <CustomDatePicker value={endDate} onChange={(val) => { setEndDate(val); setFilterType('custom'); }} />
+                  <CustomDatePicker value={endDate} onChange={(val) => { setEndDate(val); setFilterType('custom'); setShowMobileDates(true); }} />
                 </div>
               </div>
             </div>
@@ -3647,7 +3650,7 @@ const UnsubmittedModal = ({ user, showToast, onClose }) => {
           </span>
         </div>
 
-        <div className="flex-1 overflow-y-auto p-0 relative min-h-[200px] w-full">
+        <div className="flex-1 relative w-full h-full min-h-[200px] flex flex-col">
           {loading && (
             <div className="absolute inset-0 bg-slate-900/10 backdrop-blur-[3px] z-[50] flex flex-col items-center justify-center pointer-events-auto">
               <div className="text-center p-6 bg-white/95 backdrop-blur-md rounded-2xl shadow-2xl border border-slate-200 animate-in zoom-in duration-200">
@@ -3657,59 +3660,61 @@ const UnsubmittedModal = ({ user, showToast, onClose }) => {
               </div>
             </div>
           )}
-          <table className={`w-full text-sm text-left transition-opacity duration-300 ${loading ? 'opacity-50 pointer-events-none select-none' : ''}`}>
-            <thead className="hidden md:table-header-group bg-slate-50 text-slate-500 font-bold sticky top-0 z-20">
-              <tr>
-                <th className="p-4 border-b text-xs uppercase tracking-wider">Nama Lengkap</th>
-                <th className="p-4 border-b text-xs uppercase tracking-wider">NIM Kelas</th>
-                <th className="p-4 border-b text-xs uppercase tracking-wider">Tanggal Belum Logbook</th>
-                <th className="p-4 border-b text-xs uppercase tracking-wider text-center">Tindakan</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y md:divide-slate-100 flex flex-col md:table-row-group p-4 md:p-0 gap-4 md:gap-0 bg-slate-50/50 md:bg-transparent">
-              {students.map((s, i) => (
-                <tr key={i} className="flex flex-col md:table-row transition-colors p-5 md:p-0 gap-3 md:gap-0 bg-white border border-slate-200 md:border-0 rounded-2xl md:rounded-none shadow-sm md:shadow-none hover:bg-slate-50 relative">
-                  <td className="p-0 md:p-4 block md:table-cell">
-                    <span className="text-[10px] font-bold text-slate-400 mb-1 block md:hidden uppercase tracking-wider">Nama Lengkap</span>
-                    <div className="font-bold text-slate-800 text-base md:text-sm">{s.name}</div>
-                  </td>
-                  <td className="p-0 md:p-4 text-slate-700 font-medium block md:table-cell border-t border-slate-50 pt-3 md:border-0 md:pt-4">
-                    <span className="text-[10px] font-bold text-slate-400 mb-1 block md:hidden uppercase tracking-wider">NIM Kelas</span>
-                    {s.nim} - {s.class}
-                  </td>
-                  <td className="p-0 md:p-4 block md:table-cell border-t border-slate-100 pt-3 md:border-0 md:pt-4">
-                    <span className="text-[10px] font-bold text-slate-400 mb-2 block md:hidden uppercase tracking-wider">Tanggal Belum Logbook</span>
-                    <div className="flex flex-col md:flex-row md:flex-wrap gap-1.5 md:gap-1 mt-1">
-                      {(s.missingDates || []).map((d, idx) => (
-                        <span key={idx} className="px-2 py-1 md:py-0.5 bg-red-50 text-red-600 rounded-md md:rounded text-[12px] md:text-[11px] font-bold border border-red-100 md:whitespace-nowrap w-fit md:w-auto">{formatTanggalIndo(d)}</span>
-                      ))}
-                    </div>
-                  </td>
-                  <td className="p-0 md:p-4 text-left md:text-center block md:table-cell border-t border-slate-50 pt-3 md:border-0 md:pt-4 mt-1 md:mt-0">
-                    <button
-                      onClick={() => showToast('success', 'Berhasil', `Notifikasi peringatan logbook telah dikirimkan ke ${s.name}.`)}
-                      className="w-full md:w-auto px-4 py-2.5 md:py-1.5 bg-yellow-500 hover:bg-yellow-600 text-white text-sm md:text-xs font-bold rounded-xl md:rounded-lg shadow-sm hover:shadow transition-all"
-                    >
-                      Ingatkan
-                    </button>
-                  </td>
-                </tr>
-              ))}
-              {!loading && students.length === 0 && (
+          <div className="flex-1 overflow-y-auto p-0">
+            <table className={`w-full text-sm text-left transition-opacity duration-300 ${loading ? 'opacity-50 pointer-events-none select-none' : ''}`}>
+              <thead className="hidden md:table-header-group bg-slate-50 text-slate-500 font-bold sticky top-0 z-20">
                 <tr>
-                  <td colSpan="4" className="p-16">
-                    <div className="flex flex-col items-center justify-center text-center">
-                      <div className="w-16 h-16 bg-emerald-50 text-emerald-500 rounded-full flex items-center justify-center mb-4">
-                        <CheckCircle size={32} />
-                      </div>
-                      <h4 className="text-lg font-bold text-slate-800 mb-1">Semua Mengisi Logbook</h4>
-                      <p className="text-slate-500">Semua mahasiswa sudah rajin mengisi logbook pada rentang waktu ini 🎉</p>
-                    </div>
-                  </td>
+                  <th className="p-4 border-b text-xs uppercase tracking-wider">Nama Lengkap</th>
+                  <th className="p-4 border-b text-xs uppercase tracking-wider">NIM Kelas</th>
+                  <th className="p-4 border-b text-xs uppercase tracking-wider">Tanggal Belum Logbook</th>
+                  <th className="p-4 border-b text-xs uppercase tracking-wider text-center">Tindakan</th>
                 </tr>
-              )}
-            </tbody>
-          </table>
+              </thead>
+              <tbody className="divide-y md:divide-slate-100 flex flex-col md:table-row-group p-4 md:p-0 gap-4 md:gap-0 bg-slate-50/50 md:bg-transparent">
+                {students.map((s, i) => (
+                  <tr key={i} className="flex flex-col md:table-row transition-colors p-5 md:p-0 gap-3 md:gap-0 bg-white border border-slate-200 md:border-0 rounded-2xl md:rounded-none shadow-sm md:shadow-none hover:bg-slate-50 relative">
+                    <td className="p-0 md:p-4 block md:table-cell">
+                      <span className="text-[10px] font-bold text-slate-400 mb-1 block md:hidden uppercase tracking-wider">Nama Lengkap</span>
+                      <div className="font-bold text-slate-800 text-base md:text-sm">{s.name}</div>
+                    </td>
+                    <td className="p-0 md:p-4 text-slate-700 font-medium block md:table-cell border-t border-slate-50 pt-3 md:border-0 md:pt-4">
+                      <span className="text-[10px] font-bold text-slate-400 mb-1 block md:hidden uppercase tracking-wider">NIM Kelas</span>
+                      {s.nim} - {s.class}
+                    </td>
+                    <td className="p-0 md:p-4 block md:table-cell border-t border-slate-100 pt-3 md:border-0 md:pt-4">
+                      <span className="text-[10px] font-bold text-slate-400 mb-2 block md:hidden uppercase tracking-wider">Tanggal Belum Logbook</span>
+                      <div className="flex flex-col md:flex-row md:flex-wrap gap-1.5 md:gap-1 mt-1">
+                        {(s.missingDates || []).map((d, idx) => (
+                          <span key={idx} className="px-2 py-1 md:py-0.5 bg-red-50 text-red-600 rounded-md md:rounded text-[12px] md:text-[11px] font-bold border border-red-100 md:whitespace-nowrap w-fit md:w-auto">{formatTanggalIndo(d)}</span>
+                        ))}
+                      </div>
+                    </td>
+                    <td className="p-0 md:p-4 text-left md:text-center block md:table-cell border-t border-slate-50 pt-3 md:border-0 md:pt-4 mt-1 md:mt-0">
+                      <button
+                        onClick={() => showToast('success', 'Berhasil', `Notifikasi peringatan logbook telah dikirimkan ke ${s.name}.`)}
+                        className="w-full md:w-auto px-4 py-2.5 md:py-1.5 bg-yellow-500 hover:bg-yellow-600 text-white text-sm md:text-xs font-bold rounded-xl md:rounded-lg shadow-sm hover:shadow transition-all"
+                      >
+                        Ingatkan
+                      </button>
+                    </td>
+                  </tr>
+                ))}
+                {!loading && students.length === 0 && (
+                  <tr>
+                    <td colSpan="4" className="p-16">
+                      <div className="flex flex-col items-center justify-center text-center">
+                        <div className="w-16 h-16 bg-emerald-50 text-emerald-500 rounded-full flex items-center justify-center mb-4">
+                          <CheckCircle size={32} />
+                        </div>
+                        <h4 className="text-lg font-bold text-slate-800 mb-1">Semua Mengisi Logbook</h4>
+                        <p className="text-slate-500">Semua mahasiswa sudah rajin mengisi logbook pada rentang waktu ini 🎉</p>
+                      </div>
+                    </td>
+                  </tr>
+                )}
+              </tbody>
+            </table>
+          </div>
         </div>
         <div className="p-4 border-t border-slate-100 bg-slate-50 flex justify-end gap-2">
           {students.length > 0 && (
