@@ -320,7 +320,7 @@ const CustomDatePicker = ({ value, onChange, forceOpen, onForceOpenConsume }) =>
       <button
         type="button"
         onClick={() => setShow(!show)}
-        className={`w-full min-w-[180px] flex items-center justify-between gap-2 px-4 py-3 bg-white border rounded-2xl shadow-sm transition-all focus:ring-4 focus:ring-cyan-100 group font-bold text-sm ${show ? 'border-cyan-400 text-cyan-700' : 'border-slate-200 text-slate-700 hover:border-cyan-400 hover:text-cyan-700'}`}
+        className={`w-full min-w-[140px] md:min-w-[180px] flex items-center justify-between gap-2 px-4 py-3 bg-white border rounded-2xl shadow-sm transition-all focus:ring-4 focus:ring-cyan-100 group font-bold text-sm ${show ? 'border-cyan-400 text-cyan-700' : 'border-slate-200 text-slate-700 hover:border-cyan-400 hover:text-cyan-700'}`}
       >
         <span className="flex-1 text-left">{formatDateDisplay(value)}</span>
         <Calendar size={18} className={`transition-colors ${show ? 'text-cyan-500' : 'text-slate-400 group-hover:text-cyan-500'}`} />
@@ -3631,12 +3631,12 @@ const UnsubmittedModal = ({ user, showToast, onClose }) => {
                 <button onClick={() => { handleFilterChange('custom'); setIsManualSelecting(true); }} className={`px-4 py-2 rounded-lg text-sm font-bold transition-all ${filterType === 'custom' ? 'bg-cyan-500 text-white shadow-md' : 'bg-slate-50 text-slate-600 hover:bg-slate-100'}`}>Pilih Manual</button>
               </div>
 
-              <div className="flex flex-wrap items-center justify-between gap-2 w-full md:w-auto mt-2 md:mt-0">
-                <div className="relative flex-1 min-w-[130px]">
+              <div className="flex flex-col sm:flex-row items-center gap-3 w-full lg:w-auto mt-4 md:mt-0">
+                <div className="relative w-full sm:flex-1 md:w-[180px]">
                   <CustomDatePicker value={startDate} onChange={(val) => { setStartDate(val); setFilterType('custom'); }} forceOpen={isManualSelecting} onForceOpenConsume={() => setIsManualSelecting(false)} />
                 </div>
-                <span className="text-slate-400 font-medium px-1">s/d</span>
-                <div className="relative flex-1 min-w-[130px]">
+                <span className="text-slate-400 font-bold shrink-0">s/d</span>
+                <div className="relative w-full sm:flex-1 md:w-[180px]">
                   <CustomDatePicker value={endDate} onChange={(val) => { setEndDate(val); setFilterType('custom'); }} />
                 </div>
               </div>
