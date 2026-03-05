@@ -3598,6 +3598,22 @@ function LecturerLogbookView({ user, logbooks, students, showToast, onRefresh })
 
   const paginate = (pageNumber) => setCurrentPage(pageNumber);
 
+  // Calculate page buttons (Desktop: Max 5)
+  let endPageDesktop = Math.min(totalPages, Math.max(5, currentPage + 2));
+  let startPageDesktop = Math.max(1, endPageDesktop - 4);
+  if (endPageDesktop - startPageDesktop < 4) {
+    endPageDesktop = Math.min(totalPages, startPageDesktop + 4);
+  }
+  const desktopPages = Array.from({ length: endPageDesktop - startPageDesktop + 1 }, (_, i) => startPageDesktop + i);
+
+  // Calculate page buttons (Mobile: Max 3)
+  let endPageMobile = Math.min(totalPages, Math.max(3, currentPage + 1));
+  let startPageMobile = Math.max(1, endPageMobile - 2);
+  if (endPageMobile - startPageMobile < 2) {
+    endPageMobile = Math.min(totalPages, startPageMobile + 2);
+  }
+  const mobilePages = Array.from({ length: endPageMobile - startPageMobile + 1 }, (_, i) => startPageMobile + i);
+
   return (
     <div className="space-y-6 animate-in fade-in duration-500 pb-10">
       {previewImage && <ImageModal src={previewImage} onClose={() => setPreviewImage(null)} />}
@@ -3674,8 +3690,8 @@ function LecturerLogbookView({ user, logbooks, students, showToast, onRefresh })
       {/* MAP REMOVED AS REQUESTED */}
 
       {/* Desktop View: Table */}
-      <div className="hidden xl:block bg-white rounded-[2rem] shadow-xl shadow-slate-200/50 border border-slate-100 overflow-hidden">
-        <table className="w-full text-left text-sm">
+      <div className="hidden xl:block bg-white rounded-[2rem] shadow-xl shadow-slate-200/50 border border-slate-100 overflow-x-auto">
+        <table className="w-full text-left text-sm min-w-[1200px]">
           <thead className="bg-slate-50/50 border-b border-slate-100">
             <tr>
               <th className="p-5 font-bold text-slate-400 uppercase tracking-wider text-xs text-center">Foto Selfie</th>
@@ -3881,8 +3897,9 @@ function LecturerLogbookView({ user, logbooks, students, showToast, onRefresh })
             <ChevronLeft size={20} />
           </button>
 
+          {/* Desktop Pagination */}
           <div className="hidden sm:flex gap-2">
-            {Array.from({ length: totalPages }, (_, i) => i + 1).map(number => (
+            {desktopPages.map(number => (
               <button
                 key={number}
                 onClick={() => paginate(number)}
@@ -3892,7 +3909,19 @@ function LecturerLogbookView({ user, logbooks, students, showToast, onRefresh })
               </button>
             ))}
           </div>
-          <span className="sm:hidden font-bold text-slate-600 text-sm">Halaman {currentPage}</span>
+
+          {/* Mobile Pagination */}
+          <div className="flex sm:hidden gap-1">
+            {mobilePages.map(number => (
+              <button
+                key={number}
+                onClick={() => paginate(number)}
+                className={`w-10 h-10 rounded-xl font-bold text-sm transition-all shadow-sm ${currentPage === number ? 'bg-gradient-to-r from-cyan-500 to-blue-600 text-white transform scale-105' : 'bg-white border border-slate-200 text-slate-600 hover:bg-slate-50'}`}
+              >
+                {number}
+              </button>
+            ))}
+          </div>
 
           <button
             onClick={() => paginate(currentPage + 1)}
