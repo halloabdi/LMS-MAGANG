@@ -529,11 +529,32 @@ const Input = ({ label, type = "text", value, onChange, placeholder, labelClassN
 };
 
 // --- LEAFLET MAP COMPONENT (ROBUST IMPLEMENTATION) ---
-const LeafletMap = ({ lat, lng, setLat, setLng, setAddress, readOnly = false, markers = [] }) => {
+const LeafletMap = ({ lat, lng, setLat, setLng, setAddress, readOnly = false, markers = [], onMarkerAction }) => {
   const mapRef = useRef(null);
   const mapInstanceRef = useRef(null);
   const markerRef = useRef(null);
   const markersGroupRef = useRef([]);
+
+  // Bind event listener to map container for popup buttons
+  useEffect(() => {
+    const handlePopupClick = (e) => {
+      if (e.target && e.target.classList.contains('leaflet-popup-action-btn')) {
+        const id = e.target.getAttribute('data-id');
+        if (id && onMarkerAction) {
+          onMarkerAction(id);
+        }
+      }
+    };
+    const node = mapRef.current;
+    if (node) {
+      node.addEventListener('click', handlePopupClick);
+    }
+    return () => {
+      if (node) {
+        node.removeEventListener('click', handlePopupClick);
+      }
+    };
+  }, [onMarkerAction]);
 
   useEffect(() => {
     // Inject CSS if not present
@@ -689,8 +710,21 @@ const LeafletMap = ({ lat, lng, setLat, setLng, setAddress, readOnly = false, ma
           const mLng = parseFloat(m.lng);
 
           if (!isNaN(mLat) && !isNaN(mLng) && mLat !== 0 && mLng !== 0) {
+            const popupHtml = `
+              <div class="text-xs p-1 min-w-[150px]">
+                <div class="font-bold text-slate-800 mb-1 border-b border-slate-100 pb-1">${m.name || 'Lokasi'}</div>
+                <div class="space-y-1 mb-3">
+                  <div class="text-slate-500 font-mono">${m.nim || '-'}</div>
+                  <div class="text-slate-600">${m.class || '-'}</div>
+                  <div class="font-bold uppercase text-[10px] ${m.status === 'Hadir' ? 'text-green-600' : 'text-slate-500'}">${m.status || '-'}</div>
+                  <div class="text-[10px] text-slate-400 font-mono mt-1">${mLat.toFixed(6)}, ${mLng.toFixed(6)}</div>
+                </div>
+                ${m.id ? `<button class="leaflet-popup-action-btn w-full py-1.5 bg-cyan-50 hover:bg-cyan-100 text-cyan-700 font-bold rounded-lg transition-colors border border-cyan-100" data-id="${m.id}">Lihat Detail</button>` : ''}
+              </div>
+            `;
+
             const marker = L.marker([mLat, mLng])
-              .bindPopup(`<div class="text-sm"><b class="font-bold">${m.name || 'Lokasi'}</b><br/>Status: ${m.status || '-'}</div>`)
+              .bindPopup(popupHtml)
               .addTo(map);
             markersGroupRef.current.push(marker);
             bounds.extend([mLat, mLng]);
@@ -3293,7 +3327,7 @@ function LecturerDashboard({ user, onLogout, logbooks, setLogbooks, reports, onU
 
       <main className="flex-1 overflow-y-auto relative pt-24 pb-20 md:pt-0 md:pb-0">
         <div className="p-5 md:p-8 max-w-7xl mx-auto">
-          {activeTab === 'overview' && <LecturerOverview students={students} logbooks={logbooks} reports={reports} />}
+          {activeTab === 'overview' && <LecturerOverview students={students} logbooks={logbooks} reports={reports} onDetailClick={(nim) => { setActiveTab('logbooks'); window.dispatchEvent(new CustomEvent('setSearchTerm', { detail: nim })); }} />}
           {activeTab === 'logbooks' && <LecturerLogbookView user={user} logbooks={logbooks} students={students} showToast={showToast} onRefresh={fetchData} />}
           {activeTab === 'grading' && <LecturerGrading reports={reports} showToast={showToast} />}
           {activeTab === 'profile' && <ProfileSettings user={user} students={students} onUpdate={onUpdateProfile} onCancel={() => setActiveTab('overview')} showToast={showToast} />}
@@ -3303,14 +3337,28 @@ function LecturerDashboard({ user, onLogout, logbooks, setLogbooks, reports, onU
   );
 }
 
-function LecturerOverview({ students, logbooks, reports }) {
+function LecturerOverview({ students, logbooks, reports, onDetailClick }) {
   const submitted = reports.length; const total = students.length;
 
   const studentMarkers = students.map(s => {
-    const studentLogbooks = logbooks.filter(l => l.studentId === s.id);
-    const lastLog = studentLogbooks[studentLogbooks.length - 1];
+    // Matching with NIM instead of id, since logbooks use nim
+    const studentLogbooks = logbooks.filter(l => l.nim === s.username || l.studentId === s.id);
+    if (!studentLogbooks || studentLogbooks.length === 0) return null;
+
+    // Logbooks are already sorted newest first in fetchData, but just in case:
+    const sortedLogs = [...studentLogbooks].sort((a, b) => new Date(b.date + 'T' + b.time) - new Date(a.date + 'T' + a.time));
+    const lastLog = sortedLogs[0];
+
     if (lastLog && lastLog.lat && lastLog.lng) {
-      return { lat: lastLog.lat, lng: lastLog.lng, name: s.name, status: lastLog.status };
+      return {
+        id: s.username, // Using username(NIM) as ID for filtering later
+        lat: lastLog.lat,
+        lng: lastLog.lng,
+        name: s.name,
+        nim: s.username,
+        class: s.class || '-',
+        status: lastLog.status
+      };
     }
     return null;
   }).filter(m => m !== null);
@@ -3320,8 +3368,7 @@ function LecturerOverview({ students, logbooks, reports }) {
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         <Card className="md:col-span-2 relative overflow-visible" title="Peta Sebaran Mahasiswa">
           <div className="h-80 bg-slate-100 rounded-2xl overflow-hidden relative border border-slate-200">
-            <LeafletMap readOnly={true} markers={studentMarkers} />
-            <LeafletMap readOnly={true} markers={studentMarkers} />
+            <LeafletMap readOnly={true} markers={studentMarkers} onMarkerAction={onDetailClick} />
           </div>
         </Card>
         <Card title="Progress Laporan">
@@ -3513,6 +3560,16 @@ function LecturerLogbookView({ user, logbooks, students, showToast, onRefresh })
   const [showUnsubmitted, setShowUnsubmitted] = useState(false);
   const [loadingUnsubmitted, setLoadingUnsubmitted] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
+
+  // Listen for search term events from Map Popup
+  useEffect(() => {
+    const handleSetSearch = (e) => {
+      if (e.detail) setSearchTerm(e.detail);
+    };
+    window.addEventListener('setSearchTerm', handleSetSearch);
+    return () => window.removeEventListener('setSearchTerm', handleSetSearch);
+  }, []);
+
   const [sortOrder, setSortOrder] = useState('newest');
   const [dateFilter, setDateFilter] = useState('today'); // Default: Hari Ini (Updated per request)
 
