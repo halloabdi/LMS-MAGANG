@@ -712,12 +712,12 @@ const LeafletMap = ({ lat, lng, setLat, setLng, setAddress, readOnly = false, ma
           if (!isNaN(mLat) && !isNaN(mLng) && mLat !== 0 && mLng !== 0) {
             const popupHtml = `
               <div class="text-xs p-1 min-w-[150px]">
-                <div class="font-bold text-slate-800 mb-1 border-b border-slate-100 pb-1">${m.name || 'Lokasi'}</div>
+                <div class="font-bold text-slate-800 mb-1 border-b border-slate-100 pb-1">${m.name || 'Nama Tidak Diketahui'}</div>
                 <div class="space-y-1 mb-3">
-                  <div class="text-slate-500 font-mono">${m.nim || '-'}</div>
-                  <div class="text-slate-600">${m.class || '-'}</div>
+                  <div class="text-slate-600 font-medium">${m.nim || '-'} | ${m.class || '-'}</div>
                   <div class="font-bold uppercase text-[10px] ${m.status === 'Hadir' ? 'text-green-600' : 'text-slate-500'}">${m.status || '-'}</div>
-                  <div class="text-[10px] text-slate-400 font-mono mt-1">${mLat.toFixed(6)}, ${mLng.toFixed(6)}</div>
+                  <div class="text-[10px] text-slate-500 font-mono">${mLat.toFixed(6)}, ${mLng.toFixed(6)}</div>
+                  <div class="text-[10px] text-slate-400 font-mono">${m.date || '-'} ${m.time || ''}</div>
                 </div>
                 ${m.id ? `<button class="leaflet-popup-action-btn w-full py-1.5 bg-cyan-50 hover:bg-cyan-100 text-cyan-700 font-bold rounded-lg transition-colors border border-cyan-100" data-id="${m.id}">Lihat Detail</button>` : ''}
               </div>
@@ -3357,7 +3357,9 @@ function LecturerOverview({ students, logbooks, reports, onDetailClick }) {
         name: s.name,
         nim: s.username,
         class: s.class || '-',
-        status: lastLog.status
+        status: lastLog.status,
+        date: lastLog.date || '-',
+        time: lastLog.time || '-'
       };
     }
     return null;
