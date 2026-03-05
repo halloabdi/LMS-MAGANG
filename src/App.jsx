@@ -3912,11 +3912,11 @@ function LecturerLogbookView({ user, logbooks, students, showToast, onRefresh })
       {detailModal.show && <TextModal title={detailModal.title} content={detailModal.content} onClose={() => setDetailModal({ show: false, title: '', content: '' })} />}
       {showUnsubmitted && <UnsubmittedModal user={user} showToast={showToast} onClose={() => setShowUnsubmitted(false)} />}
 
-      <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-4 bg-white p-6 rounded-[2rem] shadow-sm border border-slate-100">
-        <div>
-          <h2 className="text-3xl font-black text-slate-800 tracking-tight mb-2 flex items-center gap-3">
+      <div className="flex flex-col xl:flex-row justify-between items-start xl:items-end gap-6 bg-white p-6 rounded-[2rem] shadow-sm border border-slate-100">
+        <div className="w-full xl:w-auto">
+          <h2 className="text-3xl font-black text-slate-800 tracking-tight mb-3 flex items-center gap-3">
             Logbook Mahasiswa
-            <button onClick={handleRefresh} disabled={isRefreshing} className="p-2 bg-slate-100 hover:bg-slate-200 text-slate-600 rounded-full transition-colors" title="Refresh Data">
+            <button onClick={handleRefresh} disabled={isRefreshing} className="p-2 bg-slate-100 hover:bg-slate-200 text-slate-600 rounded-full transition-colors shrink-0" title="Refresh Data">
               <RefreshCw size={20} className={isRefreshing ? "animate-spin text-cyan-500" : ""} />
             </button>
           </h2>
@@ -3932,39 +3932,41 @@ function LecturerLogbookView({ user, logbooks, students, showToast, onRefresh })
           </div>
         </div>
 
-        <div className="flex flex-col sm:flex-row gap-3 w-full md:w-auto">
-          <div className="relative group">
+        <div className="flex flex-col sm:flex-row sm:flex-wrap gap-3 w-full xl:w-auto">
+          <div className="relative group sm:flex-1 xl:w-64">
             <input
               type="text"
               placeholder="Cari Mahasiswa..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="pl-11 pr-4 py-3 rounded-2xl border border-slate-200 bg-slate-50 focus:bg-white focus:ring-4 focus:ring-cyan-100 focus:border-cyan-400 outline-none w-full sm:w-64 transition-all font-medium text-slate-700"
+              className="pl-11 pr-4 py-3 rounded-2xl border border-slate-200 bg-slate-50 focus:bg-white focus:ring-4 focus:ring-cyan-100 focus:border-cyan-400 outline-none w-full transition-all font-medium text-slate-700"
             />
             <div className="absolute left-4 top-3.5 text-slate-400 group-focus-within:text-cyan-500 transition-colors"><Search size={20} /></div>
           </div>
 
           {/* Custom Date Picker - Modern UI mapped to selected date */}
-          <div className="relative z-50 flex-1 sm:flex-none">
+          <div className="relative z-30 sm:flex-1 xl:w-auto">
             <CustomDatePicker value={dateFilter} onChange={setDateFilter} />
           </div>
 
           {/* Custom Dropdown - Sort */}
-          <CustomDropdown
-            value={sortOrder}
-            onChange={setSortOrder}
-            icon={ListOrdered}
-            options={[
-              { value: 'newest', label: 'Terbaru Dikirim' },
-              { value: 'oldest', label: 'Terlama Dikirim' },
-              { value: 'date_newest', label: 'Tanggal Terbaru' },
-              { value: 'date_oldest', label: 'Tanggal Terlama' }
-            ]}
-          />
+          <div className="relative z-20 sm:flex-1 xl:w-auto">
+            <CustomDropdown
+              value={sortOrder}
+              onChange={setSortOrder}
+              icon={ListOrdered}
+              options={[
+                { value: 'newest', label: 'Terbaru Dikirim' },
+                { value: 'oldest', label: 'Terlama Dikirim' },
+                { value: 'date_newest', label: 'Tanggal Terbaru' },
+                { value: 'date_oldest', label: 'Tanggal Terlama' }
+              ]}
+            />
+          </div>
         </div>
 
         {/* Mobile DAFTAR MAHASISWA */}
-        <div className="md:hidden space-y-4">
+        <div className="md:hidden space-y-4 w-full">
           <button onClick={handleOpenUnsubmitted} className="w-full py-3 mb-2 bg-red-50 hover:bg-red-100 text-red-600 rounded-2xl border border-red-100 text-sm font-bold transition-colors flex items-center justify-center gap-2">
             Lihat Mahasiswa Belum Logbook
           </button>
@@ -4218,6 +4220,24 @@ function LecturerLogbookView({ user, logbooks, students, showToast, onRefresh })
             <ChevronRight size={20} />
           </button>
         </div>
+      )}
+
+      {/* Mobile FAB for Export */}
+      <button
+        onClick={() => setShowExportModal(true)}
+        className="md:hidden fixed bottom-24 right-4 p-4 bg-emerald-500 text-white rounded-full shadow-lg shadow-emerald-500/40 z-40 hover:scale-105 active:scale-95 transition-all flex items-center justify-center animate-in slide-in-from-bottom"
+        title="Ekspor Logbook"
+      >
+        <FileSpreadsheet size={24} />
+      </button>
+
+      {/* Export Logbook Modal */}
+      {showExportModal && (
+        <ExportLogbookModal
+          logbooks={logbooks}
+          onClose={() => setShowExportModal(false)}
+          showToast={showToast}
+        />
       )}
     </div>
   );
