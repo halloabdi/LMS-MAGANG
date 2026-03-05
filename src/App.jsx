@@ -447,7 +447,7 @@ const AlertModal = ({ title, content, onClose }) => {
 
 // --- CONFIGURATION ---
 // 19 Feb 11:45 - Version 48: Fallback Columns Fix
-const GAS_URL = "https://script.google.com/macros/s/AKfycbwOIBQCS-Oe1rD26IEKQ6r3v9BmCURajzuJx9UiQBzETQkilz4YibqqY_AGrSjk67lz/exec";
+const GAS_URL = "https://script.google.com/macros/s/AKfycbzRu3gPyNCxQnHlqOafQusB6t-r-epfdrBPuFLCsCqnw9YWOFB0tRkRP9Ly-C78ED9x/exec";
 
 // --- INITIAL DATA ---
 const INITIAL_LOGBOOKS = [];
@@ -3456,9 +3456,22 @@ function LecturerOverview({ students, logbooks, reports, onDetailClick }) {
 }
 
 // --- UNSUBMITTED MODAL ---
-const UnsubmittedModal = ({ students, onClose }) => {
+const UnsubmittedModal = ({ user, showToast, onClose }) => {
   const [isExportOpen, setIsExportOpen] = useState(false);
   const exportRef = useRef(null);
+
+  const [students, setStudents] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const [filterType, setFilterType] = useState('hari_ini');
+
+  const getTodayDate = () => {
+    const today = new Date();
+    const tzOffset = today.getTimezoneOffset() * 60000;
+    return new Date(today.getTime() - tzOffset).toISOString().split('T')[0];
+  };
+
+  const [startDate, setStartDate] = useState(getTodayDate());
+  const [endDate, setEndDate] = useState(getTodayDate());
 
   useEffect(() => {
     const handleClickOutside = (event) => {
@@ -3470,8 +3483,71 @@ const UnsubmittedModal = ({ students, onClose }) => {
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
+  const handleFilterChange = (type) => {
+    setFilterType(type);
+    const todayStr = getTodayDate();
+    let newStart = todayStr;
+    let newEnd = todayStr;
+
+    if (type === 'hari_ini') {
+      newStart = todayStr;
+      newEnd = todayStr;
+    } else if (type === 'triwulan') {
+      const today = new Date();
+      const startD = new Date(today.getTime() - (today.getTimezoneOffset() * 60000));
+      startD.setMonth(startD.getMonth() - 2);
+      startD.setDate(1);
+      newStart = startD.toISOString().split('T')[0];
+      newEnd = todayStr;
+    } else if (type === 'tahun_ini') {
+      const today = new Date();
+      const startD = new Date(today.getTime() - (today.getTimezoneOffset() * 60000));
+      startD.setMonth(0, 1);
+      newStart = startD.toISOString().split('T')[0];
+      newEnd = todayStr;
+    } else if (type === 'custom') {
+      newStart = startDate;
+      newEnd = endDate;
+    }
+
+    setStartDate(newStart);
+    setEndDate(newEnd);
+  };
+
+  const fetchUnsubmitted = async () => {
+    setLoading(true);
+    try {
+      const url = `${GAS_URL}?action=getUnsubmitted&startDate=${startDate}&endDate=${endDate}&userId=${user.username}&role=${user.role}`;
+      const res = await fetch(url);
+      const json = await res.json();
+      if (json.status === 'success') {
+        setStudents(json.data);
+      } else {
+        showToast('error', 'Gagal', json.message);
+      }
+    } catch (e) {
+      showToast('error', 'Error', 'Gagal mengambil data mahasiswa belum logbook.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Fetch when start or end date changes
+  useEffect(() => {
+    fetchUnsubmitted();
+  }, [startDate, endDate]);
+
+  const formatTanggalIndo = (dateStr) => {
+    return new Date(dateStr).toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' });
+  };
+
+  const getRangeText = () => {
+    if (startDate === endDate) return formatTanggalIndo(startDate);
+    return `${formatTanggalIndo(startDate)} hingga ${formatTanggalIndo(endDate)}`;
+  };
+
   const handleExportExcel = () => {
-    // Excel Export with 2pt black border as requested
+    // Excel Export with requested columns
     const tableHTML = `
       <table style="border-collapse: collapse; width: 100%;">
         <thead>
@@ -3479,6 +3555,7 @@ const UnsubmittedModal = ({ students, onClose }) => {
             <th style="border: 2pt solid black; padding: 5px; font-weight: bold;">No</th>
             <th style="border: 2pt solid black; padding: 5px; font-weight: bold;">Nama Mahasiswa</th>
             <th style="border: 2pt solid black; padding: 5px; font-weight: bold;">NIM</th>
+            <th style="border: 2pt solid black; padding: 5px; font-weight: bold;">Tanggal Belum Logbook</th>
             <th style="border: 2pt solid black; padding: 5px; font-weight: bold;">Kelas</th>
           </tr>
         </thead>
@@ -3486,8 +3563,9 @@ const UnsubmittedModal = ({ students, onClose }) => {
           ${students.map((s, i) => `
             <tr>
               <td style="border: 2pt solid black; padding: 5px;">${i + 1}</td>
-              <td style="border: 2pt solid black; padding: 5px;">${s.name}</td>
+              <td style="border: 2pt solid black; padding: 5px;">'${s.name}</td>
               <td style="border: 2pt solid black; padding: 5px;">'${s.nim}</td>
+              <td style="border: 2pt solid black; padding: 5px;">${(s.missingDates || []).map(d => formatTanggalIndo(d)).join(', ')}</td>
               <td style="border: 2pt solid black; padding: 5px;">${s.class}</td>
             </tr>
           `).join('')}
@@ -3499,17 +3577,17 @@ const UnsubmittedModal = ({ students, onClose }) => {
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
-    a.download = `Mahasiswa_Belum_Logbook_${new Date().toISOString().split('T')[0]}.xls`;
+    a.download = `Belum_Logbook_${startDate}_to_${endDate}.xls`;
     a.click();
     setIsExportOpen(false);
   };
 
   const handleExportWA = () => {
     // WA Export with requested format
-    const today = new Date().toLocaleDateString('id-ID', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
-    let message = `Berikut adalah Mahasiswa yang belum mengumpulkan Logbook ${today}:\n`;
+    let message = `Berikut adalah Mahasiswa yang belum mengumpulkan Logbook ${filterType === 'hari_ini' ? formatTanggalIndo(startDate) : getRangeText()}:\n`;
     students.forEach((s, i) => {
-      message += `${i + 1}. ${s.name} (${s.nim}), ${s.class}\n`;
+      const datesStr = (s.missingDates || []).map(d => formatTanggalIndo(d)).join(', ');
+      message += `${i + 1}. ${s.name} (${s.nim}), ${s.class} pada Tanggal: ${datesStr}\n`;
     });
 
     const encodedMessage = encodeURIComponent(message);
@@ -3519,33 +3597,87 @@ const UnsubmittedModal = ({ students, onClose }) => {
 
   return (
     <div className="fixed inset-0 z-[1000] bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4 animate-in fade-in duration-200" onClick={onClose}>
-      <div className="bg-white w-full max-w-2xl rounded-2xl shadow-2xl overflow-hidden flex flex-col max-h-[80vh] animate-in zoom-in-95" onClick={e => e.stopPropagation()}>
-        <div className="p-4 border-b border-slate-100 flex justify-between items-center bg-slate-50/50">
-          <div>
-            <h3 className="font-bold text-lg text-slate-800">Mahasiswa Belum Logbook (Hari Ini)</h3>
-            <p className="text-sm text-slate-500">Total: {students.length} Mahasiswa</p>
+      <div className="bg-white w-full max-w-4xl rounded-2xl shadow-2xl overflow-hidden flex flex-col max-h-[90vh] animate-in zoom-in-95" onClick={e => e.stopPropagation()}>
+        <div className="p-5 border-b border-slate-100 flex justify-between items-start bg-slate-50/50">
+          <div className="w-full">
+            <div className="flex justify-between items-center mb-4">
+              <div>
+                <h3 className="font-black text-2xl text-slate-800 tracking-tight">Mahasiswa Belum Logbook</h3>
+                <p className="text-sm font-medium text-slate-500 mt-1">Sistem mencari jadwal kosong mahasiswa</p>
+              </div>
+              <button onClick={onClose} className="p-2 hover:bg-slate-200 text-slate-500 rounded-full transition-colors"><X size={24} /></button>
+            </div>
+
+            {/* Modern Filters */}
+            <div className="flex flex-col md:flex-row gap-4 items-start md:items-center justify-between bg-white p-3 rounded-xl border border-slate-200 shadow-sm w-full">
+              <div className="flex flex-wrap gap-2">
+                <button onClick={() => handleFilterChange('hari_ini')} className={`px-4 py-2 rounded-lg text-sm font-bold transition-all ${filterType === 'hari_ini' ? 'bg-cyan-500 text-white shadow-md' : 'bg-slate-50 text-slate-600 hover:bg-slate-100'}`}>Hari Ini</button>
+                <button onClick={() => handleFilterChange('triwulan')} className={`px-4 py-2 rounded-lg text-sm font-bold transition-all ${filterType === 'triwulan' ? 'bg-cyan-500 text-white shadow-md' : 'bg-slate-50 text-slate-600 hover:bg-slate-100'}`}>Triwulan Semester</button>
+                <button onClick={() => handleFilterChange('tahun_ini')} className={`px-4 py-2 rounded-lg text-sm font-bold transition-all ${filterType === 'tahun_ini' ? 'bg-cyan-500 text-white shadow-md' : 'bg-slate-50 text-slate-600 hover:bg-slate-100'}`}>Tahun Ini</button>
+                <button onClick={() => handleFilterChange('custom')} className={`px-4 py-2 rounded-lg text-sm font-bold transition-all ${filterType === 'custom' ? 'bg-cyan-500 text-white shadow-md' : 'bg-slate-50 text-slate-600 hover:bg-slate-100'}`}>Pilih Manual</button>
+              </div>
+
+              <div className="flex items-center gap-2">
+                <div className="relative">
+                  <CustomDatePicker value={startDate} onChange={(val) => { setStartDate(val); setFilterType('custom'); }} />
+                </div>
+                <span className="text-slate-400 font-medium">s/d</span>
+                <div className="relative">
+                  <CustomDatePicker value={endDate} onChange={(val) => { setEndDate(val); setFilterType('custom'); }} />
+                </div>
+              </div>
+            </div>
           </div>
-          <button onClick={onClose} className="p-2 hover:bg-slate-200 rounded-full transition-colors"><X size={20} /></button>
         </div>
-        <div className="flex-1 overflow-y-auto p-0">
+
+        <div className="p-3 bg-blue-50/50 border-b border-blue-100 flex justify-between items-center px-5">
+          <span className="text-sm font-bold text-blue-700 font-mono flex items-center gap-2">
+            <Calendar size={16} /> Rentang: {getRangeText()}
+          </span>
+          <span className="px-3 py-1 bg-white rounded-full text-xs font-black text-slate-700 shadow-sm border border-slate-200">
+            Total {students.length} Mahasiswa
+          </span>
+        </div>
+
+        <div className="flex-1 overflow-y-auto p-0 relative">
+          {loading && (
+            <div className="absolute inset-0 bg-white/80 backdrop-blur-sm z-10 flex items-center justify-center">
+              <div className="text-center">
+                <RefreshCw size={32} className="animate-spin text-cyan-500 mx-auto mb-3" />
+                <p className="font-bold text-slate-600">Menganalisis Data...</p>
+              </div>
+            </div>
+          )}
           <table className="w-full text-sm text-left">
-            <thead className="bg-slate-50 text-slate-500 font-bold sticky top-0">
+            <thead className="bg-slate-50 text-slate-500 font-bold sticky top-0 z-0">
               <tr>
                 <th className="p-4 border-b text-xs uppercase tracking-wider">Nama Mahasiswa</th>
-                <th className="p-4 border-b text-xs uppercase tracking-wider">NIM</th>
                 <th className="p-4 border-b text-xs uppercase tracking-wider">Kelas</th>
+                <th className="p-4 border-b text-xs uppercase tracking-wider">Tanggal Tidak Mengisi</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-slate-100">
+            <tbody className="divide-y divide-slate-100 relative z-0">
               {students.map((s, i) => (
-                <tr key={i} className="hover:bg-slate-50">
-                  <td className="p-4 font-bold text-slate-700">{s.name}</td>
-                  <td className="p-4 font-mono text-slate-500">{s.nim}</td>
-                  <td className="p-4 text-slate-600">{s.class}</td>
+                <tr key={i} className="hover:bg-slate-50 transition-colors">
+                  <td className="p-4">
+                    <div className="font-bold text-slate-800">{s.name}</div>
+                    <div className="font-mono text-xs text-slate-400 mt-1">{s.nim}</div>
+                  </td>
+                  <td className="p-4 text-slate-600 font-medium">{s.class}</td>
+                  <td className="p-4">
+                    <div className="flex flex-wrap gap-1 mt-1">
+                      {(s.missingDates || []).slice(0, 10).map((d, idx) => (
+                        <span key={idx} className="px-2 py-0.5 bg-red-50 text-red-600 rounded text-[11px] font-bold border border-red-100">{formatTanggalIndo(d)}</span>
+                      ))}
+                      {(s.missingDates || []).length > 10 && (
+                        <span className="px-2 py-0.5 bg-slate-100 text-slate-600 rounded text-[11px] font-bold border border-slate-200">+{s.missingDates.length - 10} hari</span>
+                      )}
+                    </div>
+                  </td>
                 </tr>
               ))}
-              {students.length === 0 && (
-                <tr><td colSpan="3" className="p-8 text-center text-slate-400">Semua mahasiswa sudah mengisi logbook.</td></tr>
+              {!loading && students.length === 0 && (
+                <tr><td colSpan="3" className="p-12 text-center text-slate-400 text-lg">Semua mahasiswa sudah mengisi logbook pada rentang waktu ini 🎉.</td></tr>
               )}
             </tbody>
           </table>
@@ -3555,25 +3687,24 @@ const UnsubmittedModal = ({ students, onClose }) => {
             <div className="relative" ref={exportRef}>
               <button
                 onClick={() => setIsExportOpen(!isExportOpen)}
-                className="px-4 py-2 bg-emerald-50 text-emerald-600 hover:bg-emerald-100 rounded-xl font-bold transition-colors flex items-center gap-2 border border-emerald-100"
+                className="px-6 py-2.5 bg-emerald-50 text-emerald-600 hover:bg-emerald-100 hover:border-emerald-200 rounded-xl font-bold transition-all flex items-center gap-2 border border-emerald-100 shadow-sm"
               >
-                <Download size={18} /> Ekspor
-                <ChevronDown size={16} className={`transition-transform ${isExportOpen ? 'rotate-180' : ''}`} />
+                <Download size={18} /> Ekspor Data
+                <ChevronDown size={16} className={`transition-transform duration-300 ${isExportOpen ? 'rotate-180' : ''}`} />
               </button>
 
               {isExportOpen && (
-                <div className="absolute bottom-full right-0 mb-2 w-56 bg-white rounded-xl shadow-xl border border-slate-100 overflow-hidden animate-in fade-in zoom-in-95 origin-bottom-right z-50">
-                  <button onClick={handleExportExcel} className="w-full text-left px-4 py-3 hover:bg-emerald-50 text-slate-700 hover:text-emerald-700 flex items-center gap-2 transition-colors border-b border-slate-50">
-                    <FileSpreadsheet size={18} /> Ekspor ke Excel
+                <div className="absolute bottom-full right-0 mb-3 w-64 bg-white rounded-xl shadow-2xl border border-slate-100 overflow-hidden animate-in fade-in zoom-in-95 origin-bottom-right z-50">
+                  <button onClick={handleExportExcel} className="w-full text-left px-5 py-4 hover:bg-emerald-50 text-slate-700 hover:text-emerald-700 flex items-center gap-3 transition-colors border-b border-slate-50 font-medium">
+                    <FileSpreadsheet size={20} className="text-emerald-500" /> Ekspor ke Excel
                   </button>
-                  <button onClick={handleExportWA} className="w-full text-left px-4 py-3 hover:bg-emerald-50 text-slate-700 hover:text-emerald-700 flex items-center gap-2 transition-colors">
-                    <MessageCircle size={18} /> Ekspor via WhatsApp
+                  <button onClick={handleExportWA} className="w-full text-left px-5 py-4 hover:bg-emerald-50 text-slate-700 hover:text-emerald-700 flex items-center gap-3 transition-colors font-medium">
+                    <MessageCircle size={20} className="text-emerald-500" /> WhatsApp Template
                   </button>
                 </div>
               )}
             </div>
           )}
-          <Button onClick={onClose}>Tutup</Button>
         </div>
       </div>
     </div>
@@ -3663,30 +3794,11 @@ function LecturerLogbookView({ user, logbooks, students, showToast, onRefresh })
   };
   const [dateFilter, setDateFilter] = useState(getTodayDate());
 
-  // Pagination State
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 25;
 
-  const handleCheckUnsubmitted = async () => {
-    setLoadingUnsubmitted(true);
-    showToast('info', 'Memuat Data...', 'Sedang mengecek data mahasiswa...');
-    try {
-      const todayStr = new Date().toLocaleDateString('en-CA');
-      const url = `${GAS_URL}?action=getUnsubmitted&date=${todayStr}&userId=${user.username}&role=${user.role}`;
-      const res = await fetch(url);
-      const json = await res.json();
-      if (json.status === 'success') {
-        setUnsubmittedList(json.data);
-        setShowUnsubmitted(true);
-        showToast('success', 'Selesai', `Ditemukan ${json.data.length} mahasiswa belum absen.`);
-      } else {
-        showToast('error', 'Gagal', json.message);
-      }
-    } catch (e) {
-      showToast('error', 'Error', 'Gagal mengambil data.');
-    } finally {
-      setLoadingUnsubmitted(false);
-    }
+  const handleOpenUnsubmitted = () => {
+    setShowUnsubmitted(true);
   };
 
   // Filter & Sort Logic
@@ -3763,7 +3875,7 @@ function LecturerLogbookView({ user, logbooks, students, showToast, onRefresh })
     <div className="space-y-6 animate-in fade-in duration-500 pb-10">
       {previewImage && <ImageModal src={previewImage} onClose={() => setPreviewImage(null)} />}
       {detailModal.show && <TextModal title={detailModal.title} content={detailModal.content} onClose={() => setDetailModal({ show: false, title: '', content: '' })} />}
-      {showUnsubmitted && <UnsubmittedModal students={unsubmittedList} onClose={() => setShowUnsubmitted(false)} />}
+      {showUnsubmitted && <UnsubmittedModal user={user} showToast={showToast} onClose={() => setShowUnsubmitted(false)} />}
 
       <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-4 bg-white p-6 rounded-[2rem] shadow-sm border border-slate-100">
         <div>
@@ -3775,8 +3887,8 @@ function LecturerLogbookView({ user, logbooks, students, showToast, onRefresh })
           </h2>
           <div className="flex flex-wrap items-center gap-2">
             <span className="px-4 py-1.5 bg-cyan-50 rounded-full border border-cyan-100 text-sm font-bold text-cyan-700">{filteredLogbooks.length} Entri</span>
-            <button onClick={handleCheckUnsubmitted} disabled={loadingUnsubmitted} className="hidden md:flex px-4 py-1.5 bg-red-50 hover:bg-red-100 text-red-600 rounded-full border border-red-100 text-sm font-bold transition-colors items-center gap-1">
-              {loadingUnsubmitted ? 'Memuat...' : 'Lihat Mahasiswa Belum Logbook'}
+            <button onClick={handleOpenUnsubmitted} className="hidden md:flex px-4 py-1.5 bg-red-50 hover:bg-red-100 text-red-600 rounded-full border border-red-100 text-sm font-bold transition-colors items-center gap-1">
+              Lihat Mahasiswa Belum Logbook
             </button>
             <span className="text-slate-400 text-sm ml-2">Halaman {currentPage} dari {totalPages || 1}</span>
           </div>
