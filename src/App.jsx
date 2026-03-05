@@ -3647,15 +3647,15 @@ const UnsubmittedModal = ({ user, showToast, onClose }) => {
 
         <div className="flex-1 overflow-y-auto p-0 relative min-h-[200px]">
           {loading && (
-            <div className="absolute inset-0 bg-white/60 backdrop-blur-[2px] z-30 flex items-center justify-center">
-              <div className="text-center p-6 bg-white rounded-2xl shadow-xl border border-slate-100 mb-10">
-                <RefreshCw size={36} className="animate-spin text-cyan-500 mx-auto mb-4" />
-                <p className="font-bold text-slate-700 text-lg">Menganalisis Data...</p>
-                <p className="text-slate-500 text-sm mt-1">Sistem mencari jadwal kosong mahasiswa</p>
+            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-30 flex items-center justify-center">
+              <div className="text-center p-6 bg-white/90 backdrop-blur-md rounded-2xl shadow-2xl border border-slate-200">
+                <RefreshCw size={40} className="animate-spin text-cyan-500 mx-auto mb-4 drop-shadow-md" />
+                <p className="font-black text-slate-800 text-lg">Menganalisis Data...</p>
+                <p className="text-slate-500 text-sm mt-1 font-medium">Sistem mencari jadwal kosong mahasiswa</p>
               </div>
             </div>
           )}
-          <table className="w-full text-sm text-left">
+          <table className="w-full text-sm text-left ${loading ? 'opacity-30 pointer-events-none' : ''} transition-opacity duration-300">
             <thead className="bg-slate-50 text-slate-500 font-bold sticky top-0 z-20">
               <tr>
                 <th className="p-4 border-b text-xs uppercase tracking-wider">Nama Lengkap</th>
@@ -3726,7 +3726,7 @@ const UnsubmittedModal = ({ user, showToast, onClose }) => {
                     <FileSpreadsheet size={20} className="text-emerald-500" /> Ekspor ke Excel
                   </button>
                   <button onClick={handleExportWA} className="w-full text-left px-5 py-4 hover:bg-emerald-50 text-slate-700 hover:text-emerald-700 flex items-center gap-3 transition-colors font-medium">
-                    <MessageCircle size={20} className="text-emerald-500" /> WhatsApp Template
+                    <MessageCircle size={20} className="text-emerald-500" /> Ingatkan via WA
                   </button>
                 </div>
               )}
