@@ -3925,10 +3925,10 @@ function LecturerLogbookView({ user, logbooks, students, showToast, onRefresh })
           />
         </div>
 
-        {/* Mobile "Belum Logbook" Button */}
-        <div className="md:hidden w-full flex flex-col gap-2">
-          <button onClick={handleCheckUnsubmitted} disabled={loadingUnsubmitted} className="w-full py-3 bg-white border border-red-100 text-red-600 rounded-2xl font-bold shadow-sm hover:bg-red-50 transition-colors">
-            {loadingUnsubmitted ? 'Memuat...' : 'Lihat Mahasiswa Belum Logbook'}
+        {/* Mobile DAFTAR MAHASISWA */}
+        <div className="md:hidden space-y-4">
+          <button onClick={handleOpenUnsubmitted} className="w-full py-3 mb-2 bg-red-50 hover:bg-red-100 text-red-600 rounded-2xl border border-red-100 text-sm font-bold transition-colors flex items-center justify-center gap-2">
+            Lihat Mahasiswa Belum Logbook
           </button>
           <button onClick={handleRefresh} disabled={isRefreshing} className="w-full py-3 bg-white border border-slate-200 text-slate-600 rounded-2xl font-bold shadow-sm hover:bg-slate-50 transition-colors flex items-center justify-center gap-2">
             <RefreshCw size={18} className={isRefreshing ? "animate-spin text-cyan-500" : ""} /> Refresh Data
