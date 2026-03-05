@@ -327,9 +327,12 @@ const CustomDatePicker = ({ value, onChange, forceOpen, onForceOpenConsume }) =>
       </button>
 
       {show && (
-        <div className="absolute right-0 mt-2 max-w-[90vw] bg-white rounded-2xl shadow-[0_10px_40px_rgba(0,0,0,0.12)] border border-slate-100 z-[100] overflow-hidden animate-in fade-in slide-in-from-top-2 duration-200 origin-top-right">
-          {renderCalendar()}
-        </div>
+        <>
+          <div className="fixed inset-0 z-[100] bg-slate-900/20 backdrop-blur-sm sm:hidden" onClick={() => setShow(false)} />
+          <div className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 sm:absolute sm:top-auto sm:left-auto sm:right-0 sm:translate-x-0 sm:translate-y-0 sm:mt-2 max-w-[95vw] sm:max-w-[90vw] bg-white rounded-2xl shadow-2xl sm:shadow-[0_10px_40px_rgba(0,0,0,0.12)] border border-slate-100 z-[110] overflow-hidden animate-in fade-in zoom-in-95 sm:slide-in-from-top-2 duration-200 origin-center sm:origin-top-right">
+            {renderCalendar()}
+          </div>
+        </>
       )}
     </div>
   );
