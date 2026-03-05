@@ -1796,22 +1796,28 @@ function StudentDashboard({ user, onLogout, logbooks, setLogbooks, reports, setR
       {/* Header Mobile */}
       <div className="md:hidden absolute top-0 left-0 right-0 h-20 bg-gradient-to-r from-cyan-500 to-blue-600 backdrop-blur-md flex items-center justify-between px-6 z-50 shadow-md">
         <div className="text-white"><h2 className="text-xl font-bold">Mahasiswa Panel</h2><p className="text-xs text-blue-100 truncate max-w-[200px]">{user.name}</p></div>
-        <button onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)} className="p-2 bg-white/20 rounded-lg text-white hover:bg-white/30 transition">{isMobileMenuOpen ? <X /> : <Menu />}</button>
+        <button onClick={() => setActiveTab('profile')} className={`p-2 rounded-full text-white transition-colors shadow-sm ${activeTab === 'profile' ? 'bg-white/40' : 'bg-white/20 hover:bg-white/30'}`}><User size={22} /></button>
       </div>
 
-      {isMobileMenuOpen && (
-        <div className="md:hidden absolute top-20 left-0 right-0 bg-white shadow-xl z-40 rounded-b-3xl border-b border-slate-100 p-4">
-          <nav className="flex flex-col gap-1">
-            <NavItem id="overview" label="Overview" icon={LayoutDashboard} />
-            <NavItem id="logbook" label="Isi Logbook" icon={MapPin} />
-            <NavItem id="report" label="Kerjakan Laporan" icon={FileText} />
-            <NavItem id="profile" label="Profil Saya" icon={User} />
-            <div className="pt-4 mt-2 border-t border-slate-100"><Button variant="danger" onClick={onLogout} className="w-full justify-center">Keluar</Button></div>
-          </nav>
+      {/* Bottom Navigation Mobile */}
+      <div className="md:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-slate-200 shadow-[0_-4px_20px_rgba(0,0,0,0.05)] z-50 px-2 pb-safe pt-2">
+        <div className="flex justify-around items-center">
+          <button onClick={() => setActiveTab('overview')} className={`flex flex-col items-center p-2 min-w-[4rem] flex-1 transition-colors ${activeTab === 'overview' ? 'text-cyan-600' : 'text-slate-400 hover:text-cyan-600'}`}>
+            <LayoutDashboard size={24} className="mb-1" />
+            <span className="text-[10px] font-bold text-center leading-tight">Overview</span>
+          </button>
+          <button onClick={() => setActiveTab('logbook')} className={`flex flex-col items-center p-2 min-w-[4rem] flex-1 transition-colors ${activeTab === 'logbook' ? 'text-cyan-600' : 'text-slate-400 hover:text-cyan-600'}`}>
+            <MapPin size={24} className="mb-1" />
+            <span className="text-[10px] font-bold text-center leading-tight">Isi<br />Logbook</span>
+          </button>
+          <button onClick={() => setActiveTab('report')} className={`flex flex-col items-center p-2 min-w-[4rem] flex-1 transition-colors ${activeTab === 'report' ? 'text-cyan-600' : 'text-slate-400 hover:text-cyan-600'}`}>
+            <FileText size={24} className="mb-1" />
+            <span className="text-[10px] font-bold text-center leading-tight">Kerjakan<br />Laporan</span>
+          </button>
         </div>
-      )}
+      </div>
 
-      <main className="flex-1 overflow-y-auto relative pt-24 md:pt-0">
+      <main className="flex-1 overflow-y-auto relative pt-24 pb-20 md:pt-0 md:pb-0">
         <div className="p-5 md:p-8 max-w-7xl mx-auto">
           {activeTab === 'overview' && <StudentOverview user={user} logbooks={logbooks} reports={reports} onEditLogbook={handleEditLogbook} onRefresh={onRefresh} />}
           {activeTab === 'logbook' && <StudentLogbookForm user={user} logbooks={logbooks} setLogbooks={setLogbooks} showToast={showToast} />}
@@ -3264,22 +3270,28 @@ function LecturerDashboard({ user, onLogout, logbooks, setLogbooks, reports, onU
       {/* Header Mobile */}
       <div className="md:hidden absolute top-0 left-0 right-0 h-20 bg-gradient-to-r from-cyan-500 to-blue-600 backdrop-blur-md flex items-center justify-between px-6 z-50 shadow-md">
         <div className="text-white"><h2 className="text-xl font-bold">Panel Dosen</h2><p className="text-xs text-blue-100 truncate max-w-[200px]">{user.name}</p></div>
-        <button onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)} className="p-2 bg-white/20 rounded-lg text-white hover:bg-white/30 transition">{isMobileMenuOpen ? <X /> : <Menu />}</button>
+        <button onClick={() => setActiveTab('profile')} className={`p-2 rounded-full text-white transition-colors shadow-sm ${activeTab === 'profile' ? 'bg-white/40' : 'bg-white/20 hover:bg-white/30'}`}><User size={22} /></button>
       </div>
 
-      {isMobileMenuOpen && (
-        <div className="md:hidden absolute top-20 left-0 right-0 bg-white shadow-xl z-40 rounded-b-3xl border-b border-slate-100 p-4">
-          <nav className="flex flex-col gap-1">
-            <NavItem id="overview" label="Overview" icon={LayoutDashboard} />
-            <NavItem id="logbooks" label="Logbook Mahasiswa" icon={MapPin} />
-            <NavItem id="grading" label="Nilai Tugas" icon={FileText} />
-            <NavItem id="profile" label="Profil Saya" icon={User} />
-            <div className="pt-4 mt-2 border-t border-slate-100"><Button variant="danger" onClick={onLogout} className="w-full justify-center">Keluar</Button></div>
-          </nav>
+      {/* Bottom Navigation Mobile */}
+      <div className="md:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-slate-200 shadow-[0_-4px_20px_rgba(0,0,0,0.05)] z-50 px-2 pb-safe pt-2">
+        <div className="flex justify-around items-center">
+          <button onClick={() => setActiveTab('overview')} className={`flex flex-col items-center p-2 min-w-[4rem] flex-1 transition-colors ${activeTab === 'overview' ? 'text-cyan-600' : 'text-slate-400 hover:text-cyan-600'}`}>
+            <LayoutDashboard size={24} className="mb-1" />
+            <span className="text-[10px] font-bold text-center leading-tight">Overview</span>
+          </button>
+          <button onClick={() => setActiveTab('logbooks')} className={`flex flex-col items-center p-2 min-w-[4rem] flex-1 transition-colors ${activeTab === 'logbooks' ? 'text-cyan-600' : 'text-slate-400 hover:text-cyan-600'}`}>
+            <MapPin size={24} className="mb-1" />
+            <span className="text-[10px] font-bold text-center leading-tight">Logbook<br />Mahasiswa</span>
+          </button>
+          <button onClick={() => setActiveTab('grading')} className={`flex flex-col items-center p-2 min-w-[4rem] flex-1 transition-colors ${activeTab === 'grading' ? 'text-cyan-600' : 'text-slate-400 hover:text-cyan-600'}`}>
+            <FileText size={24} className="mb-1" />
+            <span className="text-[10px] font-bold text-center leading-tight">Nilai<br />Tugas</span>
+          </button>
         </div>
-      )}
+      </div>
 
-      <main className="flex-1 overflow-y-auto relative pt-24 md:pt-0">
+      <main className="flex-1 overflow-y-auto relative pt-24 pb-20 md:pt-0 md:pb-0">
         <div className="p-5 md:p-8 max-w-7xl mx-auto">
           {activeTab === 'overview' && <LecturerOverview students={students} logbooks={logbooks} reports={reports} />}
           {activeTab === 'logbooks' && <LecturerLogbookView user={user} logbooks={logbooks} students={students} showToast={showToast} onRefresh={fetchData} />}
