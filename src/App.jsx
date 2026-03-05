@@ -3389,13 +3389,10 @@ function LecturerOverview({ students, logbooks, reports, onDetailClick }) {
           title={
             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between w-full">
               <span>Peta Sebaran Mahasiswa</span>
-              <div className="mt-2 sm:mt-0 flex items-center bg-white border border-slate-200 rounded-lg px-2 py-1 focus-within:ring-2 focus-within:ring-cyan-500/20">
-                <Calendar size={16} className="text-slate-400 mr-2" />
-                <input
-                  type="date"
+              <div className="mt-2 sm:mt-0 w-[160px] relative z-[60]">
+                <CustomDatePicker
                   value={mapDate}
-                  onChange={(e) => setMapDate(e.target.value)}
-                  className="text-xs text-slate-600 bg-transparent border-none outline-none focus:ring-0 cursor-pointer p-0"
+                  onChange={setMapDate}
                 />
               </div>
             </div>
