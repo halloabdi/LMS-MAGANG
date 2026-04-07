@@ -415,9 +415,9 @@ const getToastStyles = (type) => {
       };
     case 'warning':
       return {
-        bg: 'bg-gradient-to-r from-amber-500 to-yellow-500',
+        bg: 'bg-gradient-to-r from-amber-600 to-yellow-600',
         icon: <AlertTriangle className="w-6 h-6 text-white" />,
-        border: 'border-amber-400 dark:border-amber-600'
+        border: 'border-amber-500 dark:border-amber-700'
       };
     case 'info':
     default:
@@ -630,7 +630,7 @@ export default function App() {
     if (premiumFeatures.includes(featureName)) {
       showToast('warning', 'Akses Terbatas', `Silahkan melakukan Login untuk menggunakan fitur ${featureName} atau kontak Developer untuk dapat uji coba gratis.`);
     } else {
-      showToast('warning', 'Sedang Dikembangkan', `Fitur ${featureName} masih dalam pengembangan. Silahkan hubungi Developer untuk info lebih lanjut.`);
+      showToast('info', 'Sedang Dikembangkan', `Fitur ${featureName} masih dalam pengembangan. Silahkan hubungi Developer untuk info lebih lanjut.`);
     }
   };
 
