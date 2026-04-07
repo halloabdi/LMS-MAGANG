@@ -30,7 +30,8 @@ export default function HitungIPTernak({ onBack }) {
     beratSak: "50",
     totalPakan: "",
     lamaPemeliharaan: "",
-    produksiHarian: ""
+    produksiHarian: "",
+    beratTelur: ""
   });
 
   const [isCalculating, setIsCalculating] = useState(false);
@@ -50,10 +51,10 @@ export default function HitungIPTernak({ onBack }) {
       return form.populasiAwal && form.populasiAkhir && form.bobotAkhir && form.lamaPemeliharaan && form.totalPakan;
     }
     if (selectedType === "unggas_petelur") {
-      return form.populasiAwal && form.populasiAkhir && form.produksiHarian;
+      return form.populasiAwal && form.populasiAkhir && form.produksiHarian && form.beratTelur && form.totalPakan && form.lamaPemeliharaan;
     }
     if (selectedType === "perah") {
-      return form.populasiAkhir && form.produksiHarian;
+      return form.populasiAwal && form.populasiAkhir && form.produksiHarian && form.totalPakan && form.lamaPemeliharaan;
     }
     return false;
   };
@@ -86,49 +87,49 @@ export default function HitungIPTernak({ onBack }) {
 
       if (selectedType === "potong_besar" || selectedType === "potong_kecil") {
         const adg = (bAkhir - bAwal) / lama;
-        const totalPakanPerEkor = pAkhir > 0 ? pakanKg / pAkhir : 0;
-        fcr = (bAkhir - bAwal) > 0 ? totalPakanPerEkor / (bAkhir - bAwal) : 0;
+        const fi = pAkhir > 0 ? pakanKg / lama / pAkhir : 0;
+        fcr = (bAkhir - bAwal) > 0 ? (pakanKg / pAkhir) / (bAkhir - bAwal) : 0;
 
-        // Perbaikan: IP Ternak Potong sekarang melibatkan parameter SR dan FCR langsung
-        // agar perhitungan pakan membedakan hasil akhir IP (seperti halnya ayam).
-        ip = fcr > 0 ? (sr * adg) / fcr * 100 : 0;
+        // IP (Efisiensi Pakan) = (ADG / Konsumsi Pakan Harian) * 100%
+        ip = fi > 0 ? (adg / fi) * 100 : 0;
 
         additionalInfo.push({ label: "Survival Rate", value: sr.toFixed(2) + " %" });
         additionalInfo.push({ label: "ADG", value: adg.toFixed(2) + " kg/hari" });
+        additionalInfo.push({ label: "Feed Intake (FI)", value: fi.toFixed(2) + " kg/ekor/hari" });
         additionalInfo.push({ label: "FCR", value: fcr.toFixed(3) });
 
         if (form.jenis === "Sapi Potong") {
-          if (ip >= 1500) rating = "Istimewa";
-          else if (ip >= 1000) rating = "Baik";
-          else if (ip >= 600) rating = "Cukup";
+          if (ip > 12) rating = "Istimewa";
+          else if (ip >= 9) rating = "Baik";
+          else if (ip >= 6) rating = "Cukup";
           else rating = "Terburuk";
         } else if (form.jenis === "Kerbau") {
-          if (ip >= 900) rating = "Istimewa";
-          else if (ip >= 600) rating = "Baik";
-          else if (ip >= 300) rating = "Cukup";
+          if (ip > 10) rating = "Istimewa";
+          else if (ip >= 7) rating = "Baik";
+          else if (ip >= 5) rating = "Cukup";
           else rating = "Terburuk";
         } else if (form.jenis === "Kambing Potong") {
-          if (ip >= 250) rating = "Istimewa";
-          else if (ip >= 150) rating = "Baik";
-          else if (ip >= 80) rating = "Cukup";
+          if (ip > 13) rating = "Istimewa";
+          else if (ip >= 10) rating = "Baik";
+          else if (ip >= 7) rating = "Cukup";
           else rating = "Terburuk";
         } else if (form.jenis === "Domba Potong") {
-          if (ip >= 350) rating = "Istimewa";
-          else if (ip >= 150) rating = "Baik";
-          else if (ip >= 80) rating = "Cukup";
+          if (ip > 14) rating = "Istimewa";
+          else if (ip >= 11) rating = "Baik";
+          else if (ip >= 8) rating = "Cukup";
           else rating = "Terburuk";
         }
       }
       else if (selectedType === "unggas_pedaging") {
-        // bAkhir dalam form di sini kita anggap 'Total Bobot Panen (Kg)' 
-        // sehingga ABW = Total / pAkhir
-        abw = bAkhir / pAkhir;
-        fcr = pakanKg / bAkhir;
-        ip = (sr * abw) / (fcr * lama) * 100;
+        abw = pAkhir > 0 ? bAkhir / pAkhir : 0;
+        fcr = bAkhir > 0 ? pakanKg / bAkhir : 0;
+        ip = (fcr * lama) > 0 ? (sr * abw) / (fcr * lama) * 100 : 0;
+        const fi = pAkhir > 0 ? (pakanKg * 1000) / lama / pAkhir : 0; // dalam gram
 
         additionalInfo.push({ label: "Survival Rate", value: sr.toFixed(2) + " %" });
         additionalInfo.push({ label: "ABW (Rata-rata)", value: abw.toFixed(3) + " kg/ekor" });
         additionalInfo.push({ label: "FCR", value: fcr.toFixed(3) });
+        additionalInfo.push({ label: "Feed Intake (FI)", value: fi.toFixed(1) + " gr/ekor/hari" });
 
         if (form.jenis === "Ayam Broiler") {
           if (ip > 400) rating = "Istimewa";
@@ -140,7 +141,7 @@ export default function HitungIPTernak({ onBack }) {
           else if (ip >= 250) rating = "Baik";
           else if (ip >= 200) rating = "Cukup";
           else rating = "Terburuk";
-        } else {
+        } else { // Joper
           if (ip > 250) rating = "Istimewa";
           else if (ip >= 200) rating = "Baik";
           else if (ip >= 150) rating = "Cukup";
@@ -148,44 +149,50 @@ export default function HitungIPTernak({ onBack }) {
         }
       }
       else if (selectedType === "unggas_petelur") {
-        const hdp = (produksi / pAkhir) * 100;
-        ip = hdp;
+        const hdp = pAkhir > 0 ? (produksi / pAkhir) * 100 : 0;
+        const fiGram = pAkhir > 0 ? (pakanKg * 1000) / lama / pAkhir : 0;
+        const beratTelurGram = parseFloat(form.beratTelur || 0);
+        ip = fiGram > 0 ? (hdp * beratTelurGram) / fiGram : 0;
 
         additionalInfo.push({ label: "Survival Rate", value: sr.toFixed(2) + " %" });
         additionalInfo.push({ label: "Hen-Day Production (HDP)", value: hdp.toFixed(2) + " %" });
+        additionalInfo.push({ label: "Feed Intake (FI)", value: fiGram.toFixed(1) + " gr/ekor/hari" });
 
         if (form.jenis === "Ayam Petelur") {
-          if (hdp > 92) rating = "Istimewa";
-          else if (hdp >= 85) rating = "Baik";
-          else if (hdp >= 75) rating = "Cukup";
+          if (ip > 45) rating = "Istimewa";
+          else if (ip >= 40) rating = "Baik";
+          else if (ip >= 35) rating = "Cukup";
           else rating = "Terburuk";
         } else if (form.jenis === "Puyuh") {
-          if (hdp > 85) rating = "Istimewa";
-          else if (hdp >= 75) rating = "Baik";
-          else if (hdp >= 65) rating = "Cukup";
+          if (ip > 42) rating = "Istimewa";
+          else if (ip >= 35) rating = "Baik";
+          else if (ip >= 28) rating = "Cukup";
           else rating = "Terburuk";
-        } else {
-          if (hdp > 80) rating = "Istimewa";
-          else if (hdp >= 70) rating = "Baik";
-          else if (hdp >= 60) rating = "Cukup";
+        } else { // Itik Petelur
+          if (ip > 40) rating = "Istimewa";
+          else if (ip >= 33) rating = "Baik";
+          else if (ip >= 28) rating = "Cukup";
           else rating = "Terburuk";
         }
       }
       else if (selectedType === "perah") {
-        const avg = produksi / pAkhir;
-        ip = avg;
+        const avg = pAkhir > 0 ? produksi / pAkhir : 0;
+        const fi = pAkhir > 0 ? pakanKg / lama / pAkhir : 0;
+        ip = fi > 0 ? avg / fi : 0; // Liter per kg konsumsi pakan
 
+        additionalInfo.push({ label: "Survival Rate", value: sr.toFixed(2) + " %" });
         additionalInfo.push({ label: "Rata-Rata Produksi", value: avg.toFixed(2) + " Liter/ekor/hari" });
+        additionalInfo.push({ label: "Feed Intake (FI)", value: fi.toFixed(2) + " kg/ekor/hari" });
 
         if (form.jenis === "Sapi Perah") {
-          if (avg > 20) rating = "Istimewa";
-          else if (avg >= 15) rating = "Baik";
-          else if (avg >= 10) rating = "Cukup";
+          if (ip > 1.5) rating = "Istimewa";
+          else if (ip >= 1.3) rating = "Baik";
+          else if (ip >= 1.1) rating = "Cukup";
           else rating = "Terburuk";
         } else { // Kambing Perah
-          if (avg > 1.5) rating = "Istimewa";
-          else if (avg >= 1.0) rating = "Baik";
-          else if (avg >= 0.5) rating = "Cukup";
+          if (ip > 1.0) rating = "Istimewa";
+          else if (ip >= 0.8) rating = "Baik";
+          else if (ip >= 0.5) rating = "Cukup";
           else rating = "Terburuk";
         }
       }
@@ -215,7 +222,7 @@ export default function HitungIPTernak({ onBack }) {
     setResult(null);
     setForm({
       jenis: "", populasiAwal: "", populasiAkhir: "", bobotAwal: "", bobotAkhir: "",
-      satuanPakan: "kg", beratSak: "50", totalPakan: "", lamaPemeliharaan: "", produksiHarian: ""
+      satuanPakan: "kg", beratSak: "50", totalPakan: "", lamaPemeliharaan: "", produksiHarian: "", beratTelur: ""
     });
   };
 
@@ -300,12 +307,13 @@ export default function HitungIPTernak({ onBack }) {
                 >
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
                     {/* POPULASI GROUP */}
-                    {selectedType !== "perah" && (
-                      <div>
-                        <label className={labelClass}>Populasi Awal Masuk <span>(Ekor)</span></label>
-                        <input type="number" name="populasiAwal" value={form.populasiAwal} onChange={handleChange} className={inputClass} placeholder="Contoh: 1000" min="1" required />
-                      </div>
-                    )}
+                    <div>
+                      <label className={labelClass}>
+                        {selectedType === "perah" ? "Populasi Awal Masuk Kandang" : "Populasi Awal Masuk"}
+                        <span>(Ekor)</span>
+                      </label>
+                      <input type="number" name="populasiAwal" value={form.populasiAwal} onChange={handleChange} className={inputClass} placeholder="Contoh: 1000" min="1" required />
+                    </div>
                     <div>
                       <label className={labelClass}>
                         {selectedType === "perah" ? "Populasi Sapi Laktasi" : "Populasi Hidup/Panen"}
@@ -337,43 +345,47 @@ export default function HitungIPTernak({ onBack }) {
                     )}
 
                     {/* DURASI */}
-                    {(selectedType === "potong_besar" || selectedType === "potong_kecil" || selectedType === "unggas_pedaging") && (
-                      <div className="md:col-span-2">
-                        <label className={labelClass}>Lama Pemeliharaan / Umur Panen <span>(Hari)</span></label>
-                        <input type="number" name="lamaPemeliharaan" value={form.lamaPemeliharaan} onChange={handleChange} className={inputClass} placeholder="Contoh: 35" min="1" required />
-                      </div>
-                    )}
+                    <div className="md:col-span-2">
+                      <label className={labelClass}>Lama Pemeliharaan / Umur Panen <span>(Hari)</span></label>
+                      <input type="number" name="lamaPemeliharaan" value={form.lamaPemeliharaan} onChange={handleChange} className={inputClass} placeholder="Contoh: 35" min="1" required />
+                    </div>
 
                     {/* PAKAN GROUP */}
-                    {(selectedType !== "unggas_petelur" && selectedType !== "perah") && (
-                      <div className="md:col-span-2 p-5 rounded-2xl bg-gray-100/50 dark:bg-gray-900/50 border border-gray-200 dark:border-gray-700/80 space-y-4">
-                        <div className="flex items-center justify-between mb-2">
-                          <div className="font-bold text-gray-800 dark:text-gray-200">Total Konsumsi Pakan</div>
-                          <div className="flex bg-white dark:bg-gray-800 rounded-lg overflow-hidden border border-gray-200 dark:border-gray-700 shadow-sm">
-                            <button type="button" onClick={() => setForm({ ...form, satuanPakan: "kg" })} className={`px-4 py-1.5 text-xs font-bold transition-colors ${form.satuanPakan === 'kg' ? 'bg-green-500 text-white' : 'text-gray-500 hover:bg-gray-50 dark:hover:bg-gray-700'}`}>Kg</button>
-                            <button type="button" onClick={() => setForm({ ...form, satuanPakan: "sak" })} className={`px-4 py-1.5 text-xs font-bold transition-colors ${form.satuanPakan === 'sak' ? 'bg-green-500 text-white' : 'text-gray-500 hover:bg-gray-50 dark:hover:bg-gray-700'}`}>Sak</button>
-                          </div>
-                        </div>
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                          <div>
-                            <input type="number" step="0.01" name="totalPakan" value={form.totalPakan} onChange={handleChange} className={inputClass} placeholder={`Jumlah (${form.satuanPakan === 'sak' ? 'Sak' : 'Kg'})`} min="0" required />
-                          </div>
-                          {form.satuanPakan === "sak" && (
-                            <div>
-                              <input type="number" step="0.01" name="beratSak" value={form.beratSak} onChange={handleChange} className={inputClass} placeholder="Isi per sak (kg)" min="1" required />
-                              <span className="text-[11px] text-gray-500 mt-1 block">Default: 50 kg / sak</span>
-                            </div>
-                          )}
-                          {form.satuanPakan === "gak_ada" && <div></div>}
+                    <div className="md:col-span-2 p-5 rounded-2xl bg-gray-100/50 dark:bg-gray-900/50 border border-gray-200 dark:border-gray-700/80 space-y-4">
+                      <div className="flex items-center justify-between mb-2">
+                        <div className="font-bold text-gray-800 dark:text-gray-200">Total Konsumsi Pakan Selama Pemeliharaan</div>
+                        <div className="flex bg-white dark:bg-gray-800 rounded-lg overflow-hidden border border-gray-200 dark:border-gray-700 shadow-sm">
+                          <button type="button" onClick={() => setForm({ ...form, satuanPakan: "kg" })} className={`px-4 py-1.5 text-xs font-bold transition-colors ${form.satuanPakan === 'kg' ? 'bg-green-500 text-white' : 'text-gray-500 hover:bg-gray-50 dark:hover:bg-gray-700'}`}>Kg</button>
+                          <button type="button" onClick={() => setForm({ ...form, satuanPakan: "sak" })} className={`px-4 py-1.5 text-xs font-bold transition-colors ${form.satuanPakan === 'sak' ? 'bg-green-500 text-white' : 'text-gray-500 hover:bg-gray-50 dark:hover:bg-gray-700'}`}>Sak</button>
                         </div>
                       </div>
-                    )}
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                          <input type="number" step="0.01" name="totalPakan" value={form.totalPakan} onChange={handleChange} className={inputClass} placeholder={`Jumlah (${form.satuanPakan === 'sak' ? 'Sak' : 'Kg'})`} min="0" required />
+                        </div>
+                        {form.satuanPakan === "sak" && (
+                          <div>
+                            <input type="number" step="0.01" name="beratSak" value={form.beratSak} onChange={handleChange} className={inputClass} placeholder="Isi per sak (kg)" min="1" required />
+                            <span className="text-[11px] text-gray-500 mt-1 block">Default: 50 kg / sak</span>
+                          </div>
+                        )}
+                        {form.satuanPakan === "gak_ada" && <div></div>}
+                      </div>
+                    </div>
 
                     {/* PRODUKSI (TELUR/SUSU) */}
                     {(selectedType === "unggas_petelur" || selectedType === "perah") && (
                       <div className="md:col-span-2">
                         <label className={labelClass}>Total Produksi Harian <span className="text-green-600">{selectedType === "perah" ? "(Liter)" : "(Butir Telur)"}</span></label>
                         <input type="number" step="0.01" name="produksiHarian" value={form.produksiHarian} onChange={handleChange} className={inputClass} placeholder={selectedType === "perah" ? "Contoh: 120" : "Contoh: 850"} min="0" required />
+                      </div>
+                    )}
+
+                    {/* BERAT TELUR (Hanya Petelur) */}
+                    {selectedType === "unggas_petelur" && (
+                      <div className="md:col-span-2">
+                        <label className={labelClass}>Berat Rata-Rata 1 Butir Telur <span>(Gram)</span></label>
+                        <input type="number" step="0.01" name="beratTelur" value={form.beratTelur} onChange={handleChange} className={inputClass} placeholder="Contoh: 60" min="0.1" required />
                       </div>
                     )}
                   </div>
