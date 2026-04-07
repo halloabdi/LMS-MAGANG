@@ -597,6 +597,8 @@ export default function App() {
           window.scrollTo({ top: offsetPosition, behavior: "smooth" });
         }
       }, 50);
+    } else {
+      handleFeatureClick(service.title);
     }
   };
 
@@ -1025,7 +1027,13 @@ export default function App() {
                     <SubServiceBox
                       title="Buat Data Baru"
                       icon={FilePlus}
-                      onClick={() => setActiveSubMenu('create_new')}
+                      onClick={() => {
+                        if (activeService === 1) {
+                          setActiveSubMenu('create_new');
+                        } else {
+                          handleFeatureClick("Buat Data Baru");
+                        }
+                      }}
                     />
                   </div>
                 </div>
@@ -1064,7 +1072,7 @@ export default function App() {
                 ) : (
                   // Fallback jika layanan lain masuk ke sini tanpa konfigurasi
                   <div className="w-full text-center p-8 bg-white/50 dark:bg-gray-800/50 rounded-2xl">
-                    <p className="text-gray-500 dark:text-gray-400">Menu khusus ini belum tersedia.</p>
+                    <p className="text-gray-500 dark:text-gray-400">Fitur masih dalam pengembangan. Silahkan hubungi Developer untuk info lebih lanjut.</p>
                   </div>
                 )}
               </div>
