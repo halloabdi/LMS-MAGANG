@@ -32,7 +32,7 @@ export default function HitungIPTernak({ onBack }) {
     lamaPemeliharaan: "",
     produksiHarian: ""
   });
-  
+
   const [isCalculating, setIsCalculating] = useState(false);
   const [result, setResult] = useState(null);
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
@@ -61,7 +61,7 @@ export default function HitungIPTernak({ onBack }) {
   const handleCalculate = (e) => {
     e.preventDefault();
     if (!isFormValid()) return;
-    
+
     setIsCalculating(true);
     setResult(null);
 
@@ -95,79 +95,79 @@ export default function HitungIPTernak({ onBack }) {
         additionalInfo.push({ label: "FCR", value: fcr.toFixed(3) });
 
         if (form.jenis === "Sapi Potong") {
-           if (adg > 1.5) rating = "Istimewa";
-           else if (adg >= 1.1) rating = "Baik";
-           else if (adg >= 0.8) rating = "Cukup";
-           else rating = "Terburuk";
+          if (adg > 1.5) rating = "Istimewa";
+          else if (adg >= 1.1) rating = "Baik";
+          else if (adg >= 0.8) rating = "Cukup";
+          else rating = "Terburuk";
         } else if (form.jenis === "Kerbau") {
-           if (adg > 1.0) rating = "Istimewa";
-           else if (adg >= 0.8) rating = "Baik";
-           else if (adg >= 0.5) rating = "Cukup";
-           else rating = "Terburuk";
+          if (adg > 1.0) rating = "Istimewa";
+          else if (adg >= 0.8) rating = "Baik";
+          else if (adg >= 0.5) rating = "Cukup";
+          else rating = "Terburuk";
         } else if (form.jenis === "Kambing Potong") {
-           if (adg > 0.20) rating = "Istimewa";
-           else if (adg >= 0.15) rating = "Baik";
-           else if (adg >= 0.10) rating = "Cukup";
-           else rating = "Terburuk";
+          if (adg > 0.20) rating = "Istimewa";
+          else if (adg >= 0.15) rating = "Baik";
+          else if (adg >= 0.10) rating = "Cukup";
+          else rating = "Terburuk";
         } else if (form.jenis === "Domba Potong") {
-           if (adg > 0.25) rating = "Istimewa";
-           else if (adg >= 0.15) rating = "Baik";
-           else if (adg >= 0.10) rating = "Cukup";
-           else rating = "Terburuk";
+          if (adg > 0.25) rating = "Istimewa";
+          else if (adg >= 0.15) rating = "Baik";
+          else if (adg >= 0.10) rating = "Cukup";
+          else rating = "Terburuk";
         }
-      } 
+      }
       else if (selectedType === "unggas_pedaging") {
         // bAkhir dalam form di sini kita anggap 'Total Bobot Panen (Kg)' 
         // sehingga ABW = Total / pAkhir
         abw = bAkhir / pAkhir;
         fcr = pakanKg / bAkhir;
         ip = (sr * abw) / (fcr * lama) * 100;
-        
+
         additionalInfo.push({ label: "Survival Rate", value: sr.toFixed(2) + " %" });
         additionalInfo.push({ label: "ABW (Rata-rata)", value: abw.toFixed(3) + " kg/ekor" });
         additionalInfo.push({ label: "FCR", value: fcr.toFixed(3) });
 
         if (form.jenis === "Ayam Broiler") {
-           if (ip > 400) rating = "Istimewa";
-           else if (ip >= 350) rating = "Baik";
-           else if (ip >= 300) rating = "Cukup";
-           else rating = "Terburuk";
+          if (ip > 400) rating = "Istimewa";
+          else if (ip >= 350) rating = "Baik";
+          else if (ip >= 300) rating = "Cukup";
+          else rating = "Terburuk";
         } else if (form.jenis === "Bebek Pedaging") {
-           if (ip > 300) rating = "Istimewa";
-           else if (ip >= 250) rating = "Baik";
-           else if (ip >= 200) rating = "Cukup";
-           else rating = "Terburuk";
+          if (ip > 300) rating = "Istimewa";
+          else if (ip >= 250) rating = "Baik";
+          else if (ip >= 200) rating = "Cukup";
+          else rating = "Terburuk";
         } else {
-           if (ip > 250) rating = "Istimewa";
-           else if (ip >= 200) rating = "Baik";
-           else if (ip >= 150) rating = "Cukup";
-           else rating = "Terburuk";
+          if (ip > 250) rating = "Istimewa";
+          else if (ip >= 200) rating = "Baik";
+          else if (ip >= 150) rating = "Cukup";
+          else rating = "Terburuk";
         }
-      } 
+      }
       else if (selectedType === "unggas_petelur") {
         const hdp = (produksi / pAkhir) * 100;
         ip = hdp;
-        
+
         additionalInfo.push({ label: "Survival Rate", value: sr.toFixed(2) + " %" });
         additionalInfo.push({ label: "Hen-Day Production (HDP)", value: hdp.toFixed(2) + " %" });
 
         if (form.jenis === "Ayam Petelur") {
-           if (hdp > 92) rating = "Istimewa";
-           else if (hdp >= 85) rating = "Baik";
-           else if (hdp >= 75) rating = "Cukup";
-           else rating = "Terburuk";
+          if (hdp > 92) rating = "Istimewa";
+          else if (hdp >= 85) rating = "Baik";
+          else if (hdp >= 75) rating = "Cukup";
+          else rating = "Terburuk";
         } else if (form.jenis === "Puyuh") {
-           if (hdp > 85) rating = "Istimewa";
-           else if (hdp >= 75) rating = "Baik";
-           else if (hdp >= 65) rating = "Cukup";
-           else rating = "Terburuk";
+          if (hdp > 85) rating = "Istimewa";
+          else if (hdp >= 75) rating = "Baik";
+          else if (hdp >= 65) rating = "Cukup";
+          else rating = "Terburuk";
         } else {
-           if (hdp > 80) rating = "Istimewa";
-           else if (hdp >= 70) rating = "Baik";
-           else if (hdp >= 60) rating = "Cukup";
-           else rating = "Terburuk";
+          if (hdp > 80) rating = "Istimewa";
+          else if (hdp >= 70) rating = "Baik";
+          else if (hdp >= 60) rating = "Cukup";
+          else rating = "Terburuk";
         }
-      } 
+      }
       else if (selectedType === "perah") {
         const avg = produksi / pAkhir;
         ip = avg;
@@ -175,25 +175,21 @@ export default function HitungIPTernak({ onBack }) {
         additionalInfo.push({ label: "Rata-Rata Produksi", value: avg.toFixed(2) + " Liter/ekor/hari" });
 
         if (form.jenis === "Sapi Perah") {
-           if (avg > 20) rating = "Istimewa";
-           else if (avg >= 15) rating = "Baik";
-           else if (avg >= 10) rating = "Cukup";
-           else rating = "Terburuk";
+          if (avg > 20) rating = "Istimewa";
+          else if (avg >= 15) rating = "Baik";
+          else if (avg >= 10) rating = "Cukup";
+          else rating = "Terburuk";
         } else { // Kambing Perah
-           if (avg > 1.5) rating = "Istimewa";
-           else if (avg >= 1.0) rating = "Baik";
-           else if (avg >= 0.5) rating = "Cukup";
-           else rating = "Terburuk";
+          if (avg > 1.5) rating = "Istimewa";
+          else if (avg >= 1.0) rating = "Baik";
+          else if (avg >= 0.5) rating = "Cukup";
+          else rating = "Terburuk";
         }
       }
 
       let badgeColor = "bg-green-500 shadow-green-500/50";
       let ringColor = "ring-green-500";
-      let titleResult = "IP (Indeks Performa)";
-
-      if (selectedType === "unggas_petelur") titleResult = "HDP (Hen-Day Production)";
-      if (selectedType === "perah") titleResult = "Produksi Susu";
-      if (selectedType === "potong_besar" || selectedType === "potong_kecil") titleResult = "ADG (Average Daily Gain)";
+      let titleResult = "Nilai IP Ternak";
 
       if (rating === "Istimewa") { badgeColor = "bg-blue-600 shadow-blue-500/50"; ringColor = "ring-blue-500"; }
       if (rating === "Baik") { badgeColor = "bg-emerald-500 shadow-emerald-500/50"; ringColor = "ring-emerald-500"; }
@@ -238,10 +234,10 @@ export default function HitungIPTernak({ onBack }) {
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 w-full max-w-5xl px-4 md:px-0">
-        
+
         {/* FORM PANEL */}
         <div className="lg:col-span-7 bg-white/80 dark:bg-gray-800/80 backdrop-blur-xl border border-gray-200/50 dark:border-gray-700 shadow-2xl rounded-[2rem] p-6 md:p-8 relative z-20">
-          
+
           <div className="flex items-center gap-3 mb-6 p-4 rounded-2xl bg-gradient-to-br from-blue-50 to-green-50 dark:from-blue-900/20 dark:to-green-900/20 border border-blue-100/50 dark:border-blue-800/50">
             <Info className="flex-shrink-0 text-blue-500 w-6 h-6" />
             <p className="text-sm font-medium text-gray-600 dark:text-gray-300">
@@ -253,7 +249,7 @@ export default function HitungIPTernak({ onBack }) {
             <div>
               <label className={labelClass}>Jenis Ternak</label>
               <div className="relative">
-                <div 
+                <div
                   onClick={() => setIsDropdownOpen(!isDropdownOpen)}
                   className={`${inputClass} flex justify-between items-center cursor-pointer min-h-[56px] select-none`}
                 >
@@ -262,10 +258,10 @@ export default function HitungIPTernak({ onBack }) {
                   </span>
                   <ChevronDown className={`text-gray-400 transition-transform duration-300 ${isDropdownOpen ? 'rotate-180 text-green-500' : ''}`} size={20} />
                 </div>
-                
+
                 <AnimatePresence>
                   {isDropdownOpen && (
-                    <motion.div 
+                    <motion.div
                       initial={{ opacity: 0, y: -10, scale: 0.98 }}
                       animate={{ opacity: 1, y: 0, scale: 1 }}
                       exit={{ opacity: 0, y: -10, scale: 0.98 }}
@@ -293,97 +289,97 @@ export default function HitungIPTernak({ onBack }) {
 
             <AnimatePresence mode="popLayout">
               {form.jenis && (
-                <motion.div 
-                  initial={{ opacity: 0, height: 0 }} 
-                  animate={{ opacity: 1, height: 'auto' }} 
+                <motion.div
+                  initial={{ opacity: 0, height: 0 }}
+                  animate={{ opacity: 1, height: 'auto' }}
                   exit={{ opacity: 0, height: 0 }}
                   className="space-y-5 overflow-hidden"
                 >
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-                     {/* POPULASI GROUP */}
-                     {selectedType !== "perah" && (
-                       <div>
-                         <label className={labelClass}>Populasi Awal Masuk <span>(Ekor)</span></label>
-                         <input type="number" name="populasiAwal" value={form.populasiAwal} onChange={handleChange} className={inputClass} placeholder="Contoh: 1000" min="1" required />
-                       </div>
-                     )}
-                     <div>
-                       <label className={labelClass}>
-                         {selectedType === "perah" ? "Populasi Sapi Laktasi" : "Populasi Hidup/Panen"} 
-                         <span>(Ekor)</span>
-                       </label>
-                       <input type="number" name="populasiAkhir" value={form.populasiAkhir} onChange={handleChange} className={inputClass} placeholder="Contoh: 980" min="1" required />
-                     </div>
+                    {/* POPULASI GROUP */}
+                    {selectedType !== "perah" && (
+                      <div>
+                        <label className={labelClass}>Populasi Awal Masuk <span>(Ekor)</span></label>
+                        <input type="number" name="populasiAwal" value={form.populasiAwal} onChange={handleChange} className={inputClass} placeholder="Contoh: 1000" min="1" required />
+                      </div>
+                    )}
+                    <div>
+                      <label className={labelClass}>
+                        {selectedType === "perah" ? "Populasi Sapi Laktasi" : "Populasi Hidup/Panen"}
+                        <span>(Ekor)</span>
+                      </label>
+                      <input type="number" name="populasiAkhir" value={form.populasiAkhir} onChange={handleChange} className={inputClass} placeholder="Contoh: 980" min="1" required />
+                    </div>
 
-                     {/* BOBOT GROUP (Hanya Potong) */}
-                     {(selectedType === "potong_besar" || selectedType === "potong_kecil") && (
-                       <>
-                         <div>
-                           <label className={labelClass}>Rata² Bobot Awal <span className="text-green-600">Per Ekor (Kg)</span></label>
-                           <input type="number" step="0.01" name="bobotAwal" value={form.bobotAwal} onChange={handleChange} className={inputClass} placeholder="Contoh: 300" min="0" required />
-                         </div>
-                         <div>
-                           <label className={labelClass}>Rata² Bobot Akhir <span className="text-green-600">Per Ekor (Kg)</span></label>
-                           <input type="number" step="0.01" name="bobotAkhir" value={form.bobotAkhir} onChange={handleChange} className={inputClass} placeholder="Contoh: 420" min="0" required />
-                         </div>
-                       </>
-                     )}
+                    {/* BOBOT GROUP (Hanya Potong) */}
+                    {(selectedType === "potong_besar" || selectedType === "potong_kecil") && (
+                      <>
+                        <div>
+                          <label className={labelClass}>Rata² Bobot Awal <span className="text-green-600">Per Ekor (Kg)</span></label>
+                          <input type="number" step="0.01" name="bobotAwal" value={form.bobotAwal} onChange={handleChange} className={inputClass} placeholder="Contoh: 300" min="0" required />
+                        </div>
+                        <div>
+                          <label className={labelClass}>Rata² Bobot Akhir <span className="text-green-600">Per Ekor (Kg)</span></label>
+                          <input type="number" step="0.01" name="bobotAkhir" value={form.bobotAkhir} onChange={handleChange} className={inputClass} placeholder="Contoh: 420" min="0" required />
+                        </div>
+                      </>
+                    )}
 
-                     {/* BOBOT UNGGAS PEDAGING */}
-                     {selectedType === "unggas_pedaging" && (
-                       <div className="md:col-span-2">
-                         <label className={labelClass}>Total Bobot Keseluruhan Panen <span className="text-green-600">(Kg)</span></label>
-                         <input type="number" step="0.01" name="bobotAkhir" value={form.bobotAkhir} onChange={handleChange} className={inputClass} placeholder="Contoh: 1960" min="0" required />
-                       </div>
-                     )}
+                    {/* BOBOT UNGGAS PEDAGING */}
+                    {selectedType === "unggas_pedaging" && (
+                      <div className="md:col-span-2">
+                        <label className={labelClass}>Total Bobot Keseluruhan Panen <span className="text-green-600">(Kg)</span></label>
+                        <input type="number" step="0.01" name="bobotAkhir" value={form.bobotAkhir} onChange={handleChange} className={inputClass} placeholder="Contoh: 1960" min="0" required />
+                      </div>
+                    )}
 
-                     {/* DURASI */}
-                     {(selectedType === "potong_besar" || selectedType === "potong_kecil" || selectedType === "unggas_pedaging") && (
-                       <div className="md:col-span-2">
-                         <label className={labelClass}>Lama Pemeliharaan / Umur Panen <span>(Hari)</span></label>
-                         <input type="number" name="lamaPemeliharaan" value={form.lamaPemeliharaan} onChange={handleChange} className={inputClass} placeholder="Contoh: 35" min="1" required />
-                       </div>
-                     )}
+                    {/* DURASI */}
+                    {(selectedType === "potong_besar" || selectedType === "potong_kecil" || selectedType === "unggas_pedaging") && (
+                      <div className="md:col-span-2">
+                        <label className={labelClass}>Lama Pemeliharaan / Umur Panen <span>(Hari)</span></label>
+                        <input type="number" name="lamaPemeliharaan" value={form.lamaPemeliharaan} onChange={handleChange} className={inputClass} placeholder="Contoh: 35" min="1" required />
+                      </div>
+                    )}
 
-                     {/* PAKAN GROUP */}
-                     {(selectedType !== "unggas_petelur" && selectedType !== "perah") && (
-                       <div className="md:col-span-2 p-5 rounded-2xl bg-gray-100/50 dark:bg-gray-900/50 border border-gray-200 dark:border-gray-700/80 space-y-4">
-                         <div className="flex items-center justify-between mb-2">
-                             <div className="font-bold text-gray-800 dark:text-gray-200">Total Konsumsi Pakan</div>
-                             <div className="flex bg-white dark:bg-gray-800 rounded-lg overflow-hidden border border-gray-200 dark:border-gray-700 shadow-sm">
-                               <button type="button" onClick={() => setForm({...form, satuanPakan: "kg"})} className={`px-4 py-1.5 text-xs font-bold transition-colors ${form.satuanPakan === 'kg' ? 'bg-green-500 text-white' : 'text-gray-500 hover:bg-gray-50 dark:hover:bg-gray-700'}`}>Kg</button>
-                               <button type="button" onClick={() => setForm({...form, satuanPakan: "sak"})} className={`px-4 py-1.5 text-xs font-bold transition-colors ${form.satuanPakan === 'sak' ? 'bg-green-500 text-white' : 'text-gray-500 hover:bg-gray-50 dark:hover:bg-gray-700'}`}>Sak</button>
-                             </div>
-                         </div>
-                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                           <div>
-                             <input type="number" step="0.01" name="totalPakan" value={form.totalPakan} onChange={handleChange} className={inputClass} placeholder={`Jumlah (${form.satuanPakan === 'sak' ? 'Sak' : 'Kg'})`} min="0" required />
-                           </div>
-                           {form.satuanPakan === "sak" && (
-                             <div>
-                               <input type="number" step="0.01" name="beratSak" value={form.beratSak} onChange={handleChange} className={inputClass} placeholder="Isi per sak (kg)" min="1" required />
-                               <span className="text-[11px] text-gray-500 mt-1 block">Default: 50 kg / sak</span>
-                             </div>
-                           )}
-                           {form.satuanPakan === "gak_ada" && <div></div>}
-                         </div>
-                       </div>
-                     )}
+                    {/* PAKAN GROUP */}
+                    {(selectedType !== "unggas_petelur" && selectedType !== "perah") && (
+                      <div className="md:col-span-2 p-5 rounded-2xl bg-gray-100/50 dark:bg-gray-900/50 border border-gray-200 dark:border-gray-700/80 space-y-4">
+                        <div className="flex items-center justify-between mb-2">
+                          <div className="font-bold text-gray-800 dark:text-gray-200">Total Konsumsi Pakan</div>
+                          <div className="flex bg-white dark:bg-gray-800 rounded-lg overflow-hidden border border-gray-200 dark:border-gray-700 shadow-sm">
+                            <button type="button" onClick={() => setForm({ ...form, satuanPakan: "kg" })} className={`px-4 py-1.5 text-xs font-bold transition-colors ${form.satuanPakan === 'kg' ? 'bg-green-500 text-white' : 'text-gray-500 hover:bg-gray-50 dark:hover:bg-gray-700'}`}>Kg</button>
+                            <button type="button" onClick={() => setForm({ ...form, satuanPakan: "sak" })} className={`px-4 py-1.5 text-xs font-bold transition-colors ${form.satuanPakan === 'sak' ? 'bg-green-500 text-white' : 'text-gray-500 hover:bg-gray-50 dark:hover:bg-gray-700'}`}>Sak</button>
+                          </div>
+                        </div>
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                          <div>
+                            <input type="number" step="0.01" name="totalPakan" value={form.totalPakan} onChange={handleChange} className={inputClass} placeholder={`Jumlah (${form.satuanPakan === 'sak' ? 'Sak' : 'Kg'})`} min="0" required />
+                          </div>
+                          {form.satuanPakan === "sak" && (
+                            <div>
+                              <input type="number" step="0.01" name="beratSak" value={form.beratSak} onChange={handleChange} className={inputClass} placeholder="Isi per sak (kg)" min="1" required />
+                              <span className="text-[11px] text-gray-500 mt-1 block">Default: 50 kg / sak</span>
+                            </div>
+                          )}
+                          {form.satuanPakan === "gak_ada" && <div></div>}
+                        </div>
+                      </div>
+                    )}
 
-                     {/* PRODUKSI (TELUR/SUSU) */}
-                     {(selectedType === "unggas_petelur" || selectedType === "perah") && (
-                       <div className="md:col-span-2">
-                         <label className={labelClass}>Total Produksi Harian <span className="text-green-600">{selectedType === "perah" ? "(Liter)" : "(Butir Telur)"}</span></label>
-                         <input type="number" step="0.01" name="produksiHarian" value={form.produksiHarian} onChange={handleChange} className={inputClass} placeholder={selectedType === "perah" ? "Contoh: 120" : "Contoh: 850"} min="0" required />
-                       </div>
-                     )}
+                    {/* PRODUKSI (TELUR/SUSU) */}
+                    {(selectedType === "unggas_petelur" || selectedType === "perah") && (
+                      <div className="md:col-span-2">
+                        <label className={labelClass}>Total Produksi Harian <span className="text-green-600">{selectedType === "perah" ? "(Liter)" : "(Butir Telur)"}</span></label>
+                        <input type="number" step="0.01" name="produksiHarian" value={form.produksiHarian} onChange={handleChange} className={inputClass} placeholder={selectedType === "perah" ? "Contoh: 120" : "Contoh: 850"} min="0" required />
+                      </div>
+                    )}
                   </div>
                 </motion.div>
               )}
             </AnimatePresence>
 
-            <button 
-              type="submit" 
+            <button
+              type="submit"
               disabled={!isFormValid() || isCalculating}
               className={`w-full py-4 mt-4 rounded-xl font-bold flex items-center justify-center gap-2 transition-all shadow-lg overflow-hidden group 
                 ${isFormValid() ? 'bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 text-white hover:shadow-green-500/30' : 'bg-gray-200 dark:bg-gray-700 text-gray-400 cursor-not-allowed'}`}
@@ -399,9 +395,9 @@ export default function HitungIPTernak({ onBack }) {
         <div className="lg:col-span-5 relative z-10 flex flex-col justify-start">
           <AnimatePresence mode="sync">
             {isCalculating && (
-              <motion.div 
-                initial={{ opacity: 0, scale: 0.9 }} 
-                animate={{ opacity: 1, scale: 1 }} 
+              <motion.div
+                initial={{ opacity: 0, scale: 0.9 }}
+                animate={{ opacity: 1, scale: 1 }}
                 exit={{ opacity: 0, scale: 0.9 }}
                 className="w-full bg-white/80 dark:bg-gray-800/80 backdrop-blur-xl border border-gray-200/50 dark:border-gray-700 shadow-2xl rounded-[2rem] p-10 flex flex-col items-center justify-center text-center min-h-[400px]"
               >
@@ -414,20 +410,20 @@ export default function HitungIPTernak({ onBack }) {
             )}
 
             {!isCalculating && result && (
-              <motion.div 
-                initial={{ opacity: 0, x: 50 }} 
-                animate={{ opacity: 1, x: 0 }} 
+              <motion.div
+                initial={{ opacity: 0, x: 50 }}
+                animate={{ opacity: 1, x: 0 }}
                 className={`w-full bg-white/80 dark:bg-gray-900/80 backdrop-blur-xl border-2 ${result.ringColor.replace('ring-', 'border-')} shadow-2xl rounded-[2rem] p-6 md:p-8 overflow-hidden relative`}
               >
                 <div className={`absolute -top-14 -right-14 w-40 h-40 ${result.badgeColor} rounded-full blur-3xl opacity-20`}></div>
-                
+
                 <div className="flex items-center justify-between mb-8">
-                   <h3 className="text-xl font-extrabold text-gray-800 dark:text-white flex items-center gap-2">
-                     <Target className="text-blue-500" /> Hasil Analisis
-                   </h3>
-                   <div className={`px-4 py-1.5 rounded-full text-sm font-extrabold text-white shadow-lg ${result.badgeColor}`}>
-                     {result.rating}
-                   </div>
+                  <h3 className="text-xl font-extrabold text-gray-800 dark:text-white flex items-center gap-2">
+                    <Target className="text-blue-500" /> Hasil Analisis
+                  </h3>
+                  <div className={`px-4 py-1.5 rounded-full text-sm font-extrabold text-white shadow-lg ${result.badgeColor}`}>
+                    {result.rating}
+                  </div>
                 </div>
 
                 <div className="text-center mb-8 bg-gray-50/80 dark:bg-gray-800/80 rounded-3xl p-6 border border-gray-100 dark:border-gray-700">
@@ -449,7 +445,7 @@ export default function HitungIPTernak({ onBack }) {
                   ))}
                 </div>
 
-                <button 
+                <button
                   onClick={handleReset}
                   className="w-full py-3.5 bg-gray-100 hover:bg-gray-200 dark:bg-gray-800 dark:hover:bg-gray-700 text-gray-800 dark:text-gray-200 rounded-xl font-bold transition-all flex items-center justify-center gap-2"
                 >
@@ -459,7 +455,7 @@ export default function HitungIPTernak({ onBack }) {
             )}
 
             {!isCalculating && !result && (
-              <motion.div 
+              <motion.div
                 initial={{ opacity: 0 }} animate={{ opacity: 1 }}
                 className="w-full bg-white/50 dark:bg-gray-800/50 backdrop-blur-xl border border-gray-200/50 dark:border-gray-700 shadow-xl rounded-[2rem] p-10 flex flex-col items-center justify-center text-center min-h-[400px] border-dashed border-2 opacity-70"
               >
