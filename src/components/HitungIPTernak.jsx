@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { ChevronLeft, Info, HelpCircle, ArrowRight, RefreshCw, Calculator, BarChart3, Target } from 'lucide-react';
+import { ChevronLeft, Info, HelpCircle, ArrowRight, RefreshCw, Calculator, BarChart3, Target, ChevronDown } from 'lucide-react';
 import { BlinkBlur } from 'react-loading-indicators';
 import { motion, AnimatePresence } from 'framer-motion';
 
@@ -35,6 +35,7 @@ export default function HitungIPTernak({ onBack }) {
   
   const [isCalculating, setIsCalculating] = useState(false);
   const [result, setResult] = useState(null);
+  const [isDropdownOpen, setIsDropdownOpen] = useState(false);
 
   const selectedType = JENIS_TERNAK_OPTIONS.find(o => o.value === form.jenis)?.type;
 
@@ -219,7 +220,7 @@ export default function HitungIPTernak({ onBack }) {
     });
   };
 
-  const inputClass = "w-full px-4 py-3 rounded-xl bg-gray-50/50 dark:bg-gray-900/50 border border-gray-200 dark:border-gray-700 focus:ring-2 focus:ring-green-500 focus:bg-white dark:focus:bg-gray-800 outline-none transition-all placeholder:text-sm";
+  const inputClass = "w-full px-5 py-3.5 rounded-2xl bg-white dark:bg-gray-900 border-2 border-gray-100 dark:border-gray-800 focus:ring-4 focus:ring-green-500/20 focus:border-green-500 outline-none transition-all placeholder:text-gray-400 font-bold text-gray-800 dark:text-gray-100 shadow-[inset_0_2px_6px_rgba(0,0,0,0.02)]";
   const labelClass = "block text-sm font-bold text-gray-700 dark:text-gray-300 mb-1.5 flex items-center justify-between";
 
   return (
@@ -251,20 +252,43 @@ export default function HitungIPTernak({ onBack }) {
           <form onSubmit={handleCalculate} className="space-y-5">
             <div>
               <label className={labelClass}>Jenis Ternak</label>
-              <select 
-                name="jenis" 
-                value={form.jenis} 
-                onChange={(e) => {
-                  handleChange(e);
-                  setResult(null); // Reset hasil saat ganti jenis
-                }}
-                className={inputClass + " font-medium appearance-none custom-select"}
-              >
-                <option value="" disabled>-- Pilih Jenis Ternak --</option>
-                {JENIS_TERNAK_OPTIONS.map((opt) => (
-                  <option key={opt.value} value={opt.value}>{opt.value}</option>
-                ))}
-              </select>
+              <div className="relative">
+                <div 
+                  onClick={() => setIsDropdownOpen(!isDropdownOpen)}
+                  className={`${inputClass} flex justify-between items-center cursor-pointer min-h-[56px] select-none`}
+                >
+                  <span className={form.jenis ? "text-gray-800 dark:text-white font-bold" : "text-gray-400 font-medium"}>
+                    {form.jenis || "-- Pilih Jenis Ternak --"}
+                  </span>
+                  <ChevronDown className={`text-gray-400 transition-transform duration-300 ${isDropdownOpen ? 'rotate-180 text-green-500' : ''}`} size={20} />
+                </div>
+                
+                <AnimatePresence>
+                  {isDropdownOpen && (
+                    <motion.div 
+                      initial={{ opacity: 0, y: -10, scale: 0.98 }}
+                      animate={{ opacity: 1, y: 0, scale: 1 }}
+                      exit={{ opacity: 0, y: -10, scale: 0.98 }}
+                      transition={{ duration: 0.2, type: "spring", stiffness: 300, damping: 25 }}
+                      className="absolute z-50 w-full mt-2 bg-white dark:bg-gray-800 rounded-2xl shadow-2xl shadow-green-900/10 dark:shadow-black/50 border border-gray-100 dark:border-gray-700 max-h-60 overflow-y-auto custom-scrollbar p-2"
+                    >
+                      {JENIS_TERNAK_OPTIONS.map((opt) => (
+                        <div
+                          key={opt.value}
+                          onClick={() => {
+                            setForm({ ...form, jenis: opt.value });
+                            setResult(null);
+                            setIsDropdownOpen(false);
+                          }}
+                          className={`px-5 py-3.5 rounded-xl cursor-pointer transition-all duration-200 font-bold text-sm md:text-base mb-1 last:mb-0 ${form.jenis === opt.value ? 'bg-gradient-to-r from-green-500 to-emerald-500 text-white shadow-md shadow-green-500/20 translate-x-1' : 'text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 hover:text-green-600'}`}
+                        >
+                          {opt.value}
+                        </div>
+                      ))}
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+              </div>
             </div>
 
             <AnimatePresence mode="popLayout">
