@@ -1,0 +1,199 @@
+RUMUS-RUMUS PERFORMA DAN INDEKS PERFORMA (IP) PETERNAKAN LENGKAP
+1. Rumus Sapi Potong
+1.1. Bobot Rata-Rata (ABW) = Total Bobot Sapi (kg) / Populasi Sapi Hidup
+1.2. Feed Conversion Ratio (FCR) = Total Konsumsi Pakan (kg) / Total Pertambahan Bobot Badan (kg)
+1.3. Feed Intake (FI) = Total Pakan yang Dikonsumsi (kg) / Lama Pemeliharaan (hari) / Populasi
+1.4. Average Daily Gain (ADG) = (Bobot Akhir (kg) - Bobot Awal (kg)) / Lama Pemeliharaan (hari)
+1.5. Perhitungan Mortalitas = (Jumlah Sapi Mati / Populasi Awal) × 100%
+1.6. Perhitungan Survival Rate = (Jumlah Sapi Hidup / Populasi Awal) × 100%
+1.7. Indeks Performa (IP) = Evaluasi performa sapi potong umumnya diukur dari target Average Daily Gain (ADG).
+1.8. Standar Nilai IP (Berdasarkan ADG Sapi Potong):
+- Istimewa: ADG > 1,5 kg/hari
+- Baik: ADG 1,1 – 1,5 kg/hari
+- Cukup: ADG 0,8 – 1,0 kg/hari
+- Terburuk: ADG < 0,8 kg/hari
+1.9. Contoh Perhitungan:
+Kasus: 10 ekor sapi dipelihara 100 hari. Bobot awal 300 kg, bobot akhir 420 kg. Total pakan 12.000 kg. Mati 0 ekor.
+- ABW: 420 kg/ekor
+- ADG: (420 - 300) / 100 = 1,2 kg/hari
+- FCR: (12.000 / (10 × 100)) / 1,2 = 10,0
+- Evaluasi IP: ADG 1,2 kg/hari (Klasifikasi Baik)
+2. Rumus Sapi Perah
+2.1. Bobot Rata-Rata (ABW) = Total Bobot Sapi (kg) / Populasi Sapi Hidup
+2.2. Feed Conversion Ratio (FCR) = Total Konsumsi Pakan Kering (kg DMI) / Total Produksi Susu (liter atau kg)
+2.3. Feed Intake (FI) = Total Pakan yang Dikonsumsi (kg) / Lama Pemeliharaan (hari) / Populasi
+2.4. Average Daily Gain (ADG) = (Bobot Akhir - Bobot Awal) / Waktu (Khusus masa pembesaran pedet/dara)
+2.5. Perhitungan Mortalitas = (Jumlah Sapi Mati / Populasi Awal) × 100%
+2.6. Perhitungan Survival Rate = (Jumlah Sapi Hidup / Populasi Awal) × 100%
+2.7. Indeks Performa (IP) = Diukur dari rata-rata Produksi Susu Harian per ekor laktasi.
+2.8. Standar Nilai IP (Berdasarkan Produksi Susu Sapi FH):
+- Istimewa: > 20 liter/hari
+- Baik: 15 – 20 liter/hari
+- Cukup: 10 – 14 liter/hari
+- Terburuk: < 10 liter/hari
+2.9. Contoh Perhitungan:
+Kasus: 5 ekor sapi perah laktasi memproduksi susu total 125 liter/hari.
+- Rata-rata Produksi: 125 liter / 5 ekor = 25 liter/ekor/hari
+- Evaluasi IP: Produksi 25 liter/hari (Klasifikasi Istimewa)
+3. Rumus Kerbau
+3.1. Bobot Rata-Rata (ABW) = Total Bobot Kerbau (kg) / Populasi Kerbau Hidup
+3.2. Feed Conversion Ratio (FCR) = Total Konsumsi Pakan (kg) / Total Pertambahan Bobot Badan (kg)
+3.3. Feed Intake (FI) = Total Pakan yang Dikonsumsi (kg) / Lama Pemeliharaan (hari) / Populasi
+3.4. Average Daily Gain (ADG) = (Bobot Akhir - Bobot Awal) / Lama Pemeliharaan (hari)
+3.5. Perhitungan Mortalitas = (Jumlah Kerbau Mati / Populasi Awal) × 100%
+3.6. Perhitungan Survival Rate = (Jumlah Kerbau Hidup / Populasi Awal) × 100%
+3.7. Indeks Performa (IP) = Diukur dari target pertumbuhan (ADG) selama penggemukan.
+3.8. Standar Nilai IP (Berdasarkan ADG Kerbau):
+- Istimewa: > 1,0 kg/hari
+- Baik: 0,8 – 1,0 kg/hari
+- Cukup: 0,5 – 0,7 kg/hari
+- Terburuk: < 0,5 kg/hari
+3.9. Contoh Perhitungan:
+Kasus: 5 kerbau digemukkan 90 hari. Bobot awal 350 kg, akhir 440 kg.
+- ADG: (440 - 350) / 90 = 1,0 kg/hari
+- Evaluasi IP: ADG 1,0 kg/hari (Klasifikasi Baik / Istimewa)
+4. Rumus Kambing
+4.1. Bobot Rata-Rata (ABW) = Total Bobot Kambing (kg) / Populasi Kambing Hidup
+4.2. Feed Conversion Ratio (FCR) = Total Konsumsi Pakan (kg) / Total Pertambahan Bobot (kg)
+4.3. Feed Intake (FI) = Total Konsumsi Pakan (kg) / Lama Pemeliharaan (hari) / Populasi
+4.4. Average Daily Gain (ADG) = (Bobot Akhir - Bobot Awal) / Lama Pemeliharaan (hari)
+4.5. Perhitungan Mortalitas = (Jumlah Kambing Mati / Populasi Awal) × 100%
+4.6. Perhitungan Survival Rate = (Jumlah Kambing Hidup / Populasi Awal) × 100%
+4.7. Indeks Performa (IP) = Diukur berdasarkan capaian ADG penggemukan intensif.
+4.8. Standar Nilai IP (Berdasarkan ADG Kambing):
+- Istimewa: > 0,20 kg/hari (200 gr/hari)
+- Baik: 0,15 – 0,20 kg/hari
+- Cukup: 0,10 – 0,14 kg/hari
+- Terburuk: < 0,10 kg/hari
+4.9. Contoh Perhitungan:
+Kasus: Kambing dipelihara 60 hari. Bobot awal 15 kg, akhir 24 kg.
+- ADG: (24 - 15) / 60 = 0,15 kg/hari
+- Evaluasi IP: ADG 0,15 kg/hari (Klasifikasi Baik)
+5. Rumus Domba
+5.1. Bobot Rata-Rata (ABW) = Total Bobot Domba (kg) / Populasi Domba Hidup
+5.2. Feed Conversion Ratio (FCR) = Total Konsumsi Pakan (kg) / Total Pertambahan Bobot (kg)
+5.3. Feed Intake (FI) = Total Konsumsi Pakan (kg) / Lama Pemeliharaan (hari) / Populasi
+5.4. Average Daily Gain (ADG) = (Bobot Akhir - Bobot Awal) / Lama Pemeliharaan (hari)
+5.5. Perhitungan Mortalitas = (Jumlah Domba Mati / Populasi Awal) × 100%
+5.6. Perhitungan Survival Rate = (Jumlah Domba Hidup / Populasi Awal) × 100%
+5.7. Indeks Performa (IP) = Diukur berdasarkan capaian ADG penggemukan intensif (Domba umumnya tumbuh sedikit lebih cepat dari kambing).
+5.8. Standar Nilai IP (Berdasarkan ADG Domba):
+- Istimewa: > 0,25 kg/hari (250 gr/hari)
+- Baik: 0,15 – 0,25 kg/hari
+- Cukup: 0,10 – 0,14 kg/hari
+- Terburuk: < 0,10 kg/hari
+5.9. Contoh Perhitungan:
+Kasus: Domba digemukkan 60 hari. Bobot awal 20 kg, akhir 32 kg.
+- ADG: (32 - 20) / 60 = 0,20 kg/hari (200 gr/hari)
+- Evaluasi IP: ADG 0,20 kg/hari (Klasifikasi Baik)
+6. Rumus Ayam Ras (Petelur / Layer)
+6.1. Bobot Rata-Rata (ABW) = Total Bobot Ayam (kg) / Populasi Ayam Hidup
+6.2. Feed Conversion Ratio (FCR) = Total Konsumsi Pakan (kg) / Total Massa Telur (kg)
+6.3. Feed Intake (FI) = Total Konsumsi Pakan (kg) / Populasi / Hari
+6.4. Average Daily Gain (ADG) = (Bobot Akhir - Bobot Awal) / Waktu (Khusus masa pertumbuhan pullet)
+6.5. Perhitungan Mortalitas = (Jumlah Ayam Mati / Populasi Awal) × 100%
+6.6. Perhitungan Survival Rate = (Jumlah Ayam Hidup / Populasi Awal) × 100%
+6.7. HDP (Hen-Day Production) = (Produksi Telur Hari Ini / Populasi Ayam Hidup Hari Ini) × 100%
+6.8. HHA (Hen-Housed Average) = (Total Produksi Telur Kumulatif / Populasi Awal Masuk Kandang)
+6.9. Indeks Performa (IP) = Evaluasi performa ayam petelur komersial umumnya dinilai dari capaian HDP (Hen-Day Production) di masa puncak.
+6.10. Standar Nilai IP (Berdasarkan HDP Puncak Layer):
+- Istimewa: > 92%
+- Baik: 85% – 92%
+- Cukup: 75% – 84%
+- Terburuk: < 75%
+6.11. Contoh Perhitungan:
+Kasus: 1.000 ayam petelur (mati 20 ekor, sisa 980). Produksi telur harian 882 butir.
+- HDP: (882 / 980) × 100% = 90%
+- Evaluasi IP: HDP 90% (Klasifikasi Baik)
+7. Rumus Ayam Broiler (Pedaging)
+7.1. Bobot Rata-Rata (ABW) = Total Bobot Panen (kg) / Populasi Hidup Saat Panen
+7.2. Feed Conversion Ratio (FCR) = Total Konsumsi Pakan (kg) / Total Pertambahan Bobot (kg)
+7.3. Feed Intake (FI) = Total Konsumsi Pakan (kg) / Populasi / Hari
+7.4. Average Daily Gain (ADG) = (Bobot Panen - Bobot DOC) / Umur Panen (hari)
+7.5. Perhitungan Mortalitas = (Jumlah Mati / Populasi Awal DOC) × 100%
+7.6. Perhitungan Survival Rate = (Jumlah Hidup / Populasi Awal DOC) × 100%
+7.7. HDP & HHA = Rumus sama dengan layer (Hanya berlaku untuk ayam Parent Stock/Pembibit).
+7.8. Indeks Performa (IP) = Menggunakan rumus EPEF (European Production Efficiency Factor): IP = (Survival Rate (%) × Bobot Rata-rata (kg) / (FCR × Umur Panen (hari))) × 100
+7.9. Standar Nilai IP Broiler:
+- Istimewa: > 400
+- Baik: 350 – 400
+- Cukup: 300 – 349
+- Terburuk: < 300
+7.10. Contoh Perhitungan:
+Kasus: Broiler panen umur 35 hari. SR 96%. Bobot rata-rata 2,0 kg. FCR 1,53.
+- IP: (96 × 2,0) / (1,53 × 35) × 100 = 358,5
+- Evaluasi IP: Nilai 358,5 (Klasifikasi Baik)
+8. Rumus Bebek
+8.1. Bobot Rata-Rata (ABW) = Total Bobot Bebek (kg) / Populasi Bebek Hidup
+8.2. Feed Conversion Ratio (FCR) = Total Konsumsi Pakan (kg) / Total Pertambahan Bobot (Pedaging) atau Massa Telur (Petelur)
+8.3. Feed Intake (FI) = Total Konsumsi Pakan (kg) / Populasi / Hari
+8.4. Average Daily Gain (ADG) = (Bobot Akhir - Bobot DOD) / Umur Panen (hari)
+8.5. Perhitungan Mortalitas = (Jumlah Mati / Populasi Awal) × 100%
+8.6. Perhitungan Survival Rate = (Jumlah Hidup / Populasi Awal) × 100%
+8.7. HDP & HHA = HDP = (Produksi Telur / Populasi Bebek Hidup) × 100% (Khusus Bebek Petelur)
+8.8. Indeks Performa (IP) = Untuk Bebek Pedaging, IP dihitung menggunakan rumus Broiler: IP = (SR (%) × ABW (kg) / (FCR × Umur Panen)) × 100. Untuk Bebek Petelur dinilai dari HDP.
+8.9. Standar Nilai IP Bebek Pedaging:
+- Istimewa: > 300
+- Baik: 250 – 300
+- Cukup: 200 – 249
+- Terburuk: < 200
+8.10. Contoh Perhitungan:
+Kasus: Panen bebek peking umur 40 hari. SR 95%. ABW 1,5 kg. FCR 2,27.
+- IP: (95 × 1,5) / (2,27 × 40) × 100 = 156,9
+- Evaluasi IP: Nilai 156,9 (Klasifikasi Terburuk, indikasi FCR bengkak)
+9. Rumus Itik
+9.1. Bobot Rata-Rata (ABW) = Total Bobot Itik (kg) / Populasi Itik Hidup
+9.2. Feed Conversion Ratio (FCR) = Total Konsumsi Pakan (kg) / Total Massa Telur (kg)
+9.3. Feed Intake (FI) = Total Konsumsi Pakan (kg) / Populasi / Hari
+9.4. Average Daily Gain (ADG) = (Bobot Akhir - Bobot Awal) / Waktu (Khusus fase pertumbuhan/dara)
+9.5. Perhitungan Mortalitas = (Jumlah Mati / Populasi Awal) × 100%
+9.6. Perhitungan Survival Rate = (Jumlah Hidup / Populasi Awal) × 100%
+9.7. HDP (Hen-Day Production) = (Produksi Telur Harian / Populasi Itik Hidup) × 100%
+9.8. HHA (Hen-Housed Average) = (Total Produksi Telur / Populasi Itik Awal Masuk)
+9.9. Indeks Performa (IP) = Itik Petelur dievaluasi performanya berdasarkan kestabilan Hen-Day Production (HDP).
+9.10. Standar Nilai IP (Berdasarkan HDP Itik Petelur):
+- Istimewa: > 80%
+- Baik: 70% – 80%
+- Cukup: 60% – 69%
+- Terburuk: < 60%
+9.11. Contoh Perhitungan:
+Kasus: Sisa 490 ekor itik petelur. Telur harian 367 butir.
+- HDP: (367 / 490) × 100% = 74,89%
+- Evaluasi IP: HDP 74,89% (Klasifikasi Baik)
+10. Rumus Ayam Kampung
+10.1. Bobot Rata-Rata (ABW) = Total Bobot Ayam (kg) / Populasi Hidup
+10.2. Feed Conversion Ratio (FCR) = Total Konsumsi Pakan (kg) / Total Pertambahan Bobot
+10.3. Feed Intake (FI) = Total Konsumsi Pakan (kg) / Populasi / Hari
+10.4. Average Daily Gain (ADG) = (Bobot Akhir - Bobot Awal) / Umur (hari)
+10.5. Perhitungan Mortalitas = (Jumlah Mati / Populasi Awal) × 100%
+10.6. Perhitungan Survival Rate = (Jumlah Hidup / Populasi Awal) × 100%
+10.7. HDP & HHA = Berlaku untuk ayam kampung petelur (misal ayam KUB), dihitung dengan rumus layer.
+10.8. Indeks Performa (IP) = Joper (Ayam Kampung Pedaging) dihitung dengan rumus Broiler, namun standar klasifikasinya lebih rendah karena sifat genetik pertumbuhannya yang lebih lambat.
+10.9. Standar Nilai IP (Khusus Joper Pedaging):
+- Istimewa: > 250
+- Baik: 200 – 250
+- Cukup: 150 – 199
+- Terburuk: < 150
+10.10. Contoh Perhitungan:
+Kasus: Joper panen umur 60 hari. SR 95%. Bobot panen 1,0 kg. FCR 2,39.
+- IP: (95 × 1,0) / (2,39 × 60) × 100 = 66,2
+- Evaluasi IP: Nilai 66,2 (Klasifikasi Terburuk)
+11. Rumus Puyuh
+11.1. Bobot Rata-Rata (ABW) = Total Bobot Puyuh (kg) / Populasi Hidup
+11.2. Feed Conversion Ratio (FCR) = Total Konsumsi Pakan (kg) / Total Massa Telur (kg)
+11.3. Feed Intake (FI) = Total Konsumsi Pakan (kg) / Populasi / Hari
+11.4. Average Daily Gain (ADG) = (Bobot Akhir - Bobot Awal) / Waktu (Khusus fase stater/grower)
+11.5. Perhitungan Mortalitas = (Jumlah Mati / Populasi Awal) × 100%
+11.6. Perhitungan Survival Rate = (Jumlah Hidup / Populasi Awal) × 100%
+11.7. HDP (Hen-Day Production) = (Produksi Telur Harian / Populasi Puyuh Hidup) × 100%
+11.8. HHA (Hen-Housed Average) = (Total Produksi Telur / Populasi Awal Kandang)
+11.9. Indeks Performa (IP) = Puyuh petelur dievaluasi performanya berdasarkan target pencapaian Hen-Day Production (HDP).
+11.10. Standar Nilai IP (Berdasarkan HDP Puyuh):
+- Istimewa: > 85%
+- Baik: 75% – 85%
+- Cukup: 65% – 74%
+- Terburuk: < 65%
+11.11. Contoh Perhitungan:
+Kasus: 1.900 ekor puyuh produktif. Telur harian 1.615 butir.
+- HDP: (1.615 / 1.900) × 100% = 85%
+- Evaluasi IP: HDP 85% (Klasifikasi Baik / Istimewa)
