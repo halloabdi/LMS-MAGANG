@@ -240,7 +240,7 @@ export default function HitungIPTernak({ onBack }) {
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 w-full max-w-5xl px-4 md:px-0">
         
         {/* FORM PANEL */}
-        <div className="lg:col-span-7 bg-white/80 dark:bg-gray-800/80 backdrop-blur-xl border border-gray-200/50 dark:border-gray-700 shadow-2xl rounded-[2rem] p-6 md:p-8 overflow-hidden relative z-10">
+        <div className="lg:col-span-7 bg-white/80 dark:bg-gray-800/80 backdrop-blur-xl border border-gray-200/50 dark:border-gray-700 shadow-2xl rounded-[2rem] p-6 md:p-8 relative z-20">
           
           <div className="flex items-center gap-3 mb-6 p-4 rounded-2xl bg-gradient-to-br from-blue-50 to-green-50 dark:from-blue-900/20 dark:to-green-900/20 border border-blue-100/50 dark:border-blue-800/50">
             <Info className="flex-shrink-0 text-blue-500 w-6 h-6" />
