@@ -86,33 +86,36 @@ export default function HitungIPTernak({ onBack }) {
 
       if (selectedType === "potong_besar" || selectedType === "potong_kecil") {
         const adg = (bAkhir - bAwal) / lama;
-        const totalPakanPerEkor = pakanKg / pAkhir;
-        fcr = totalPakanPerEkor / (bAkhir - bAwal);
-        ip = adg;
+        const totalPakanPerEkor = pAkhir > 0 ? pakanKg / pAkhir : 0;
+        fcr = (bAkhir - bAwal) > 0 ? totalPakanPerEkor / (bAkhir - bAwal) : 0;
+
+        // Perbaikan: IP Ternak Potong sekarang melibatkan parameter SR dan FCR langsung
+        // agar perhitungan pakan membedakan hasil akhir IP (seperti halnya ayam).
+        ip = fcr > 0 ? (sr * adg) / fcr * 100 : 0;
 
         additionalInfo.push({ label: "Survival Rate", value: sr.toFixed(2) + " %" });
         additionalInfo.push({ label: "ADG", value: adg.toFixed(2) + " kg/hari" });
         additionalInfo.push({ label: "FCR", value: fcr.toFixed(3) });
 
         if (form.jenis === "Sapi Potong") {
-          if (adg > 1.5) rating = "Istimewa";
-          else if (adg >= 1.1) rating = "Baik";
-          else if (adg >= 0.8) rating = "Cukup";
+          if (ip >= 1500) rating = "Istimewa";
+          else if (ip >= 1000) rating = "Baik";
+          else if (ip >= 600) rating = "Cukup";
           else rating = "Terburuk";
         } else if (form.jenis === "Kerbau") {
-          if (adg > 1.0) rating = "Istimewa";
-          else if (adg >= 0.8) rating = "Baik";
-          else if (adg >= 0.5) rating = "Cukup";
+          if (ip >= 900) rating = "Istimewa";
+          else if (ip >= 600) rating = "Baik";
+          else if (ip >= 300) rating = "Cukup";
           else rating = "Terburuk";
         } else if (form.jenis === "Kambing Potong") {
-          if (adg > 0.20) rating = "Istimewa";
-          else if (adg >= 0.15) rating = "Baik";
-          else if (adg >= 0.10) rating = "Cukup";
+          if (ip >= 250) rating = "Istimewa";
+          else if (ip >= 150) rating = "Baik";
+          else if (ip >= 80) rating = "Cukup";
           else rating = "Terburuk";
         } else if (form.jenis === "Domba Potong") {
-          if (adg > 0.25) rating = "Istimewa";
-          else if (adg >= 0.15) rating = "Baik";
-          else if (adg >= 0.10) rating = "Cukup";
+          if (ip >= 350) rating = "Istimewa";
+          else if (ip >= 150) rating = "Baik";
+          else if (ip >= 80) rating = "Cukup";
           else rating = "Terburuk";
         }
       }
