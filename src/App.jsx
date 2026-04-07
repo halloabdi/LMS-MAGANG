@@ -624,7 +624,7 @@ export default function App() {
   };
 
   const handleFeatureClick = (featureName) => {
-    showToast('warning', 'Fitur Belum Tersedia', `Modul ${featureName} sedang dalam tahap pengembangan. Nantikan update selanjutnya!`);
+    showToast('warning', 'Akses Terbatas', `Silahkan melakukan Login untuk menggunakan fitur ${featureName} atau kontak Developer untuk dapat uji coba gratis.`);
   };
 
   const truncateString = (str, num) => {
