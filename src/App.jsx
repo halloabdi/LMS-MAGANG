@@ -478,6 +478,9 @@ export default function App() {
   const [currentPinnedIndex, setCurrentPinnedIndex] = useState(0);
   const pinnedNews = newsData.filter(n => n.isPinned);
   const regularNews = newsData.filter(n => !n.isPinned);
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 4;
+  const totalPages = Math.ceil(regularNews.length / itemsPerPage);
 
   const [activeService, setActiveService] = useState(null);
   const [activeSubMenu, setActiveSubMenu] = useState(null);
@@ -1100,10 +1103,18 @@ export default function App() {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6 xl:gap-10 items-stretch min-h-[450px] lg:min-h-[550px]">
 
             {/* Pinned News */}
-            <div className="relative overflow-hidden glass-card rounded-3xl shadow-xl group h-full flex flex-col">
-              <div
-                className="flex flex-1 w-full transition-transform duration-1000 ease-in-out"
-                style={{ transform: `translateX(-${currentPinnedIndex * 100}%)` }}
+            <div className="relative overflow-hidden glass-card rounded-3xl shadow-xl group h-[500px] md:h-full flex flex-col">
+              <motion.div
+                className="flex flex-1 w-full"
+                animate={{ x: `-${currentPinnedIndex * 100}%` }}
+                transition={{ type: "spring", stiffness: 300, damping: 30 }}
+                drag="x"
+                dragConstraints={{ left: 0, right: 0 }}
+                dragElastic={0.2}
+                onDragEnd={(e, { offset }) => {
+                  if (offset.x < -50) handleNextPinned();
+                  else if (offset.x > 50) handlePrevPinned();
+                }}
               >
                 {pinnedNews.map((news) => (
                   <div
@@ -1144,7 +1155,7 @@ export default function App() {
                     </div>
                   </div>
                 ))}
-              </div>
+              </motion.div>
 
               <button
                 onClick={(e) => { e.stopPropagation(); handlePrevPinned(); }}
@@ -1171,30 +1182,85 @@ export default function App() {
               </div>
             </div>
 
-            {/* Regular News */}
-            <div className="grid grid-cols-2 grid-rows-2 gap-4 md:gap-6 h-full">
-              {regularNews.slice(0, 4).map((news) => (
-                <div key={news.id} className="glass-card rounded-2xl overflow-hidden shadow-md hover:shadow-lg transition-shadow flex flex-col group h-full cursor-pointer" onClick={() => openModal('news', news)}>
-                  <div className="h-32 md:h-44 xl:h-52 relative overflow-hidden shrink-0">
-                    <img src={news.thumbnail} alt={news.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
+            {/* Regular News with Pagination */}
+            <div className="flex flex-col h-[500px] md:h-full relative z-20">
+              <div className="flex-1 relative overflow-hidden">
+                <AnimatePresence mode="wait">
+                  <motion.div
+                    key={currentPage}
+                    initial={{ opacity: 0, scale: 0.9, y: 30 }}
+                    animate={{ opacity: 1, scale: 1, y: 0 }}
+                    exit={{ opacity: 0, scale: 0.9, y: -30 }}
+                    transition={{ type: "spring", stiffness: 300, damping: 25 }}
+                    className="grid grid-cols-2 grid-rows-2 gap-4 md:gap-6 absolute inset-0"
+                  >
+                    {regularNews.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage).map((news) => (
+                      <div key={news.id} className="glass-card rounded-2xl overflow-hidden shadow-md hover:shadow-lg transition-shadow flex flex-col group h-full cursor-pointer" onClick={() => openModal('news', news)}>
+                        <div className="h-28 md:h-40 xl:h-48 relative overflow-hidden shrink-0">
+                          <img src={news.thumbnail} alt={news.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
+                        </div>
+                        <div className="p-3 md:p-4 flex flex-col flex-grow justify-between">
+                          <div>
+                            <div className="text-[10px] md:text-xs font-bold text-green-600 dark:text-green-400 mb-1.5 uppercase line-clamp-1 tracking-wide">{news.category}</div>
+                            <h3 className="text-sm md:text-base xl:text-lg font-extrabold mb-1.5 md:mb-2 leading-snug line-clamp-2 group-hover:text-green-600 dark:group-hover:text-green-400 transition-colors">{news.title}</h3>
+                            <p className="text-[10px] md:text-xs text-gray-500 dark:text-gray-400 mb-3 md:mb-4 line-clamp-2 md:line-clamp-3 text-justify">
+                              {news.content}
+                            </p>
+                          </div>
+                          <button
+                            onClick={(e) => { e.stopPropagation(); openModal('news', news); }}
+                            className="text-xs md:text-sm font-bold text-center w-full text-green-700 dark:text-green-400 bg-green-100 dark:bg-green-900/30 hover:bg-green-200 dark:hover:bg-green-800/50 px-3 py-2 md:py-2.5 rounded-xl transition-colors mt-auto shrink-0"
+                          >
+                            Yuk Baca!
+                          </button>
+                        </div>
+                      </div>
+                    ))}
+                  </motion.div>
+                </AnimatePresence>
+              </div>
+
+              {/* Pagination Controls */}
+              {totalPages > 0 && (
+                <div className="flex items-center justify-center gap-2 mt-6 animate-fade-in shrink-0 relative z-30">
+                  <button 
+                    onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+                    disabled={currentPage === 1}
+                    className="px-3 md:px-4 py-2 flex items-center gap-1 rounded-xl text-xs md:text-sm font-bold transition-all bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 shadow-sm border border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700 disabled:opacity-50 disabled:hover:translate-x-0 hover:-translate-x-1"
+                  >
+                    <span>&lt;</span> Before
+                  </button>
+                  
+                  <div className="flex items-center gap-1.5">
+                    {[...Array(totalPages)].map((_, idx) => {
+                      const page = idx + 1;
+                      if (totalPages > 4) {
+                        if (page !== 1 && page !== totalPages && page !== currentPage && page !== currentPage - 1 && page !== currentPage + 1) {
+                          if (page === 2 || page === totalPages - 1) return <span key={page} className="px-1 text-gray-400 font-bold">...</span>;
+                          return null;
+                        }
+                      }
+                      return (
+                        <button
+                          key={page}
+                          onClick={() => setCurrentPage(page)}
+                          className={`w-8 h-8 md:w-10 md:h-10 rounded-xl text-xs md:text-sm font-bold transition-all flex items-center justify-center shadow-sm border ${currentPage === page ? 'bg-gradient-to-r from-green-500 to-emerald-500 text-white border-transparent scale-110 shadow-md' : 'bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700 hover:scale-105'}`}
+                        >
+                          {page}
+                        </button>
+                      );
+                    })}
                   </div>
-                  <div className="p-4 flex flex-col flex-grow justify-between">
-                    <div>
-                      <div className="text-xs md:text-sm font-bold text-green-600 dark:text-green-400 mb-2 uppercase line-clamp-1 tracking-wide">{news.category}</div>
-                      <h3 className="text-base md:text-lg xl:text-xl font-extrabold mb-2 md:mb-3 leading-snug line-clamp-2 group-hover:text-green-600 dark:group-hover:text-green-400 transition-colors">{news.title}</h3>
-                      <p className="text-xs md:text-sm text-gray-500 dark:text-gray-400 mb-4 md:mb-5 line-clamp-3 text-justify">
-                        {news.content}
-                      </p>
-                    </div>
-                    <button
-                      onClick={(e) => { e.stopPropagation(); openModal('news', news); }}
-                      className="text-sm md:text-base font-bold text-center w-full text-green-700 dark:text-green-400 bg-green-100 dark:bg-green-900/30 hover:bg-green-200 dark:hover:bg-green-800/50 px-4 py-2.5 md:py-3 rounded-xl transition-colors mt-auto"
-                    >
-                      Yuk Baca!
-                    </button>
-                  </div>
+
+                  <button 
+                    onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+                    disabled={currentPage === totalPages}
+                    className="px-3 md:px-4 py-2 flex items-center gap-1 rounded-xl text-xs md:text-sm font-bold transition-all bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 shadow-sm border border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700 disabled:opacity-50 disabled:hover:translate-x-0 hover:translate-x-1"
+                  >
+                    Next <span>&gt;</span>
+                  </button>
                 </div>
-              ))}
+              )}
             </div>
 
           </div>
