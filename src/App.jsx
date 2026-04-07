@@ -624,7 +624,12 @@ export default function App() {
   };
 
   const handleFeatureClick = (featureName) => {
-    showToast('warning', 'Akses Terbatas', `Silahkan melakukan Login untuk menggunakan fitur ${featureName} atau kontak Developer untuk dapat uji coba gratis.`);
+    const premiumFeatures = ["Catatan Pakan", "Catat Ternak", "Catat Vitamin", "Data Tersimpan"];
+    if (premiumFeatures.includes(featureName)) {
+      showToast('warning', 'Akses Terbatas', `Silahkan melakukan Login untuk menggunakan fitur ${featureName} atau kontak Developer untuk dapat uji coba gratis.`);
+    } else {
+      showToast('warning', 'Sedang Dikembangkan', `Fitur ${featureName} masih dalam pengembangan. Silahkan hubungi Developer untuk info lebih lanjut.`);
+    }
   };
 
   const truncateString = (str, num) => {
