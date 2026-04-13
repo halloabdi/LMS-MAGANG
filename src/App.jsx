@@ -10,6 +10,7 @@ import {
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import HitungIPTernak from './components/HitungIPTernak';
+import Dashboard from './components/Dashboard';
 
 // --- DATA FROM USER ---
 const aboutText = "Website SATUTERNAK adalah platform digital gratis yang dirancang secara spesifik bagi peternak skala rakyat untuk mengelola rekam jejak pemeliharaan dan menganalisis kelayakan usaha. Aplikasi berbasis situs web ini dibangun menggunakan arsitektur pemrograman yang ringan agar responsif dan mudah diakses meskipun peternak berada di wilayah pelosok dengan keterbatasan sinyal internet.";
@@ -464,10 +465,10 @@ const ToastNotification = ({ type, title, message, onClose }) => {
 
 
 // --- Main Application ---
-export default function App() {
+export function LandingPage() {
   const [activeSection, setActiveSection] = useState('home');
   const [darkMode, setDarkMode] = useState(false);
-  const [showLogin, setShowLogin] = useState(false);
+  const [showLogin, setShowLogin] = useState(window.location.hash === '#login');
   const [allPricesExpanded, setAllPricesExpanded] = useState(false);
   const [showMobileMenu, setShowMobileMenu] = useState(false);
 
@@ -621,10 +622,73 @@ export default function App() {
     setActiveSubMenu(null);
   };
 
-  const handleLoginSubmit = (e) => {
+  const [loginEmail, setLoginEmail] = useState('');
+  const [loginPassword, setLoginPassword] = useState('');
+  const [isLoggingIn, setIsLoggingIn] = useState(false);
+
+  const handleLoginSubmit = async (e) => {
     e.preventDefault();
-    setShowLogin(false);
-    showToast('success', 'Login Berhasil', 'Anda telah berhasil masuk ke dalam dashboard SatuTernak.');
+    setIsLoggingIn(true);
+    showToast('info', 'Harap Tunggu', 'Mencoba masuk ke sistem...');
+
+    try {
+      const response = await fetch('https://docs.google.com/spreadsheets/d/1gJN7Ej04Cn1IIFXDFISLlAv_cHgrOLqWXl9z7sGoFyg/gviz/tq?tqx=out:csv&sheet=InfoAkun');
+      const csvText = await response.text();
+      
+      const rows = [];
+      let row = [];
+      let currentVal = '';
+      let inQuotes = false;
+      for (let i = 0; i < csvText.length; i++) {
+        const char = csvText[i];
+        if (char === '"') {
+          if (inQuotes && csvText[i+1] === '"') { currentVal += '"'; i++; }
+          else { inQuotes = !inQuotes; }
+        } else if (char === ',' && !inQuotes) {
+          row.push(currentVal); currentVal = '';
+        } else if (char === '\n' && !inQuotes) {
+          row.push(currentVal); rows.push(row); row = []; currentVal = '';
+        } else if (char !== '\r') {
+          currentVal += char;
+        }
+      }
+      if (row.length || currentVal) { row.push(currentVal); rows.push(row); }
+
+      const headers = rows[0];
+      let userFound = null;
+
+      for (let j = 1; j < rows.length; j++) {
+        const r = rows[j];
+        if (!r[1]) continue;
+        const username = r[1];
+        const email = r[2];
+        const pass = r[11];
+
+        if ((username === loginEmail || email === loginEmail) && pass === loginPassword) {
+          userFound = {};
+          headers.forEach((h, idx) => {
+            if (h !== "Password") userFound[h] = r[idx];
+          });
+          break;
+        }
+      }
+
+      if (userFound) {
+        localStorage.setItem('satuternak_user', JSON.stringify(userFound));
+        setShowLogin(false);
+        showToast('success', 'Login Berhasil', 'Mengarahkan ke Dashboard...');
+        setTimeout(() => {
+          window.location.hash = '';
+          window.location.pathname = '/Dashboard';
+        }, 1000);
+      } else {
+        showToast('error', 'Gagal', 'Username/Email atau Password salah!');
+      }
+    } catch (error) {
+      showToast('error', 'Koneksi Gagal', 'Gagal terhubung ke server database.');
+    } finally {
+      setIsLoggingIn(false);
+    }
   };
 
   const handleFeatureClick = (featureName) => {
@@ -689,12 +753,12 @@ export default function App() {
         <h2 className="text-2xl font-extrabold text-center mb-6 font-['Poppins'] text-green-600">Login SATUTERNAK</h2>
         <form className="space-y-4" onSubmit={handleLoginSubmit}>
           <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Email</label>
-            <input type="email" className="w-full px-4 py-3 rounded-xl bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 focus:ring-2 focus:ring-green-500 outline-none" placeholder="peternak@contoh.com" required />
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Email / Username</label>
+            <input type="text" value={loginEmail} onChange={e => setLoginEmail(e.target.value)} className="w-full px-4 py-3 rounded-xl bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 focus:ring-2 focus:ring-green-500 outline-none" placeholder="peternak@contoh.com" required disabled={isLoggingIn} />
           </div>
           <div>
             <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Password</label>
-            <input type="password" className="w-full px-4 py-3 rounded-xl bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 focus:ring-2 focus:ring-green-500 outline-none" placeholder="••••••••" required />
+            <input type="password" value={loginPassword} onChange={e => setLoginPassword(e.target.value)} className="w-full px-4 py-3 rounded-xl bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 focus:ring-2 focus:ring-green-500 outline-none" placeholder="••••••••" required disabled={isLoggingIn} />
           </div>
           <div className="flex items-center">
             <input type="checkbox" id="remember" className="w-4 h-4 text-green-600 rounded focus:ring-green-500 border-gray-300" defaultChecked />
@@ -702,8 +766,8 @@ export default function App() {
               Ingat Saya 30 Hari
             </label>
           </div>
-          <button type="submit" className="w-full bg-green-600 text-white py-3 rounded-xl font-bold hover:bg-green-700 transition shadow-lg hover:shadow-green-500/30">
-            Masuk Sekarang
+          <button type="submit" disabled={isLoggingIn} className={`w-full ${isLoggingIn ? 'bg-gray-400' : 'bg-green-600 hover:bg-green-700'} text-white py-3 rounded-xl font-bold transition shadow-lg hover:shadow-green-500/30`}>
+            {isLoggingIn ? 'Memproses...' : 'Masuk Sekarang'}
           </button>
         </form>
       </motion.div>
@@ -897,7 +961,7 @@ export default function App() {
           <NavItem label="Informasi" icon={FileText} active={activeSection === 'info'} onClick={() => scrollTo('info')} />
           <NavItem label="Sponsor" icon={Users} active={activeSection === 'sponsor'} onClick={() => scrollTo('sponsor')} />
           <div className="w-px h-6 bg-gray-300 dark:bg-gray-600 mx-1 lg:mx-2"></div>
-          <NavItem label="Login" icon={User} active={showLogin} onClick={() => setShowLogin(true)} />
+          <NavItem label="Login" icon={User} active={showLogin} onClick={() => { setShowLogin(true); window.location.hash = '#login'; }} />
         </nav>
 
         <button onClick={toggleTheme} className="p-2 lg:p-3 rounded-full bg-gray-100 hover:bg-gray-200 dark:bg-gray-800 dark:hover:bg-gray-700 transition flex-shrink-0">
@@ -1469,7 +1533,7 @@ export default function App() {
         </div>
 
         <div className="flex-1 flex justify-center">
-          <NavItem label="Akun" icon={User} active={showLogin} onClick={() => setShowLogin(true)} mobile />
+          <NavItem label="Akun" icon={User} active={showLogin} onClick={() => { setShowLogin(true); window.location.hash = '#login'; }} mobile />
         </div>
       </nav>
 
@@ -1623,4 +1687,25 @@ export default function App() {
 
     </div>
   );
+}
+
+export default function AppRouter() {
+  const [currentPath, setCurrentPath] = useState(window.location.pathname);
+
+  useEffect(() => {
+    const handleLocationChange = () => {
+      setCurrentPath(window.location.pathname);
+    };
+
+    window.addEventListener('popstate', handleLocationChange);
+    return () => {
+      window.removeEventListener('popstate', handleLocationChange);
+    };
+  }, []);
+
+  if (currentPath === '/Dashboard' || currentPath === '/dashboard') {
+    return <Dashboard />;
+  }
+
+  return <LandingPage />;
 }
