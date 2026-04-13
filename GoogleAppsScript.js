@@ -193,59 +193,60 @@ function cascadeUpdateId(sheetName, oldId, newId) {
 }
 
 // ============================================
-// FUNGSI KHUSUS UNTUK MEMAKSA TAMPILAN IZIN GOOGLE DRIVE (JALANKAN INI SEKALI SAJA)
+// WAKTU PERTAMA KALI: JALANKAN FUNGSI INI DARI EDITOR UNTUK MEMAKSA MUNCULNYA IZIN!
 // ============================================
-function SETUP_IZIN_GOOGLE_DRIVE_DISINI() {
-  try {
-    var files = DriveApp.getFiles();
-    var ss = SpreadsheetApp.openById(SPREADSHEET_ID);
-    return "SANGAT BERHASIL! Izin Google Drive kini telah terbuka 100%. Silakan lakukan New Deploy.";
-  } catch(e) {
-    return "JANGAN KHAWATIR! Sengaja error karena Popup Izin harus Anda SETUJUI dulu. Klik Tinjau Izin -> Centang Semua -> Lanjutkan -> Allow.";
-  }
+function JALANKAN_UNTUK_MENGELUARKAN_IZIN_GO_UNSAFE() {
+  // Tanpa try-catch agar sistem Scanner Google 100% mendeteksi kebutuhan OAuth Drive!
+  var folder = DriveApp.getRootFolder(); 
+  var checkSheet = SpreadsheetApp.openById(SPREADSHEET_ID);
+  return "BERHASIL! Jika Go Unsafe sudah Anda setujui sebelumnya, maka Anda tinggal melakukan Deploy -> Manage Deployments -> New Version.";
 }
 
 // ============================================
-// UPLOAD HANDLER (OTOMATIK KE GOOGLE DRIVE ADMIN)
+// UPLOAD HANDLER
 // ============================================
+function extractFolderId(url) {
+  if (!url || url === "-") return null;
+  var match = url.match(/folders\/([a-zA-Z0-9-_]+)/);
+  if (match) return match[1];
+  match = url.match(/id=([a-zA-Z0-9-_]+)/);
+  if (match) return match[1];
+  return null;
+}
+
 function handleUpload(payload) {
+  var folderId = extractFolderId(payload.folderUrl);
+  if (!folderId) return respondError("GAGAL_URL_FOLDER: Link Folder Penyimpanan Anda pada Kolom M tidak sah. Isikan Link asli folder Google Drive Anda.");
+  if (!folderId) return respondError("GAGAL_PARSE_URL: Format Link Folder Penyimpanan pada Kolom M Anda tidak mengandung ID Google Drive yang sah. Harap periksa kembali.");
+
+  var folder;
   try {
-    const FOLDER_NAME = "FOLDER_UPLOAD_SATUTERNAK";
-    var folders = DriveApp.getFoldersByName(FOLDER_NAME);
-    var folder;
-    
-    // Gunakan folder sentral jika ada, buat baru jika belum
-    if (folders.hasNext()) {
-      folder = folders.next();
-    } else {
-      folder = DriveApp.createFolder(FOLDER_NAME);
-      folder.setSharing(DriveApp.Access.ANYONE_WITH_LINK, DriveApp.Permission.VIEW);
-    }
-
-    // Dekode file
-    var data = Utilities.base64Decode(payload.base64Data);
-    var blob = Utilities.newBlob(data, payload.mimeType, payload.fileName);
-
-    // Buat file dan posisikan sharing agar dapat dimuat oleh public link .png/.jpg
-    var file = folder.createFile(blob);
-    file.setSharing(DriveApp.Access.ANYONE_WITH_LINK, DriveApp.Permission.VIEW);
-    var fileUrl = file.getUrl();
-
-    // Timpa URL ke dalam Sheet InfoAkun secara presisi pada Role pengupload
-    var sheet = SpreadsheetApp.openById(SPREADSHEET_ID).getSheetByName("InfoAkun");
-    var dataSheet = sheet.getDataRange().getValues();
-    for (var i = 1; i < dataSheet.length; i++) {
-      if (dataSheet[i][0] === payload.userId) { 
-        sheet.getRange(i + 1, 9).setValue(fileUrl); // Kolom 9 (I) Foto Profil
-        break;
-      }
-    }
-
-    return respondSuccess({ fileUrl: fileUrl, message: "Foto Anda kini 100% berhasil tertanam di Google Spreadsheets dan Google Drive tanpa perlu capek mikirin Link Kolom M!" });
-
+    folder = DriveApp.getFolderById(folderId);
   } catch (e) {
-    return respondError("DITOLAK KARENA BUKAN OWNER ASLI/BELUM IZIN: " + e.message);
+    return respondError(
+      "AKSES_DITOLAK_DRIVE: Skrip gagal mengakses Link Folder Penyimpanan yang Anda tautkan di Kolom M. Error utama: " + e.message + ". " +
+      "MOHON BACA SOLUSI INI: Ganti fungsi di tombol biru Jalankan/Run ke 'AKTIFKAN_IZIN_DRIVE_SEKARANG' lalu jalankan. " +
+      "Pastikan folder Drive tersebut telah diset Akses Siapa Saja (Anyone with link) - Editor Google Drive."
+    );
   }
+
+  var data = Utilities.base64Decode(payload.base64Data);
+  var blob = Utilities.newBlob(data, payload.mimeType, payload.fileName);
+
+  var file = folder.createFile(blob);
+  file.setSharing(DriveApp.Access.ANYONE_WITH_LINK, DriveApp.Permission.VIEW);
+  var fileUrl = file.getUrl();
+
+  var sheet = SpreadsheetApp.openById(SPREADSHEET_ID).getSheetByName("InfoAkun");
+  var dataSheet = sheet.getDataRange().getValues();
+  for (var i = 1; i < dataSheet.length; i++) {
+    if (dataSheet[i][0] === payload.userId) { 
+      sheet.getRange(i + 1, 9).setValue(fileUrl); // Kolom 9 (I) Foto Profil
+      break;
+    }
+  }
+
+  return respondSuccess({ fileUrl: fileUrl, message: "Foto Anda kini 100% berhasil masuk ke dalam Folder Kolom M Anda sendiri!" });
 }
 
 // ============================================
