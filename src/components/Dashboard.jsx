@@ -418,7 +418,9 @@ const InputRekordingView = ({ user }) => {
     menit: new Date().getMinutes().toString().padStart(2, '0'),
     jenisHewan: '', 
     jumlah: '', 
-    keterangan: '' 
+    keterangan: '',
+    satuanPakan: 'Kg',
+    beratSak: '50'
   });
   const [loading, setLoading] = useState(false);
 
@@ -427,7 +429,7 @@ const InputRekordingView = ({ user }) => {
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    if (!form.jenis || !form.jenisHewan || !form.jumlah) return alert("Pilih evaluasi, jenis ternak, dan jumlah ekor!");
+    if (!form.jenis || !form.jenisHewan || !form.jumlah) return alert("Pilih evaluasi, jenis ternak, dan jumlah ekor/pakan!");
     setLoading(true);
 
     const ds = form.tanggal instanceof Date ? form.tanggal : new Date();
@@ -449,11 +451,18 @@ const InputRekordingView = ({ user }) => {
       "Jenis Evaluasi": form.jenis
     };
 
-    if (form.jenis === 'Populasi Awal Masuk') submitPayload["Jumlah Populasi Awal Masuk Ternak"] = form.jumlah;
-    else if (form.jenis === 'Penambahan Populasi Ternak') submitPayload["Jumlah Penambahan Populasi Ternak"] = form.jumlah;
-    else if (form.jenis === 'Kematian Ternak (Mortalitas)') submitPayload["Jumlah Kematian Ternak"] = form.jumlah;
-    else if (form.jenis === 'Program Vaksinasi') submitPayload["Jumlah Ternak Di Vaksin"] = form.jumlah;
-    else submitPayload["Jumlah Ekor Terdampak"] = form.jumlah;
+    let finalJumlah = Number(form.jumlah) || 0;
+    if ((form.jenis === 'Pemberian Pakan' || form.jenis === 'Stok Gudang') && form.satuanPakan === 'Sak') {
+       finalJumlah = finalJumlah * (Number(form.beratSak) || 0);
+    }
+
+    if (form.jenis === 'Populasi Awal Masuk') submitPayload["Jumlah Populasi Awal Masuk Ternak"] = finalJumlah;
+    else if (form.jenis === 'Penambahan Populasi Ternak') submitPayload["Jumlah Penambahan Populasi Ternak"] = finalJumlah;
+    else if (form.jenis === 'Kematian Ternak (Mortalitas)') submitPayload["Jumlah Kematian Ternak"] = finalJumlah;
+    else if (form.jenis === 'Program Vaksinasi') submitPayload["Jumlah Ternak Di Vaksin"] = finalJumlah;
+    else if (form.jenis === 'Pemberian Pakan') submitPayload["Jumlah Pemberian Pakan (Kg)"] = finalJumlah;
+    else if (form.jenis === 'Stok Gudang') submitPayload["Jumlah Stok Gudang (Kg)"] = finalJumlah;
+    else submitPayload["Jumlah Ekor Terdampak"] = finalJumlah;
 
     fetch(GAS_URL, {
       method: "POST",
@@ -472,7 +481,9 @@ const InputRekordingView = ({ user }) => {
             menit: new Date().getMinutes().toString().padStart(2, '0'),
             jenisHewan: '', 
             jumlah: '', 
-            keterangan: '' 
+            keterangan: '',
+            satuanPakan: 'Kg',
+            beratSak: '50'
           }); 
         }
         setLoading(false);
@@ -523,28 +534,58 @@ const InputRekordingView = ({ user }) => {
           <div>
             <label className="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-1">Jenis Evaluasi</label>
             <ModernSelect
-              value={form.jenis}
-              onChange={(v) => setForm({ ...form, jenis: v })}
-              options={['Populasi Awal Masuk', 'Penambahan Populasi Ternak', 'Kematian Ternak (Mortalitas)', 'Program Vaksinasi', 'Lainnya']}
-              placeholder="- Pilih Kejadian -"
+               value={form.jenis}
+               onChange={(v) => setForm({ ...form, jenis: v })}
+               options={['Populasi Awal Masuk', 'Penambahan Populasi Ternak', 'Kematian Ternak (Mortalitas)', 'Program Vaksinasi', 'Pemberian Pakan', 'Stok Gudang', 'Lainnya']}
+               placeholder="- Pilih Kejadian -"
             />
           </div>
         </div>
+        
         <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
           <div>
             <label className="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-1">Jenis Ternak</label>
-            <input type="text" required value={form.jenisHewan} onChange={e => setForm({ ...form, jenisHewan: e.target.value })} placeholder="Cth: Sapi Potong / Kambing" className="w-full px-4 py-3 rounded-xl bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 outline-none focus:ring-2 focus:ring-green-500 font-medium" />
+            <input type="text" required value={form.jenisHewan} onChange={e => setForm({ ...form, jenisHewan: e.target.value })} placeholder="Cth: Sapi Potong / Kambing" className="w-full px-4 py-3 rounded-xl bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 outline-none focus:ring-2 focus:ring-green-500 font-medium cursor-text" />
           </div>
           <div>
-            <label className="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-1">Jumlah Ekor Terkait Kejadian</label>
-            <input type="number" required value={form.jumlah} onChange={e => setForm({ ...form, jumlah: e.target.value })} placeholder="Cth: 10" className="w-full px-4 py-3 rounded-xl bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 outline-none focus:ring-2 focus:ring-green-500 font-medium" />
+            <label className="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-1">
+              {(form.jenis === 'Pemberian Pakan' || form.jenis === 'Stok Gudang') ? "Jumlah Kuantitas" : "Jumlah Ekor Terkait Kejadian"}
+            </label>
+            <div className="flex gap-2">
+              <input type="number" required value={form.jumlah} onChange={e => setForm({ ...form, jumlah: e.target.value })} placeholder="Cth: 10" className="w-full px-4 py-3 rounded-xl bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 outline-none focus:ring-2 focus:ring-green-500 font-medium flex-1 cursor-text" />
+              
+              {(form.jenis === 'Pemberian Pakan' || form.jenis === 'Stok Gudang') && (
+                <div className="w-[120px] relative z-[40]">
+                  <ModernSelect 
+                    value={form.satuanPakan} 
+                    onChange={v => setForm({...form, satuanPakan: v})} 
+                    options={['Kg', 'Sak']} 
+                    placeholder="Satuan" 
+                  />
+                </div>
+              )}
+            </div>
           </div>
         </div>
+
+        {/* INJECTION UNTUK INPUT BERAT SAK */}
+        <AnimatePresence>
+          {(form.jenis === 'Pemberian Pakan' || form.jenis === 'Stok Gudang') && form.satuanPakan === 'Sak' && (
+            <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }} exit={{ opacity: 0, height: 0 }} className="overflow-hidden">
+              <div className="pt-2">
+                 <label className="block text-sm font-bold text-blue-700 dark:text-blue-400 mb-1">Berat per 1 Sak (Kg)</label>
+                 <input type="number" required value={form.beratSak} onChange={e => setForm({ ...form, beratSak: e.target.value })} placeholder="Cth: 50" className="w-full px-4 py-3 rounded-xl bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 outline-none focus:ring-2 focus:ring-blue-500 font-medium text-blue-800 dark:text-blue-200 cursor-text" />
+                 <p className="text-xs font-medium text-gray-500 mt-2">Dihitung menjadi total: {Number(form.jumlah || 0) * Number(form.beratSak || 0)} Kg.</p>
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+
         <div>
           <label className="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-1">Keterangan / Memo (Sebab/Kondisi)</label>
-          <textarea rows="3" value={form.keterangan} onChange={e => setForm({ ...form, keterangan: e.target.value })} className="w-full px-4 py-3 rounded-xl bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 outline-none focus:ring-2 focus:ring-green-500 font-medium resize-none"></textarea>
+          <textarea rows="3" value={form.keterangan} onChange={e => setForm({ ...form, keterangan: e.target.value })} className="w-full px-4 py-3 rounded-xl bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 outline-none focus:ring-2 focus:ring-green-500 font-medium resize-none cursor-text"></textarea>
         </div>
-        <button disabled={loading} className="px-8 py-3 bg-green-600 font-bold text-white rounded-xl shadow-lg w-full md:w-auto hover:bg-green-700">
+        <button disabled={loading} className="px-8 py-3 bg-green-600 font-bold text-white rounded-xl shadow-lg w-full md:w-auto hover:bg-green-700 cursor-pointer">
           {loading ? 'Menyimpan...' : 'Simpan Pencatatan'}
         </button>
       </form>
@@ -631,33 +672,53 @@ const InputUsahaView = ({ user }) => {
   );
 };
 
-// ==========================================
-// RIWAYAT TABLES 
-// ==========================================
-const RiwayatRekordingView = ({ user }) => {
+const RiwayatRekordingView = ({ user, onChangeTab }) => {
   const [records, setRecords] = useState([]);
   const [loading, setLoading] = useState(true);
 
+  // USER MAP FOR MODERATOR
+  const [idToNameMap, setIdToNameMap] = useState({});
+
   // FILTER STATES
-  const [dateStart, setDateStart] = useState("");
-  const [dateEnd, setDateEnd] = useState("");
+  const [dateStart, setDateStart] = useState(null);
+  const [dateEnd, setDateEnd] = useState(null);
   const [selectedAkun, setSelectedAkun] = useState(user.Role === 'Moderator' ? "Semua" : user['ID Akun']);
   
-  // IP CALC STATES
+  // IP CALC & MISSING DATA STATES
   const [showIPCalc, setShowIPCalc] = useState(false);
   const [ipData, setIpData] = useState(null);
+  const [showMissingData, setShowMissingData] = useState(false);
+  const [manualData, setManualData] = useState({ totalPakan: '', bobotAkhir: '', satuanPakan: 'Kg', beratSak: '50', modeInputActive: false });
+  const [isSavingManual, setIsSavingManual] = useState(false);
 
-  useEffect(() => {
+  const fetchRecords = () => {
+    setLoading(true);
     fetch(GAS_URL, { method: 'POST', body: JSON.stringify({ action: 'getRekording', userId: user['ID Akun'], role: user.Role }) })
       .then(r => r.json()).then(res => { if (res.status === 'success') setRecords(res.data.reverse()); setLoading(false); }).catch(() => setLoading(false));
+  };
+
+  useEffect(() => {
+    fetchRecords();
+    if (user.Role === 'Moderator') {
+       fetch(GAS_URL, { method: "POST", body: JSON.stringify({ action: "getUsers", userId: user['ID Akun'], role: user.Role }) })
+        .then(r => r.json())
+        .then(res => {
+           if (res.status === 'success') {
+              const map = {};
+              res.data.forEach(u => map[u['ID Akun']] = u['Nama Lengkap']);
+              setIdToNameMap(map);
+           }
+        });
+    }
   }, [user]);
 
+  const getUserName = (id) => idToNameMap[id] || id;
   const uniqueUsers = Array.from(new Set(records.map(r => r['ID Akun']))).filter(Boolean);
 
   const filteredRecords = records.filter(r => {
     if (user.Role === 'Moderator' && selectedAkun !== 'Semua' && r['ID Akun'] !== selectedAkun) return false;
     const recordDate = new Date(r['TimeStamp'] || r['Tanggal & Waktu'] || r['Tanggal']);
-    if (dateStart && recordDate < new Date(dateStart)) return false;
+    if (dateStart && recordDate < new Date(dateStart).setHours(0,0,0,0)) return false;
     if (dateEnd) {
       const end = new Date(dateEnd);
       end.setHours(23, 59, 59, 999);
@@ -666,21 +727,19 @@ const RiwayatRekordingView = ({ user }) => {
     return true;
   });
 
-  const handleAnalisisIP = () => {
-    if (filteredRecords.length === 0) return alert("Tidak ada data dalam rentang filter untuk dihitung.");
-    
-    const popAwalArr = filteredRecords.filter(r => r['Jenis Evaluasi'] === 'Populasi Awal Masuk');
+  const runCalculation = (recordsToUse) => {
+    const popAwalArr = recordsToUse.filter(r => r['Jenis Evaluasi'] === 'Populasi Awal Masuk');
     const sumAwal = popAwalArr.reduce((acc, curr) => acc + (Number(curr['Jumlah Populasi Awal Masuk Ternak'] || curr['Jumlah Ekor Terdampak']) || 0), 0);
 
-    const popTambahArr = filteredRecords.filter(r => r['Jenis Evaluasi'] === 'Penambahan Populasi Ternak');
+    const popTambahArr = recordsToUse.filter(r => r['Jenis Evaluasi'] === 'Penambahan Populasi Ternak');
     const sumTambah = popTambahArr.reduce((acc, curr) => acc + (Number(curr['Jumlah Penambahan Populasi Ternak'] || curr['Jumlah Ekor Terdampak']) || 0), 0);
 
-    const popMatiArr = filteredRecords.filter(r => r['Jenis Evaluasi'] === 'Kematian Ternak (Mortalitas)');
+    const popMatiArr = recordsToUse.filter(r => r['Jenis Evaluasi'] === 'Kematian Ternak (Mortalitas)');
     const sumMati = popMatiArr.reduce((acc, curr) => acc + (Number(curr['Jumlah Kematian Ternak'] || curr['Jumlah Ekor Terdampak']) || 0), 0);
 
     const populasiAkhir = sumAwal + sumTambah - sumMati;
 
-    let dates = filteredRecords.map(r => new Date(r['TimeStamp'] || r['Tanggal & Waktu'] || r['Tanggal']).getTime()).filter(t => !isNaN(t));
+    let dates = recordsToUse.map(r => new Date(r['TimeStamp'] || r['Tanggal & Waktu'] || r['Tanggal']).getTime()).filter(t => !isNaN(t));
     let durationDays = 1;
     if (dates.length > 0) {
       let minTime = Math.min(...dates);
@@ -689,15 +748,14 @@ const RiwayatRekordingView = ({ user }) => {
       if (durationDays < 1) durationDays = 1;
     }
 
-    // Attempt to guess Jenis Ternak
     let guessedJenis = "";
-    for (let i = 0; i < filteredRecords.length; i++) {
-       if (filteredRecords[i]['Jenis Ternak']) {
-           guessedJenis = filteredRecords[i]['Jenis Ternak'];
+    for (let i = 0; i < recordsToUse.length; i++) {
+       if (recordsToUse[i]['Jenis Ternak']) {
+           guessedJenis = recordsToUse[i]['Jenis Ternak'];
            break;
        }
     }
-    // Set matching string for JENIS_TERNAK_OPTIONS from HitungIPTernak
+    
     let finalJenisForm = "";
     const lowerGuess = guessedJenis.toLowerCase();
     if (lowerGuess.includes("sapi") && lowerGuess.includes("perah")) finalJenisForm = "Sapi Perah";
@@ -713,48 +771,132 @@ const RiwayatRekordingView = ({ user }) => {
     else if (lowerGuess.includes("kerbau")) finalJenisForm = "Kerbau";
     else if (lowerGuess.includes("puyuh")) finalJenisForm = "Puyuh";
 
+    // Auto extract Feed data if it exists
+    const pakanArr = recordsToUse.filter(r => r['Jenis Evaluasi'] === 'Pemberian Pakan' || r['Jenis Evaluasi'] === 'Kalkulasi Manual IP');
+    const sumPakan = pakanArr.reduce((acc, curr) => acc + (Number(curr['Jumlah Pemberian Pakan (Kg)'] || curr['Total Konsumsi Pakan (Kg)']) || 0), 0);
+    
+    // Auto extract Harvest weight if it exists mapped manually
+    const bobotArr = recordsToUse.filter(r => r['Jenis Evaluasi'] === 'Kalkulasi Manual IP' && r['Bobot Panen (Kg)']);
+    const lastBobot = bobotArr.length > 0 ? Number(bobotArr[bobotArr.length - 1]['Bobot Panen (Kg)']) : "";
+
     setIpData({
       jenis: finalJenisForm,
       populasiAwal: sumAwal || "",
       populasiAkhir: populasiAkhir || "",
       lamaPemeliharaan: durationDays,
+      totalPakan: sumPakan || "",
+      bobotAkhir: lastBobot || ""
     });
     
     setShowIPCalc(true);
   };
 
+  const handleAnalisisIP = () => {
+    if (filteredRecords.length === 0) return alert("Tidak ada data dalam rentang filter untuk dihitung.");
+    
+    // VALIDATOR: Check for 'Pemberian Pakan' or 'Kalkulasi Manual IP'
+    const hasPakan = filteredRecords.some(r => r['Jenis Evaluasi'] === 'Pemberian Pakan' || r['Jenis Evaluasi'] === 'Kalkulasi Manual IP');
+    if (!hasPakan) {
+       setShowMissingData(true);
+       return;
+    }
+    
+    runCalculation(filteredRecords);
+  };
+
+  const handleSaveManualData = () => {
+    if (!manualData.totalPakan || !manualData.bobotAkhir) return alert("Lengkapi data yang kosong!");
+    setIsSavingManual(true);
+
+    let finalPakan = Number(manualData.totalPakan) || 0;
+    if (manualData.satuanPakan === 'Sak') {
+      finalPakan = finalPakan * (Number(manualData.beratSak) || 0);
+    }
+
+    const payload = {
+      "TimeStamp": new Date().toISOString(),
+      "ID Akun": user['ID Akun'],
+      "Username": user['Username'],
+      "Nama Lengkap": user['Nama Lengkap'],
+      "Role": user.Role,
+      "Jenis Evaluasi": "Kalkulasi Manual IP",
+      "Total Konsumsi Pakan (Kg)": finalPakan,
+      "Bobot Panen (Kg)": manualData.bobotAkhir,
+      "Keterangan Tambahan": "Data Ekstra Disimpan via Missing Data Validator"
+    };
+
+    fetch(GAS_URL, {
+      method: "POST",
+      body: JSON.stringify({ action: "addRekording", payload })
+    }).then(r => r.json()).then(res => {
+      if (res.status === 'success') {
+         alert("Data Ekstra Berhasil Disimpan ke Rekomendasi Anda!");
+         setShowMissingData(false);
+         // Simulate re-fetching and run calc directly
+         setManualData({ ...manualData, modeInputActive: false });
+         const newRecord = { ...payload, "TimeStamp": payload.TimeStamp };
+         const compositeRecords = [...filteredRecords, newRecord];
+         runCalculation(compositeRecords);
+         fetchRecords();
+      } else {
+         alert("Gagal: " + res.message);
+      }
+      setIsSavingManual(false);
+    }).catch(e => {
+      alert("Error System: " + e.message);
+      setIsSavingManual(false);
+    });
+  };
+
   return (
     <>
-      <div className="bg-white dark:bg-gray-900 rounded-3xl border border-gray-100 dark:border-gray-800 overflow-hidden shadow-sm relative z-10">
+      <div className="bg-white dark:bg-gray-900 rounded-3xl border border-gray-100 dark:border-gray-800 overflow-visible shadow-sm relative z-10 transition-all duration-300">
         <div className="p-6 pb-4 font-bold text-lg border-b border-gray-100 dark:border-gray-800">Daftar Rekording</div>
         
         {/* FILTER BAR SECTION */}
-        <div className="p-4 border-b border-gray-100 dark:border-gray-800 flex flex-col md:flex-row gap-4 items-end bg-gray-50/50 dark:bg-gray-800/50">
+        <div className="p-4 border-b border-gray-100 dark:border-gray-800 flex flex-col md:flex-row gap-4 items-end bg-gray-50/50 dark:bg-gray-800/50 relative z-50">
           {user.Role === 'Moderator' && (
             <div className="w-full md:w-1/4">
               <label className="block text-xs font-bold text-gray-500 dark:text-gray-400 mb-1">Pilih Anggota</label>
               <select value={selectedAkun} onChange={e => setSelectedAkun(e.target.value)} className="w-full px-3 py-2.5 rounded-xl bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 outline-none text-sm dark:text-white focus:border-green-500 transition-colors">
                 <option value="Semua">Semua Anggota</option>
-                {uniqueUsers.map(u => <option key={u} value={u}>{u}</option>)}
+                {uniqueUsers.map(u => <option key={u} value={u}>{getUserName(u)}</option>)}
               </select>
             </div>
           )}
-          <div className="w-full md:w-1/4">
+          <div className="w-full md:w-1/4 relative z-[100]">
             <label className="block text-xs font-bold text-gray-500 dark:text-gray-400 mb-1">Mulai Tanggal</label>
-            <input type="date" value={dateStart} onChange={e => setDateStart(e.target.value)} className="w-full px-3 py-2 rounded-xl bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 outline-none text-sm dark:text-white focus:border-green-500 transition-colors" />
+            <DatePicker
+              selected={dateStart}
+              onChange={(date) => setDateStart(date)}
+              dateFormat="dd/MM/yyyy"
+              placeholderText="dd/mm/yyyy"
+              isClearable
+              className="w-full px-4 py-2.5 rounded-xl bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 outline-none focus:ring-2 focus:ring-green-500 text-sm font-medium cursor-pointer"
+              calendarClassName="modern-datepicker-calendar"
+            />
           </div>
-          <div className="w-full md:w-1/4">
+          <div className="w-full md:w-1/4 relative z-[90]">
             <label className="block text-xs font-bold text-gray-500 dark:text-gray-400 mb-1">Sampai Tanggal</label>
-            <input type="date" value={dateEnd} onChange={e => setDateEnd(e.target.value)} className="w-full px-3 py-2 rounded-xl bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 outline-none text-sm dark:text-white focus:border-green-500 transition-colors" />
+            <DatePicker
+              selected={dateEnd}
+              onChange={(date) => setDateEnd(date)}
+              dateFormat="dd/MM/yyyy"
+              placeholderText="dd/mm/yyyy"
+              isClearable
+              className="w-full px-4 py-2.5 rounded-xl bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 outline-none focus:ring-2 focus:ring-green-500 text-sm font-medium cursor-pointer"
+              calendarClassName="modern-datepicker-calendar"
+              minDate={dateStart}
+            />
           </div>
-          <div className="w-full md:flex-1">
-            <button onClick={handleAnalisisIP} className="w-full py-2.5 bg-gradient-to-r from-blue-600 to-green-600 hover:from-blue-700 hover:to-green-700 text-white font-bold rounded-xl text-sm transition-all shadow-md shadow-green-500/20 active:scale-[0.98] flex items-center justify-center gap-2">
+          <div className="w-full md:flex-1 relative z-10">
+            <button onClick={handleAnalisisIP} className="w-full py-3 bg-gradient-to-r from-blue-600 to-green-600 hover:from-blue-700 hover:to-green-700 text-white font-bold rounded-xl text-sm transition-all shadow-md shadow-green-500/20 active:scale-[0.98] flex items-center justify-center gap-2">
                <Activity size={16} /> Auto Hitung IP Ternak
             </button>
           </div>
         </div>
 
-        <div className="overflow-x-auto">
+        <div className="overflow-x-auto relative z-0">
           <table className="w-full text-left text-sm text-gray-600 dark:text-gray-300">
             <thead className="bg-gray-50 dark:bg-gray-800 text-gray-500 dark:text-gray-400">
               <tr>
@@ -765,10 +907,10 @@ const RiwayatRekordingView = ({ user }) => {
             <tbody className="divide-y divide-gray-100 dark:divide-gray-800">
               {loading ? <tr><td colSpan="6" className="text-center p-6 bg-white dark:bg-gray-900">Loading...</td></tr> : filteredRecords.length === 0 ? <tr><td colSpan="6" className="text-center p-6 bg-white dark:bg-gray-900 text-gray-400">Tidak ada record.</td></tr> : filteredRecords.map((r, i) => (
                 <tr key={i} className="hover:bg-gray-50 dark:hover:bg-gray-800/50 bg-white dark:bg-gray-900 transition-colors">
-                  <td className="px-6 py-4 font-medium">{r['ID Akun']}</td>
+                  <td className="px-6 py-4 font-medium">{getUserName(r['ID Akun'])}</td>
                   <td className="px-6 py-4 whitespace-nowrap">{parseIndoDate(r['TimeStamp'] || r['Tanggal & Waktu'] || r['Tanggal'])}</td>
                   <td className="px-6 py-4"><span className="px-3 py-1 bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400 rounded-full font-bold text-xs whitespace-nowrap">{r['Jenis Evaluasi']}</span></td>
-                  <td className="px-6 py-4 font-bold">{r['Jumlah Ekor Terdampak'] || r['Jumlah Populasi Awal Masuk Ternak'] || r['Jumlah Kematian Ternak'] || r['Jumlah Penambahan Populasi Ternak'] || '-'}</td>
+                  <td className="px-6 py-4 font-bold">{r['Jumlah Pemberian Pakan (Kg)'] || r['Jumlah Stok Gudang (Kg)'] || r['Jumlah Ekor Terdampak'] || r['Jumlah Populasi Awal Masuk Ternak'] || r['Jumlah Kematian Ternak'] || r['Jumlah Penambahan Populasi Ternak'] || r['Total Konsumsi Pakan (Kg)'] || '-'}</td>
                   <td className="px-6 py-4 font-medium text-green-600 dark:text-green-500 whitespace-nowrap">{r['Jenis Ternak'] || '-'}</td>
                   <td className="px-6 py-4 min-w-[200px] text-gray-500 dark:text-gray-400">{r['Keterangan Tambahan'] || r['Catatan Kondisi Ternak']}</td>
                 </tr>
@@ -778,6 +920,72 @@ const RiwayatRekordingView = ({ user }) => {
         </div>
       </div>
 
+      {/* MISSING DATA OVERLAY */}
+      <AnimatePresence>
+        {showMissingData && (
+          <motion.div 
+            initial={{ opacity: 0 }} 
+            animate={{ opacity: 1 }} 
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-[150] bg-gray-900/60 backdrop-blur-sm flex items-center justify-center p-4 lg:p-0"
+          >
+            <motion.div 
+              initial={{ scale: 0.9, y: 30 }} 
+              animate={{ scale: 1, y: 0 }} 
+              exit={{ scale: 0.9, y: -30 }} 
+              className="bg-white dark:bg-gray-900 rounded-3xl p-6 lg:p-8 max-w-xl w-full shadow-2xl relative border border-gray-100 dark:border-gray-800"
+            >
+               <button onClick={() => setShowMissingData(false)} className="absolute top-4 right-4 p-2 text-gray-400 hover:text-gray-800 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-gray-800 rounded-full transition-colors"><X size={20}/></button>
+               
+               <div className="flex items-center gap-3 mb-4 text-amber-500">
+                 <div className="p-3 bg-amber-100 dark:bg-amber-500/20 rounded-2xl"><AlertTriangle size={24} /></div>
+                 <h3 className="text-xl font-bold text-gray-800 dark:text-white">Data Kalkulasi Belum Lengkap</h3>
+               </div>
+               
+               <p className="text-gray-600 dark:text-gray-400 mb-6 font-medium">Terdapat data esensial yang kosong di riwayat Anda (khususnya rekaman <b>Pemberian Pakan</b> atau <b>Bobot</b>). Silahkan lengkapi melalui Input Rekording Harian normal atau input manual secara cepat di bawah.</p>
+
+               {!manualData.modeInputActive && (
+                 <div className="flex flex-col sm:flex-row gap-3">
+                   <button onClick={() => { setShowMissingData(false); onChangeTab('Input Rekording'); }} className="flex-1 py-3.5 bg-gray-100 hover:bg-gray-200 dark:bg-gray-800 dark:hover:bg-gray-700 text-gray-800 dark:text-gray-200 font-bold rounded-xl transition-colors">Buka Menu Input Rekording</button>
+                   <button onClick={() => setManualData({...manualData, modeInputActive: true})} className="flex-1 py-3.5 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-xl shadow-lg transition-colors shadow-blue-500/30">Lakukan Input Manual Ekstra</button>
+                 </div>
+               )}
+
+               {manualData.modeInputActive && (
+                 <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }} className="overflow-hidden border-t border-gray-100 dark:border-gray-800 pt-5 mt-2 space-y-4">
+                    <div>
+                      <label className="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-1">Total Konsumsi Pakan Keseluruhan</label>
+                      <div className="flex gap-2">
+                        <input type="number" value={manualData.totalPakan} onChange={e => setManualData({...manualData, totalPakan: e.target.value})} placeholder="Cth: 200" className="flex-1 px-4 py-3 rounded-xl border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 text-gray-800 dark:text-gray-200" />
+                        <div className="w-[110px]">
+                           <ModernSelect value={manualData.satuanPakan} onChange={v => setManualData({...manualData, satuanPakan: v})} options={['Kg', 'Sak']} placeholder="Satuan" />
+                        </div>
+                      </div>
+                    </div>
+                    {manualData.satuanPakan === 'Sak' && (
+                       <div className="bg-blue-50 dark:bg-blue-900/20 p-4 rounded-xl border border-blue-100 dark:border-blue-800">
+                          <label className="block text-sm font-bold text-blue-700 dark:text-blue-400 mb-1">Berat 1 Sak (Kg)</label>
+                          <input type="number" value={manualData.beratSak} onChange={e => setManualData({...manualData, beratSak: e.target.value})} placeholder="Cth: 50" className="w-full px-4 py-3 rounded-xl border border-blue-200 dark:border-blue-700 bg-white dark:bg-gray-900 outline-none focus:border-blue-500 text-blue-900 dark:text-blue-100" />
+                          <p className="text-xs text-blue-600 dark:text-blue-400 mt-2 font-medium">Beban Pakan Dihitung: {Number(manualData.totalPakan||0) * Number(manualData.beratSak||0)} Kg</p>
+                       </div>
+                    )}
+                    <div>
+                      <label className="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-1">Bobot Panen / Akhir Rata-rata (Kg)</label>
+                      <input type="number" value={manualData.bobotAkhir} onChange={e => setManualData({...manualData, bobotAkhir: e.target.value})} placeholder="Cth: 2.1" className="w-full px-4 py-3 rounded-xl border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 text-gray-800 dark:text-gray-200" />
+                    </div>
+                    
+                    <button disabled={isSavingManual} onClick={handleSaveManualData} className="w-full py-3.5 bg-green-600 hover:bg-green-700 text-white font-bold rounded-xl mt-2 transition-all flex justify-center items-center gap-2">
+                       {isSavingManual ? "Menyimpan ke Sheet..." : <><Save size={18} /> Simpan ke Database & Lanjut IP</>}
+                    </button>
+                    <button onClick={() => setManualData({...manualData, modeInputActive: false})} className="w-full py-3 text-gray-500 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-xl font-bold mt-1">Batal</button>
+                 </motion.div>
+               )}
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* IP CALC OVERLAY */}
       <AnimatePresence>
         {showIPCalc && (
           <motion.div 
