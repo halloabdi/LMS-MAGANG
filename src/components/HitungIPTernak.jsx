@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { ChevronLeft, Info, HelpCircle, ArrowRight, RefreshCw, Calculator, BarChart3, Target, ChevronDown } from 'lucide-react';
+import { ChevronLeft, Info, HelpCircle, ArrowRight, RefreshCw, Calculator, BarChart3, Target, ChevronDown, Save } from 'lucide-react';
 import { BlinkBlur } from 'react-loading-indicators';
 import { motion, AnimatePresence } from 'framer-motion';
 
@@ -19,7 +19,7 @@ const JENIS_TERNAK_OPTIONS = [
   { value: "Puyuh", type: "unggas_petelur" }
 ];
 
-export default function HitungIPTernak({ onBack }) {
+export default function HitungIPTernak({ onBack, user = null, initialData = null, gasUrl = "" }) {
   const [form, setForm] = useState({
     jenis: "",
     populasiAwal: "",
@@ -34,7 +34,14 @@ export default function HitungIPTernak({ onBack }) {
     beratTelur: ""
   });
 
+  useEffect(() => {
+    if (initialData) {
+      setForm(prev => ({ ...prev, ...initialData }));
+    }
+  }, [initialData]);
+
   const [isCalculating, setIsCalculating] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
   const [result, setResult] = useState(null);
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
 
@@ -223,6 +230,41 @@ export default function HitungIPTernak({ onBack }) {
     setForm({
       jenis: "", populasiAwal: "", populasiAkhir: "", bobotAwal: "", bobotAkhir: "",
       satuanPakan: "kg", beratSak: "50", totalPakan: "", lamaPemeliharaan: "", produksiHarian: "", beratTelur: ""
+    });
+  };
+
+  const handleSaveToGAS = () => {
+    if (!user) return;
+    setIsSaving(true);
+    
+    const payload = {
+      "ID Akun": user['ID Akun'],
+      "Username": user['Username'],
+      "Nama Lengkap": user['Nama Lengkap'],
+      "Role": user.Role,
+      "Waktu Kalkulasi": new Date().toISOString(),
+      "Jenis Ternak": form.jenis,
+      "Nilai IP": result.ip,
+      "Rating": result.rating,
+      "Populasi Awal": form.populasiAwal,
+      "Populasi Akhir": form.populasiAkhir,
+      "Lama Pemeliharaan": form.lamaPemeliharaan,
+      "Analisis Tambahan": JSON.stringify(result.additionalInfo)
+    };
+
+    fetch(gasUrl, {
+      method: "POST",
+      body: JSON.stringify({ action: "addIPTernak", payload })
+    }).then(r => r.json()).then(res => {
+      if (res.status === 'success') {
+        alert("Data IP Berhasil Disimpan ke Riwayat Anda!");
+      } else {
+        alert("Gagal menyimpan data.");
+      }
+      setIsSaving(false);
+    }).catch(e => {
+      alert("Error: " + e.message);
+      setIsSaving(false);
     });
   };
 
@@ -466,6 +508,16 @@ export default function HitungIPTernak({ onBack }) {
                 >
                   <RefreshCw size={18} /> Hitung Ulang Data Lain
                 </button>
+
+                {user && (
+                  <button
+                    onClick={handleSaveToGAS}
+                    disabled={isSaving}
+                    className={`w-full mt-3 py-3.5 text-white rounded-xl font-bold transition-all flex items-center justify-center gap-2 shadow-lg ${isSaving ? 'bg-gray-400 cursor-not-allowed' : 'bg-green-600 hover:bg-green-700 shadow-green-500/30'}`}
+                  >
+                    <Save size={18} /> {isSaving ? "Menyimpan ke Riwayat..." : "Simpan Data IP ke Riwayat"}
+                  </button>
+                )}
               </motion.div>
             )}
 

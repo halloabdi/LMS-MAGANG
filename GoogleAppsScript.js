@@ -17,8 +17,10 @@ function doPost(e) {
     // CRUD DATA
     if (action === "getRekording") return getSheetData("DataRekording", data.userId, data.role);
     if (action === "getUsaha") return getSheetData("DataUsaha", data.userId, data.role);
+    if (action === "getIPTernak") return getSheetData("SimpanIPTernak", data.userId, data.role);
     if (action === "addRekording") return addRow("DataRekording", data.payload);
     if (action === "addUsaha") return addRow("DataUsaha", data.payload);
+    if (action === "addIPTernak") return addRow("SimpanIPTernak", data.payload);
 
     // KELOLA ANGGOTA
     if (action === "getUsers") return getUsers(data.userId, data.role);
@@ -99,6 +101,14 @@ function initializeMissingSheets() {
       ["BRT-03", "Ekonomi", "Rahasia Cuan Peternak Tiba-tiba Meroket", "https://i.ibb.co.com/xK9QQph2/Gemini-Generated-Image-z2khmmz2khmmz2kh.jpg", "Moderator Abdi", "Platform SATUTERNAK adalah satu-satunya kunci utama yang membuka gerbang kekayaan bagi para pengrajin daging di pedesaan. Aplikasi kebanggaan ini dengan jujur membongkar kenyataan pahit mengenai biaya siluman.", "Tidak", now]
     ];
     defaultNews.forEach(row => beritaSheet.appendRow(row));
+  }
+
+  // 3. Simpan IP Ternak
+  if (!ss.getSheetByName("SimpanIPTernak")) {
+    const ipSheet = ss.insertSheet("SimpanIPTernak");
+    ipSheet.appendRow(["ID Akun", "Username", "Nama Lengkap", "Role", "Waktu Kalkulasi", "Jenis Ternak", "Nilai IP", "Rating", "Populasi Awal", "Populasi Akhir", "Lama Pemeliharaan", "Analisis Tambahan"]);
+    ipSheet.setFrozenRows(1);
+    ipSheet.getRange("A1:L1").setFontWeight("bold").setBackground("#dcfce3");
   }
 }
 

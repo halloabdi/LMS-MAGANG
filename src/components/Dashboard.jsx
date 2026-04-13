@@ -8,6 +8,7 @@ import {
 import { motion, AnimatePresence } from 'framer-motion';
 import DatePicker from 'react-datepicker';
 import 'react-datepicker/dist/react-datepicker.css';
+import HitungIPTernak from './HitungIPTernak';
 
 const GAS_URL = 'https://script.google.com/macros/s/AKfycbxAo4T6fGrjBhd1D7khfIzVns7gn4tQM4XasNmocegNDpvMHlFH44vw-SJ7z8mCmkU3/exec';
 
@@ -637,36 +638,161 @@ const RiwayatRekordingView = ({ user }) => {
   const [records, setRecords] = useState([]);
   const [loading, setLoading] = useState(true);
 
+  // FILTER STATES
+  const [dateStart, setDateStart] = useState("");
+  const [dateEnd, setDateEnd] = useState("");
+  const [selectedAkun, setSelectedAkun] = useState(user.Role === 'Moderator' ? "Semua" : user['ID Akun']);
+  
+  // IP CALC STATES
+  const [showIPCalc, setShowIPCalc] = useState(false);
+  const [ipData, setIpData] = useState(null);
+
   useEffect(() => {
     fetch(GAS_URL, { method: 'POST', body: JSON.stringify({ action: 'getRekording', userId: user['ID Akun'], role: user.Role }) })
       .then(r => r.json()).then(res => { if (res.status === 'success') setRecords(res.data.reverse()); setLoading(false); }).catch(() => setLoading(false));
   }, [user]);
 
+  const uniqueUsers = Array.from(new Set(records.map(r => r['ID Akun']))).filter(Boolean);
+
+  const filteredRecords = records.filter(r => {
+    if (user.Role === 'Moderator' && selectedAkun !== 'Semua' && r['ID Akun'] !== selectedAkun) return false;
+    const recordDate = new Date(r['TimeStamp'] || r['Tanggal & Waktu'] || r['Tanggal']);
+    if (dateStart && recordDate < new Date(dateStart)) return false;
+    if (dateEnd) {
+      const end = new Date(dateEnd);
+      end.setHours(23, 59, 59, 999);
+      if (recordDate > end) return false;
+    }
+    return true;
+  });
+
+  const handleAnalisisIP = () => {
+    if (filteredRecords.length === 0) return alert("Tidak ada data dalam rentang filter untuk dihitung.");
+    
+    const popAwalArr = filteredRecords.filter(r => r['Jenis Evaluasi'] === 'Populasi Awal Masuk');
+    const sumAwal = popAwalArr.reduce((acc, curr) => acc + (Number(curr['Jumlah Populasi Awal Masuk Ternak'] || curr['Jumlah Ekor Terdampak']) || 0), 0);
+
+    const popTambahArr = filteredRecords.filter(r => r['Jenis Evaluasi'] === 'Penambahan Populasi Ternak');
+    const sumTambah = popTambahArr.reduce((acc, curr) => acc + (Number(curr['Jumlah Penambahan Populasi Ternak'] || curr['Jumlah Ekor Terdampak']) || 0), 0);
+
+    const popMatiArr = filteredRecords.filter(r => r['Jenis Evaluasi'] === 'Kematian Ternak (Mortalitas)');
+    const sumMati = popMatiArr.reduce((acc, curr) => acc + (Number(curr['Jumlah Kematian Ternak'] || curr['Jumlah Ekor Terdampak']) || 0), 0);
+
+    const populasiAkhir = sumAwal + sumTambah - sumMati;
+
+    let dates = filteredRecords.map(r => new Date(r['TimeStamp'] || r['Tanggal & Waktu'] || r['Tanggal']).getTime()).filter(t => !isNaN(t));
+    let durationDays = 1;
+    if (dates.length > 0) {
+      let minTime = Math.min(...dates);
+      let maxTime = Math.max(...dates);
+      durationDays = Math.ceil((maxTime - minTime) / (1000 * 3600 * 24));
+      if (durationDays < 1) durationDays = 1;
+    }
+
+    // Attempt to guess Jenis Ternak
+    let guessedJenis = "";
+    for (let i = 0; i < filteredRecords.length; i++) {
+       if (filteredRecords[i]['Jenis Ternak']) {
+           guessedJenis = filteredRecords[i]['Jenis Ternak'];
+           break;
+       }
+    }
+    // Set matching string for JENIS_TERNAK_OPTIONS from HitungIPTernak
+    let finalJenisForm = "";
+    const lowerGuess = guessedJenis.toLowerCase();
+    if (lowerGuess.includes("sapi") && lowerGuess.includes("perah")) finalJenisForm = "Sapi Perah";
+    else if (lowerGuess.includes("sapi")) finalJenisForm = "Sapi Potong";
+    else if (lowerGuess.includes("kambing") && lowerGuess.includes("perah")) finalJenisForm = "Kambing Perah";
+    else if (lowerGuess.includes("kambing")) finalJenisForm = "Kambing Potong";
+    else if (lowerGuess.includes("broiler")) finalJenisForm = "Ayam Broiler";
+    else if (lowerGuess.includes("kampung") || lowerGuess.includes("joper")) finalJenisForm = "Ayam Kampung (Joper)";
+    else if (lowerGuess.includes("petelur") && lowerGuess.includes("ayam")) finalJenisForm = "Ayam Petelur";
+    else if (lowerGuess.includes("bebek") && lowerGuess.includes("petelur")) finalJenisForm = "Bebek Petelur";
+    else if (lowerGuess.includes("bebek")) finalJenisForm = "Bebek Pedaging";
+    else if (lowerGuess.includes("domba")) finalJenisForm = "Domba Potong";
+    else if (lowerGuess.includes("kerbau")) finalJenisForm = "Kerbau";
+    else if (lowerGuess.includes("puyuh")) finalJenisForm = "Puyuh";
+
+    setIpData({
+      jenis: finalJenisForm,
+      populasiAwal: sumAwal || "",
+      populasiAkhir: populasiAkhir || "",
+      lamaPemeliharaan: durationDays,
+    });
+    
+    setShowIPCalc(true);
+  };
+
   return (
-    <div className="bg-white dark:bg-gray-900 rounded-3xl border border-gray-100 overflow-hidden shadow-sm">
-      <div className="p-6 pb-0 mb-4 font-bold text-lg border-b border-gray-100">Daftar Rekording</div>
-      <div className="overflow-x-auto">
-        <table className="w-full text-left text-sm text-gray-600">
-          <thead className="bg-gray-50 text-gray-500">
-            <tr>
-              <th className="px-6 py-4">Nasabah</th><th className="px-6 py-4">Waktu & Tanggal</th><th className="px-6 py-4">Evaluasi</th>
-              <th className="px-6 py-4">Jumlah</th><th className="px-6 py-4">Catatan</th>
-            </tr>
-          </thead>
-          <tbody className="divide-y divide-gray-100">
-            {loading ? <tr><td colSpan="5" className="text-center p-6">Loading...</td></tr> : records.map((r, i) => (
-              <tr key={i} className="hover:bg-gray-50">
-                <td className="px-6 py-4">{r['ID Akun']}</td>
-                <td className="px-6 py-4">{parseIndoDate(r['TimeStamp'] || r['Tanggal & Waktu'] || r['Tanggal'])}</td>
-                <td className="px-6 py-4"><span className="px-3 py-1 bg-blue-100 text-blue-700 rounded-full font-bold text-xs">{r['Jenis Evaluasi']}</span></td>
-                <td className="px-6 py-4">{r['Jumlah Ekor Terdampak'] || r['Jumlah Populasi Awal Masuk Ternak'] || r['Jumlah Kematian Ternak'] || '-'}</td>
-                <td className="px-6 py-4 truncate max-w-[200px]">{r['Keterangan Tambahan'] || r['Catatan Kondisi Ternak']}</td>
+    <>
+      <div className="bg-white dark:bg-gray-900 rounded-3xl border border-gray-100 dark:border-gray-800 overflow-hidden shadow-sm relative z-10">
+        <div className="p-6 pb-4 font-bold text-lg border-b border-gray-100 dark:border-gray-800">Daftar Rekording</div>
+        
+        {/* FILTER BAR SECTION */}
+        <div className="p-4 border-b border-gray-100 dark:border-gray-800 flex flex-col md:flex-row gap-4 items-end bg-gray-50/50 dark:bg-gray-800/50">
+          {user.Role === 'Moderator' && (
+            <div className="w-full md:w-1/4">
+              <label className="block text-xs font-bold text-gray-500 dark:text-gray-400 mb-1">Pilih Anggota</label>
+              <select value={selectedAkun} onChange={e => setSelectedAkun(e.target.value)} className="w-full px-3 py-2.5 rounded-xl bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 outline-none text-sm dark:text-white focus:border-green-500 transition-colors">
+                <option value="Semua">Semua Anggota</option>
+                {uniqueUsers.map(u => <option key={u} value={u}>{u}</option>)}
+              </select>
+            </div>
+          )}
+          <div className="w-full md:w-1/4">
+            <label className="block text-xs font-bold text-gray-500 dark:text-gray-400 mb-1">Mulai Tanggal</label>
+            <input type="date" value={dateStart} onChange={e => setDateStart(e.target.value)} className="w-full px-3 py-2 rounded-xl bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 outline-none text-sm dark:text-white focus:border-green-500 transition-colors" />
+          </div>
+          <div className="w-full md:w-1/4">
+            <label className="block text-xs font-bold text-gray-500 dark:text-gray-400 mb-1">Sampai Tanggal</label>
+            <input type="date" value={dateEnd} onChange={e => setDateEnd(e.target.value)} className="w-full px-3 py-2 rounded-xl bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 outline-none text-sm dark:text-white focus:border-green-500 transition-colors" />
+          </div>
+          <div className="w-full md:flex-1">
+            <button onClick={handleAnalisisIP} className="w-full py-2.5 bg-gradient-to-r from-blue-600 to-green-600 hover:from-blue-700 hover:to-green-700 text-white font-bold rounded-xl text-sm transition-all shadow-md shadow-green-500/20 active:scale-[0.98] flex items-center justify-center gap-2">
+               <Activity size={16} /> Auto Hitung IP Ternak
+            </button>
+          </div>
+        </div>
+
+        <div className="overflow-x-auto">
+          <table className="w-full text-left text-sm text-gray-600 dark:text-gray-300">
+            <thead className="bg-gray-50 dark:bg-gray-800 text-gray-500 dark:text-gray-400">
+              <tr>
+                <th className="px-6 py-4">Nasabah</th><th className="px-6 py-4">Waktu & Tanggal</th><th className="px-6 py-4">Evaluasi</th>
+                <th className="px-6 py-4">Jumlah</th><th className="px-6 py-4 whitespace-nowrap">Jenis Ternak</th><th className="px-6 py-4">Catatan</th>
               </tr>
-            ))}
-          </tbody>
-        </table>
+            </thead>
+            <tbody className="divide-y divide-gray-100 dark:divide-gray-800">
+              {loading ? <tr><td colSpan="6" className="text-center p-6 bg-white dark:bg-gray-900">Loading...</td></tr> : filteredRecords.length === 0 ? <tr><td colSpan="6" className="text-center p-6 bg-white dark:bg-gray-900 text-gray-400">Tidak ada record.</td></tr> : filteredRecords.map((r, i) => (
+                <tr key={i} className="hover:bg-gray-50 dark:hover:bg-gray-800/50 bg-white dark:bg-gray-900 transition-colors">
+                  <td className="px-6 py-4 font-medium">{r['ID Akun']}</td>
+                  <td className="px-6 py-4 whitespace-nowrap">{parseIndoDate(r['TimeStamp'] || r['Tanggal & Waktu'] || r['Tanggal'])}</td>
+                  <td className="px-6 py-4"><span className="px-3 py-1 bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400 rounded-full font-bold text-xs whitespace-nowrap">{r['Jenis Evaluasi']}</span></td>
+                  <td className="px-6 py-4 font-bold">{r['Jumlah Ekor Terdampak'] || r['Jumlah Populasi Awal Masuk Ternak'] || r['Jumlah Kematian Ternak'] || r['Jumlah Penambahan Populasi Ternak'] || '-'}</td>
+                  <td className="px-6 py-4 font-medium text-green-600 dark:text-green-500 whitespace-nowrap">{r['Jenis Ternak'] || '-'}</td>
+                  <td className="px-6 py-4 min-w-[200px] text-gray-500 dark:text-gray-400">{r['Keterangan Tambahan'] || r['Catatan Kondisi Ternak']}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
       </div>
-    </div>
+
+      <AnimatePresence>
+        {showIPCalc && (
+          <motion.div 
+            initial={{ opacity: 0, y: 100 }} 
+            animate={{ opacity: 1, y: 0 }} 
+            exit={{ opacity: 0, scale: 0.95 }}
+            className="fixed inset-0 z-[120] bg-gray-900/40 backdrop-blur-md overflow-y-auto custom-scrollbar flex items-start justify-center pt-safe pb-24 md:py-10 px-0 md:px-6"
+          >
+            <div className="w-full max-w-5xl bg-transparent min-h-screen">
+               <HitungIPTernak onBack={() => setShowIPCalc(false)} user={user} initialData={ipData} gasUrl={GAS_URL} />
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </>
   );
 };
 
