@@ -413,10 +413,9 @@ const InputRekordingView = ({ user }) => {
             <DatePicker
               selected={form.tanggal instanceof Date ? form.tanggal : new Date()}
               onChange={(date) => setForm({ ...form, tanggal: date })}
-              showTimeSelect
+              showTimeInput
               timeFormat="HH:mm"
-              timeIntervals={15}
-              timeCaption="Waktu"
+              timeInputLabel="Input Waktu:"
               dateFormat="d MMMM yyyy, HH:mm"
               className="w-full px-4 py-3 rounded-xl bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 outline-none focus:ring-2 focus:ring-green-500 font-medium cursor-pointer"
               calendarClassName="modern-datepicker-calendar"
