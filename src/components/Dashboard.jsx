@@ -350,12 +350,14 @@ const OverviewView = ({ user, setTab }) => {
 // INPUT VIEWS 
 // ==========================================
 const InputRekordingView = ({ user }) => {
-  const [form, setForm] = useState({ jenis: '', tanggal: '', jumlah: '', jenisHewan: '', keterangan: '' });
+  const getLocalDatetimePattern = () => new Date(new Date().getTime() - new Date().getTimezoneOffset() * 60000).toISOString().slice(0, 16);
+  
+  const [form, setForm] = useState({ jenis: '', tanggal: getLocalDatetimePattern(), jenisHewan: '', jumlah: '', keterangan: '' });
   const [loading, setLoading] = useState(false);
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    if (!form.jenis || !form.tanggal || !form.jumlah || !form.jenisHewan) return alert("Harap lengkapi semua field wajib");
+    if (!form.jenis || !form.jenisHewan || !form.jumlah) return alert("Pilih evaluasi, jenis ternak, dan jumlah ekor!");
     setLoading(true);
 
     let submitPayload = {
@@ -384,7 +386,7 @@ const InputRekordingView = ({ user }) => {
       })
     })
       .then(r => r.json()).then(res => {
-        if (res.status === 'success') { alert("Disimpan dengan format dinamis!"); setForm({ jenis: '', tanggal: '', jenisHewan: '', jumlah: '', keterangan: '' }); }
+        if (res.status === 'success') { alert("Pencatatan Berhasil Disimpan!"); setForm({ jenis: '', tanggal: getLocalDatetimePattern(), jenisHewan: '', jumlah: '', keterangan: '' }); }
         setLoading(false);
       }).catch(() => setLoading(false));
   };
