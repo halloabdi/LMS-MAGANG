@@ -773,33 +773,7 @@ const RiwayatRekordingView = ({ user, onChangeTab }) => {
   // IP CALC & MISSING DATA STATES
   const [showIPCalc, setShowIPCalc] = useState(false);
   const [ipData, setIpData] = useState(null);
-  const [showMissingData, setShowMissingData] = useState(false);
-  const [manualData, setManualData] = useState({ 
-    totalPakan: '', bobotAkhir: '', satuanPakan: 'Kg', beratSak: '50', modeInputActive: false,
-    bobotMode: 'RataRata', bobotRata: '', bobotSamples: ['', '', '']
-  });
-  const [isSavingManual, setIsSavingManual] = useState(false);
-
-  const getManualAverageBobot = () => {
-    const valid = manualData.bobotSamples.map(Number).filter(n => n > 0);
-    if (valid.length === 0) return 0;
-    return (valid.reduce((a, b) => a + b, 0) / valid.length).toFixed(2);
-  };
-  const handleAddManualSample = () => setManualData({...manualData, bobotSamples: [...manualData.bobotSamples, '']});
-  const handleRemoveManualSample = (index) => {
-    if (manualData.bobotSamples.length > 3) {
-      const newSamples = [...manualData.bobotSamples];
-      newSamples.splice(index, 1);
-      setManualData({...manualData, bobotSamples: newSamples});
-    } else {
-      alert("Minimal 3 sampel ekor diperlukan!");
-    }
-  };
-  const handleManualSampleChange = (index, val) => {
-    const newSamples = [...manualData.bobotSamples];
-    newSamples[index] = val;
-    setManualData({...manualData, bobotSamples: newSamples});
-  };
+  const [isMissingDataMode, setIsMissingDataMode] = useState(false);
 
   const fetchRecords = () => {
     setLoading(true);
@@ -908,72 +882,15 @@ const RiwayatRekordingView = ({ user, onChangeTab }) => {
   const handleAnalisisIP = () => {
     if (filteredRecords.length === 0) return alert("Tidak ada data dalam rentang filter untuk dihitung.");
     
-    // VALIDATOR: Check for 'Pemberian Pakan' or 'Kalkulasi Manual IP'
-    const hasPakan = filteredRecords.some(r => r['Jenis Evaluasi'] === 'Pemberian Pakan' || r['Jenis Evaluasi'] === 'Kalkulasi Manual IP');
-    if (!hasPakan) {
-       setShowMissingData(true);
-       return;
-    }
+    // VALIDATOR
+    const hasPakanInfo = filteredRecords.some(r => r['Jenis Evaluasi'] === 'Pemberian Pakan' || r['Jenis Evaluasi'] === 'Kalkulasi Manual IP');
+    const hasBobotInfo = filteredRecords.some(r => r['Jenis Evaluasi'] === 'Kalkulasi Manual IP' || r['Jenis Evaluasi'] === 'Pencatatan Bobot Badan' || r['Bobot Panen (Kg)']);
     
+    setIsMissingDataMode(!(hasPakanInfo && hasBobotInfo));
     runCalculation(filteredRecords);
   };
 
-  const handleSaveManualData = () => {
-    let finalBobotRata = 0;
-    let bobotSamplesPayload = "";
-    if (manualData.bobotMode === 'RataRata') {
-      if (!manualData.bobotRata) return alert("Harap isikan bobot rata-rata!");
-      finalBobotRata = manualData.bobotRata;
-    } else {
-      const valid = manualData.bobotSamples.map(Number).filter(n => n > 0);
-      if (valid.length < 3) return alert("Minimal 3 sampel bobot valid diperlukan!");
-      finalBobotRata = getManualAverageBobot();
-      bobotSamplesPayload = valid.join(', ');
-    }
 
-    if (!manualData.totalPakan || !finalBobotRata) return alert("Lengkapi data yang kosong!");
-    setIsSavingManual(true);
-
-    let finalPakan = Number(manualData.totalPakan) || 0;
-    if (manualData.satuanPakan === 'Sak') {
-      finalPakan = finalPakan * (Number(manualData.beratSak) || 0);
-    }
-
-    const payload = {
-      "TimeStamp": new Date().toISOString(),
-      "ID Akun": user['ID Akun'],
-      "Username": user['Username'],
-      "Nama Lengkap": user['Nama Lengkap'],
-      "Role": user.Role,
-      "Jenis Evaluasi": "Kalkulasi Manual IP",
-      "Total Konsumsi Pakan (Kg)": finalPakan,
-      "Bobot Badan Rata-Rata Keseluruhan dari Total Populasi": finalBobotRata,
-      "Keterangan Tambahan": "Data Ekstra Disimpan via Missing Data Validator"
-    };
-    if (bobotSamplesPayload) payload["Bobot Badan Per Ekor"] = bobotSamplesPayload;
-
-    fetch(GAS_URL, {
-      method: "POST",
-      body: JSON.stringify({ action: "addRekording", payload })
-    }).then(r => r.json()).then(res => {
-      if (res.status === 'success') {
-         alert("Data Ekstra Berhasil Disimpan ke Rekomendasi Anda!");
-         setShowMissingData(false);
-         // Simulate re-fetching and run calc directly
-         setManualData({ ...manualData, modeInputActive: false });
-         const newRecord = { ...payload, "TimeStamp": payload.TimeStamp };
-         const compositeRecords = [...filteredRecords, newRecord];
-         runCalculation(compositeRecords);
-         fetchRecords();
-      } else {
-         alert("Gagal: " + res.message);
-      }
-      setIsSavingManual(false);
-    }).catch(e => {
-      alert("Error System: " + e.message);
-      setIsSavingManual(false);
-    });
-  };
 
   return (
     <>
@@ -1051,97 +968,6 @@ const RiwayatRekordingView = ({ user, onChangeTab }) => {
         </div>
       </div>
 
-      {/* MISSING DATA OVERLAY */}
-      <AnimatePresence>
-        {showMissingData && (
-          <motion.div 
-            initial={{ opacity: 0 }} 
-            animate={{ opacity: 1 }} 
-            exit={{ opacity: 0 }}
-            className="fixed inset-0 z-[150] bg-gray-900/60 backdrop-blur-sm flex items-center justify-center p-4 lg:p-0"
-          >
-            <motion.div 
-              initial={{ scale: 0.9, y: 30 }} 
-              animate={{ scale: 1, y: 0 }} 
-              exit={{ scale: 0.9, y: -30 }} 
-              className="bg-white dark:bg-gray-900 rounded-3xl p-6 lg:p-8 max-w-xl w-full shadow-2xl relative border border-gray-100 dark:border-gray-800"
-            >
-               <button onClick={() => setShowMissingData(false)} className="absolute top-4 right-4 p-2 text-gray-400 hover:text-gray-800 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-gray-800 rounded-full transition-colors"><X size={20}/></button>
-               
-               <div className="flex items-center gap-3 mb-4 text-amber-500">
-                 <div className="p-3 bg-amber-100 dark:bg-amber-500/20 rounded-2xl"><AlertTriangle size={24} /></div>
-                 <h3 className="text-xl font-bold text-gray-800 dark:text-white">Data Kalkulasi Belum Lengkap</h3>
-               </div>
-               
-               <p className="text-gray-600 dark:text-gray-400 mb-6 font-medium">Terdapat data esensial yang kosong di riwayat Anda (khususnya rekaman <b>Pemberian Pakan</b> atau <b>Bobot</b>). Silahkan lengkapi melalui Input Rekording Harian normal atau input manual secara cepat di bawah.</p>
-
-               {!manualData.modeInputActive && (
-                 <div className="flex flex-col sm:flex-row gap-3">
-                   <button onClick={() => { setShowMissingData(false); onChangeTab('Input Rekording'); }} className="flex-1 py-3.5 bg-gray-100 hover:bg-gray-200 dark:bg-gray-800 dark:hover:bg-gray-700 text-gray-800 dark:text-gray-200 font-bold rounded-xl transition-colors">Buka Menu Input Rekording</button>
-                   <button onClick={() => setManualData({...manualData, modeInputActive: true})} className="flex-1 py-3.5 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-xl shadow-lg transition-colors shadow-blue-500/30">Lakukan Input Manual Ekstra</button>
-                 </div>
-               )}
-
-               {manualData.modeInputActive && (
-                 <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }} className="overflow-hidden border-t border-gray-100 dark:border-gray-800 pt-5 mt-2 space-y-4">
-                    <div>
-                      <label className="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-1">Total Konsumsi Pakan Keseluruhan</label>
-                      <div className="flex gap-2">
-                        <input type="number" value={manualData.totalPakan} onChange={e => setManualData({...manualData, totalPakan: e.target.value})} placeholder="Cth: 200" className="flex-1 px-4 py-3 rounded-xl border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 text-gray-800 dark:text-gray-200" />
-                        <div className="w-[110px]">
-                           <ModernSelect value={manualData.satuanPakan} onChange={v => setManualData({...manualData, satuanPakan: v})} options={['Kg', 'Sak']} placeholder="Satuan" />
-                        </div>
-                      </div>
-                    </div>
-                    {manualData.satuanPakan === 'Sak' && (
-                       <div className="bg-blue-50 dark:bg-blue-900/20 p-4 rounded-xl border border-blue-100 dark:border-blue-800">
-                          <label className="block text-sm font-bold text-blue-700 dark:text-blue-400 mb-1">Berat 1 Sak (Kg)</label>
-                          <input type="number" value={manualData.beratSak} onChange={e => setManualData({...manualData, beratSak: e.target.value})} placeholder="Cth: 50" className="w-full px-4 py-3 rounded-xl border border-blue-200 dark:border-blue-700 bg-white dark:bg-gray-900 outline-none focus:border-blue-500 text-blue-900 dark:text-blue-100" />
-                          <p className="text-xs text-blue-600 dark:text-blue-400 mt-2 font-medium">Beban Pakan Dihitung: {Number(manualData.totalPakan||0) * Number(manualData.beratSak||0)} Kg</p>
-                       </div>
-                    )}
-                    <div className="pt-2">
-                      <label className="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-2">Metode Pencatatan Bobot Panen/Akhir</label>
-                      <div className="w-full relative z-[45]">
-                        <ModernSelect value={manualData.bobotMode === 'RataRata' ? 'Isi Rata-rata Langsung' : 'Hitung dari Sampel Per Ekor'} onChange={v => setManualData({...manualData, bobotMode: v === 'Isi Rata-rata Langsung' ? 'RataRata' : 'PerEkor'})} options={['Isi Rata-rata Langsung', 'Hitung dari Sampel Per Ekor']} />
-                      </div>
-                    </div>
-
-                    {manualData.bobotMode === 'RataRata' ? (
-                      <div>
-                        <label className="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-1">Bobot Panen / Akhir Rata-rata (Kg)</label>
-                        <input type="number" step="0.01" value={manualData.bobotRata} onChange={e => setManualData({...manualData, bobotRata: e.target.value})} placeholder="Cth: 2.1" className="w-full px-4 py-3 rounded-xl border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 text-gray-800 dark:text-gray-200" />
-                      </div>
-                    ) : (
-                      <div className="space-y-3 bg-gray-50 dark:bg-gray-800/50 p-4 rounded-xl border border-gray-100 dark:border-gray-800">
-                        <label className="block text-sm font-bold text-gray-700 dark:text-gray-300">Input Sampel Bobot Per Ekor (Kg)</label>
-                        <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 max-h-[160px] overflow-y-auto pr-1 custom-scrollbar">
-                          {manualData.bobotSamples.map((samp, idx) => (
-                            <div key={idx} className="relative group">
-                              <input type="number" step="0.01" placeholder={`Ekor ${idx+1}`} value={samp} onChange={e => handleManualSampleChange(idx, e.target.value)} className="w-full px-4 py-2.5 rounded-xl bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 outline-none focus:ring-2 focus:ring-blue-500 font-medium cursor-text pr-8 text-center" />
-                              <button type="button" onClick={() => handleRemoveManualSample(idx)} className="absolute right-2 top-1/2 -translate-y-1/2 text-red-300 hover:text-red-500 opacity-0 group-hover:opacity-100 transition-opacity"><X size={16} /></button>
-                            </div>
-                          ))}
-                        </div>
-                        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 pt-2 border-t border-gray-200 dark:border-gray-700 mt-2">
-                          <button type="button" onClick={handleAddManualSample} className="text-sm px-4 py-2 bg-blue-100/50 hover:bg-blue-200 dark:bg-blue-900/40 dark:hover:bg-blue-800 text-blue-700 dark:text-blue-300 font-bold rounded-lg transition-colors flex items-center gap-1 mt-2 sm:mt-0"><Plus size={16}/> Tambah Sampel</button>
-                          <div className="px-4 py-2 bg-green-100/50 dark:bg-green-900/30 text-green-800 dark:text-green-300 font-bold rounded-lg text-sm border border-green-200 dark:border-green-800">
-                              Rata-rata: {getManualAverageBobot()} Kg
-                          </div>
-                        </div>
-                      </div>
-                    )}
-                    <button disabled={isSavingManual} onClick={handleSaveManualData} className="w-full py-3.5 bg-green-600 hover:bg-green-700 text-white font-bold rounded-xl mt-2 transition-all flex justify-center items-center gap-2">
-                       {isSavingManual ? "Menyimpan ke Sheet..." : <><Save size={18} /> Simpan ke Database & Lanjut IP</>}
-                    </button>
-                    <button onClick={() => setManualData({...manualData, modeInputActive: false})} className="w-full py-3 text-gray-500 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-xl font-bold mt-1">Batal</button>
-                 </motion.div>
-               )}
-            </motion.div>
-          </motion.div>
-        )}
-      </AnimatePresence>
-
       {/* IP CALC OVERLAY */}
       <AnimatePresence>
         {showIPCalc && (
@@ -1152,7 +978,7 @@ const RiwayatRekordingView = ({ user, onChangeTab }) => {
             className="fixed inset-0 z-[120] bg-gray-900/40 backdrop-blur-md overflow-y-auto custom-scrollbar flex items-start justify-center pt-safe pb-24 md:py-10 px-0 md:px-6"
           >
             <div className="w-full max-w-5xl bg-transparent min-h-screen">
-               <HitungIPTernak onBack={() => setShowIPCalc(false)} user={user} initialData={ipData} gasUrl={GAS_URL} />
+               <HitungIPTernak onBack={() => setShowIPCalc(false)} user={user} initialData={ipData} gasUrl={GAS_URL} isMissingDataMode={isMissingDataMode} />
             </div>
           </motion.div>
         )}

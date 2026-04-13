@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { ChevronLeft, Info, HelpCircle, ArrowRight, RefreshCw, Calculator, BarChart3, Target, ChevronDown, Save } from 'lucide-react';
+import { ChevronLeft, Info, HelpCircle, ArrowRight, RefreshCw, Calculator, BarChart3, Target, ChevronDown, Save, AlertTriangle, Plus, X } from 'lucide-react';
 import { BlinkBlur } from 'react-loading-indicators';
 import { motion, AnimatePresence } from 'framer-motion';
 
@@ -19,13 +19,15 @@ const JENIS_TERNAK_OPTIONS = [
   { value: "Puyuh", type: "unggas_petelur" }
 ];
 
-export default function HitungIPTernak({ onBack, user = null, initialData = null, gasUrl = "" }) {
+export default function HitungIPTernak({ onBack, user = null, initialData = null, gasUrl = "", isMissingDataMode = false }) {
   const [form, setForm] = useState({
     jenis: "",
     populasiAwal: "",
     populasiAkhir: "",
     bobotAwal: "",
     bobotAkhir: "",
+    bobotMode: "RataRata",
+    bobotSamples: ["", "", ""],
     satuanPakan: "kg",
     beratSak: "50",
     totalPakan: "",
@@ -49,13 +51,35 @@ export default function HitungIPTernak({ onBack, user = null, initialData = null
 
   const handleChange = (e) => setForm({ ...form, [e.target.name]: e.target.value });
 
+  const getAverageBobot = () => {
+    const valid = form.bobotSamples.map(Number).filter(n => n > 0);
+    if (valid.length === 0) return 0;
+    return (valid.reduce((a, b) => a + b, 0) / valid.length).toFixed(2);
+  };
+  const handleAddSample = () => setForm({...form, bobotSamples: [...form.bobotSamples, '']});
+  const handleRemoveSample = (index) => {
+    if (form.bobotSamples.length > 3) {
+      const newSamples = [...form.bobotSamples];
+      newSamples.splice(index, 1);
+      setForm({...form, bobotSamples: newSamples});
+    } else {
+      alert("Minimal 3 sampel ekor diperlukan!");
+    }
+  };
+  const handleSampleChange = (index, val) => {
+    const newSamples = [...form.bobotSamples];
+    newSamples[index] = val;
+    setForm({...form, bobotSamples: newSamples});
+  };
+
   const isFormValid = () => {
     if (!form.jenis) return false;
+    const hasBobotAkhirValid = form.bobotMode === 'RataRata' ? form.bobotAkhir : getAverageBobot() > 0;
     if (selectedType === "potong_besar" || selectedType === "potong_kecil") {
-      return form.populasiAwal && form.populasiAkhir && form.bobotAwal && form.bobotAkhir && form.lamaPemeliharaan && form.totalPakan;
+      return form.populasiAwal && form.populasiAkhir && form.bobotAwal && hasBobotAkhirValid && form.lamaPemeliharaan && form.totalPakan;
     }
     if (selectedType === "unggas_pedaging") {
-      return form.populasiAwal && form.populasiAkhir && form.bobotAkhir && form.lamaPemeliharaan && form.totalPakan;
+      return form.populasiAwal && form.populasiAkhir && hasBobotAkhirValid && form.lamaPemeliharaan && form.totalPakan;
     }
     if (selectedType === "unggas_petelur") {
       return form.populasiAwal && form.populasiAkhir && form.produksiHarian && form.beratTelur && form.totalPakan && form.lamaPemeliharaan;
@@ -70,6 +94,31 @@ export default function HitungIPTernak({ onBack, user = null, initialData = null
     e.preventDefault();
     if (!isFormValid()) return;
 
+    const finalBobotAkhirValue = form.bobotMode === 'RataRata' ? parseFloat(form.bobotAkhir) : getAverageBobot();
+
+    if (isMissingDataMode && user) {
+      setIsCalculating(true);
+      const pakanKg = form.satuanPakan === "sak" ? parseFloat(form.totalPakan) * parseFloat(form.beratSak || 50) : parseFloat(form.totalPakan);
+      const manualPayload = {
+        "TimeStamp": new Date().toISOString(),
+        "ID Akun": user['ID Akun'],
+        "Username": user['Username'],
+        "Nama Lengkap": user['Nama Lengkap'],
+        "Role": user.Role,
+        "Jenis Evaluasi": "Kalkulasi Manual IP",
+        "Jenis Ternak": form.jenis,
+        "Jumlah Populasi Awal Masuk Ternak": form.populasiAwal,
+        "Bobot Badan Rata-Rata Keseluruhan dari Total Populasi": finalBobotAkhirValue,
+        "Total Konsumsi Pakan (Kg)": pakanKg,
+        "Keterangan Tambahan": "Disimpan Otomatis melalui form Kalkulator IP (Auto-Sync Missing Data)"
+      };
+      if (form.bobotMode !== 'RataRata') {
+        manualPayload["Bobot Badan Per Ekor"] = form.bobotSamples.map(Number).filter(n => n > 0).join(', ');
+      }
+      
+      fetch(gasUrl, { method: "POST", body: JSON.stringify({ action: "addRekording", payload: manualPayload }) }).catch(()=>{});
+    }
+
     setIsCalculating(true);
     setResult(null);
 
@@ -83,8 +132,8 @@ export default function HitungIPTernak({ onBack, user = null, initialData = null
 
       const pAwal = parseFloat(form.populasiAwal);
       const pAkhir = parseFloat(form.populasiAkhir);
-      const bAwal = parseFloat(form.bobotAwal);
-      const bAkhir = parseFloat(form.bobotAkhir); // Bisa Rata-rata atau Total tergantung jenis
+      const bAwal = parseFloat(form.bobotAwal) || 0;
+      const bAkhir = parseFloat(finalBobotAkhirValue); // Rata-rata atau Hasil Array
       const lama = parseFloat(form.lamaPemeliharaan);
       const pakanRaw = parseFloat(form.totalPakan);
       const pakanKg = form.satuanPakan === "sak" ? pakanRaw * parseFloat(form.beratSak || 50) : pakanRaw;
@@ -229,6 +278,7 @@ export default function HitungIPTernak({ onBack, user = null, initialData = null
     setResult(null);
     setForm({
       jenis: "", populasiAwal: "", populasiAkhir: "", bobotAwal: "", bobotAkhir: "",
+      bobotMode: "RataRata", bobotSamples: ["", "", ""],
       satuanPakan: "kg", beratSak: "50", totalPakan: "", lamaPemeliharaan: "", produksiHarian: "", beratTelur: ""
     });
   };
@@ -297,6 +347,15 @@ export default function HitungIPTernak({ onBack, user = null, initialData = null
             </p>
           </div>
 
+          {isMissingDataMode && (
+            <div className="flex items-center gap-3 mb-6 p-4 rounded-2xl bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800">
+              <AlertTriangle className="flex-shrink-0 text-amber-500 w-6 h-6" />
+              <p className="text-sm font-medium text-amber-800 dark:text-amber-200">
+                <strong>Data Riwayat Belum Memadai:</strong> Sistem tidak mendeteksi rekording Pakan atau Bobot yang cukup. Form yang Anda isi di bawah akan kami <strong>simpan otomatis ke Database Rekording Harian</strong> Anda agar terekam abadi!
+              </p>
+            </div>
+          )}
+
           <form onSubmit={handleCalculate} className="space-y-5">
             <div>
               <label className={labelClass}>Jenis Ternak</label>
@@ -364,25 +423,51 @@ export default function HitungIPTernak({ onBack, user = null, initialData = null
                       <input type="number" name="populasiAkhir" value={form.populasiAkhir} onChange={handleChange} className={inputClass} placeholder="Contoh: 980" min="1" required />
                     </div>
 
-                    {/* BOBOT GROUP (Hanya Potong) */}
-                    {(selectedType === "potong_besar" || selectedType === "potong_kecil") && (
-                      <>
-                        <div>
-                          <label className={labelClass}>Rata² Bobot Awal <span className="text-green-600">Per Ekor (Kg)</span></label>
-                          <input type="number" step="0.01" name="bobotAwal" value={form.bobotAwal} onChange={handleChange} className={inputClass} placeholder="Contoh: 300" min="0" required />
+                    {/* BOBOT GROUP */}
+                    {(selectedType === "potong_besar" || selectedType === "potong_kecil" || selectedType === "unggas_pedaging") && (
+                      <div className="md:col-span-2 p-5 rounded-2xl bg-gray-100/50 dark:bg-gray-900/50 border border-gray-200 dark:border-gray-700/80 space-y-4">
+                        <div className="flex flex-col md:flex-row md:items-center justify-between mb-2 gap-2">
+                           <div className="font-bold text-gray-800 dark:text-gray-200">Pengisian Bobot Panen/Akhir</div>
+                           <select value={form.bobotMode} onChange={e => setForm({...form, bobotMode: e.target.value})} className="px-3 py-2 md:py-1.5 text-sm md:text-xs font-bold rounded-lg bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 dark:text-white outline-none cursor-pointer">
+                             <option value="RataRata">Isi Manual Rata-rata Bobot</option>
+                             <option value="PerEkor">Hitung dari Sampel Per Ekor</option>
+                             <option value="SeluruhEkor">Hitung dari Seluruh Ekor Terdata</option>
+                           </select>
                         </div>
-                        <div>
-                          <label className={labelClass}>Rata² Bobot Akhir <span className="text-green-600">Per Ekor (Kg)</span></label>
-                          <input type="number" step="0.01" name="bobotAkhir" value={form.bobotAkhir} onChange={handleChange} className={inputClass} placeholder="Contoh: 420" min="0" required />
-                        </div>
-                      </>
-                    )}
+                        
+                        {(selectedType === "potong_besar" || selectedType === "potong_kecil") && (
+                          <div className="mb-5">
+                            <label className={labelClass}>Rata² Bobot Awal Masuk <span className="text-green-600">Per Ekor (Kg)</span></label>
+                            <input type="number" step="0.01" name="bobotAwal" value={form.bobotAwal} onChange={handleChange} className={inputClass} placeholder="Contoh: 300" min="0" required />
+                          </div>
+                        )}
 
-                    {/* BOBOT UNGGAS PEDAGING */}
-                    {selectedType === "unggas_pedaging" && (
-                      <div className="md:col-span-2">
-                        <label className={labelClass}>Total Bobot Keseluruhan Panen <span className="text-green-600">(Kg)</span></label>
-                        <input type="number" step="0.01" name="bobotAkhir" value={form.bobotAkhir} onChange={handleChange} className={inputClass} placeholder="Contoh: 1960" min="0" required />
+                        {form.bobotMode === 'RataRata' ? (
+                          <div>
+                            <label className={labelClass}>{selectedType === "unggas_pedaging" ? "Total Bobot Keseluruhan Panen / Akhir" : "Rata² Bobot Akhir"} <span className="text-green-600">(Kg)</span></label>
+                            <input type="number" step="0.01" name="bobotAkhir" value={form.bobotAkhir} onChange={handleChange} className={inputClass} placeholder="Contoh: 420" min="0" required />
+                          </div>
+                        ) : (
+                          <div className="space-y-3 pt-2">
+                            <label className="block text-sm font-bold text-gray-700 dark:text-gray-300">
+                               {form.bobotMode === 'PerEkor' ? 'Input Sampel Bobot Per Ekor (Minimum 3)' : 'Input Bobot Secara Keseluruhan (Satu Per Satu)'} <span className="text-green-600">(Kg)</span>
+                            </label>
+                            <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 max-h-[180px] overflow-y-auto pr-1 custom-scrollbar">
+                              {form.bobotSamples.map((samp, idx) => (
+                                <div key={idx} className="relative group">
+                                  <input type="number" step="0.01" placeholder={`Ekor ${idx+1}`} value={samp} onChange={e => handleSampleChange(idx, e.target.value)} className="w-full px-4 py-3 rounded-xl bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 outline-none focus:ring-2 focus:ring-green-500 font-bold text-gray-800 dark:text-white cursor-text pr-8 text-center" />
+                                  <button type="button" onClick={() => handleRemoveSample(idx)} className="absolute right-2 top-1/2 -translate-y-1/2 text-red-300 hover:text-red-500 opacity-0 group-hover:opacity-100 transition-opacity"><X size={16}/></button>
+                                </div>
+                              ))}
+                            </div>
+                            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center pt-3 mt-3 border-t border-gray-200 dark:border-gray-700 gap-3">
+                              <button type="button" onClick={handleAddSample} className="text-sm px-4 py-2 bg-green-100/50 dark:bg-green-900/30 hover:bg-green-200 dark:hover:bg-green-800 text-green-700 dark:text-green-400 font-bold rounded-lg transition-colors flex items-center gap-1 w-full sm:w-auto justify-center"><Plus size={16}/> Tambah Kolom Isian</button>
+                              <div className="px-4 py-2 bg-blue-50 dark:bg-blue-900/20 text-blue-700 dark:text-blue-400 font-bold rounded-lg text-sm border border-blue-100 dark:border-blue-800 w-full sm:w-auto text-center flex items-center justify-center">
+                                  Rata-Rata: {getAverageBobot()} Kg
+                              </div>
+                            </div>
+                          </div>
+                        )}
                       </div>
                     )}
 
