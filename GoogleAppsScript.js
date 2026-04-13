@@ -197,7 +197,7 @@ function cascadeUpdateId(sheetName, oldId, newId) {
 // ============================================
 function JALANKAN_UNTUK_MENGELUARKAN_IZIN_GO_UNSAFE() {
   // Tanpa try-catch agar sistem Scanner Google 100% mendeteksi kebutuhan OAuth Drive!
-  var folder = DriveApp.getRootFolder(); 
+  var folder = DriveApp.getRootFolder();
   var checkSheet = SpreadsheetApp.openById(SPREADSHEET_ID);
   return "BERHASIL! Jika Go Unsafe sudah Anda setujui sebelumnya, maka Anda tinggal melakukan Deploy -> Manage Deployments -> New Version.";
 }
@@ -240,7 +240,7 @@ function handleUpload(payload) {
   var sheet = SpreadsheetApp.openById(SPREADSHEET_ID).getSheetByName("InfoAkun");
   var dataSheet = sheet.getDataRange().getValues();
   for (var i = 1; i < dataSheet.length; i++) {
-    if (dataSheet[i][0] === payload.userId) { 
+    if (dataSheet[i][0] === payload.userId) {
       sheet.getRange(i + 1, 9).setValue(fileUrl); // Kolom 9 (I) Foto Profil
       break;
     }
@@ -309,7 +309,7 @@ function addRow(sheetName, payloadArrayOrObj) {
 
   if (!Array.isArray(payloadArrayOrObj) && typeof payloadArrayOrObj === 'object') {
     let headers = sheet.getDataRange().getValues()[0] || [];
-    
+
     // Auto-tambah kolom baru di Spreadsheet jika Payload memiliki Key yang belum ada di Header
     let headersAdded = false;
     Object.keys(payloadArrayOrObj).forEach(key => {
