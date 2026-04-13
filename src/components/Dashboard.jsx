@@ -232,14 +232,31 @@ const InputRekordingView = ({ user }) => (
   </div>
 );
 
-const MOCK_REKORDING = [
-  { idAkun: 'REGULAR001', nasabah: 'Budi Santoso', tanggal: '14 April 2026', tipe: 'Populasi Awal', ekor: '145 Ekor', keterangan: 'Pemasukan benih ke kandang utama' },
-  { idAkun: 'REGULAR002', nasabah: 'Siti Aminah', tanggal: '15 April 2026', tipe: 'Mortalitas', ekor: '3 Ekor', keterangan: 'Indikasi masalah pernafasan malam hari' },
-];
+const GAS_URL = 'https://script.google.com/macros/s/AKfycbw8PPdSeOky1W3VIWur2hgnEqsshfMKFie7EMPNEzfoBrr7aW56eMtak14LUem3s3jE/exec';
 
 const RiwayatRekordingView = ({ user }) => {
   const isModerator = user.Role === 'Moderator';
-  const displayedRecords = MOCK_REKORDING.filter(r => isModerator || r.idAkun === user['ID Akun']);
+  const [displayedRecords, setDisplayedRecords] = useState([]);
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    fetch(GAS_URL, {
+      method: 'POST',
+      body: JSON.stringify({ action: 'getRekording', userId: user['ID Akun'], role: user.Role })
+    })
+    .then(res => res.json())
+    .then(res => {
+      if (res.status === 'success') {
+         // Sort descending by index / default order from sheets
+         setDisplayedRecords(res.data.reverse());
+      }
+      setIsLoading(false);
+    })
+    .catch(err => {
+      console.error(err);
+      setIsLoading(false);
+    });
+  }, [user]);
 
   return (
     <div className="bg-white dark:bg-gray-900 rounded-3xl border border-gray-100 dark:border-gray-800 shadow-sm overflow-hidden">
@@ -259,20 +276,25 @@ const RiwayatRekordingView = ({ user }) => {
             </tr>
           </thead>
           <tbody className="divide-y divide-gray-100 dark:divide-gray-800">
-            {displayedRecords.length === 0 && (
+            {isLoading && (
+              <tr><td colSpan="6" className="text-center py-8 text-gray-500">Memuat data dari server...</td></tr>
+            )}
+            {!isLoading && displayedRecords.length === 0 && (
               <tr><td colSpan="6" className="text-center py-8 text-gray-500">Belum ada data rekording.</td></tr>
             )}
-            {displayedRecords.map((r, idx) => (
+            {!isLoading && displayedRecords.map((r, idx) => (
               <tr key={idx} className="hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors">
-                <td className="px-6 py-4 font-medium whitespace-nowrap">{r.tanggal}</td>
-                {isModerator && <td className="px-6 py-4 font-medium whitespace-nowrap text-blue-600">{r.idAkun}</td>}
+                <td className="px-6 py-4 font-medium whitespace-nowrap">
+                   {r['Tanggal & Waktu'] ? new Date(r['Tanggal & Waktu']).toLocaleDateString() : '-'}
+                </td>
+                {isModerator && <td className="px-6 py-4 font-medium whitespace-nowrap text-blue-600">{r['ID Akun']}</td>}
                 <td className="px-6 py-4">
-                  <span className={`px-3 py-1 rounded-full text-xs font-bold ${r.tipe === 'Mortalitas' ? 'bg-red-100 text-red-700' : 'bg-blue-100 text-blue-700'}`}>
-                    {r.tipe}
+                  <span className={`px-3 py-1 rounded-full text-xs font-bold ${r['Jenis Evaluasi'] === 'Mortalitas' ? 'bg-red-100 text-red-700' : 'bg-blue-100 text-blue-700'}`}>
+                    {r['Jenis Evaluasi']}
                   </span>
                 </td>
-                <td className={`px-6 py-4 font-medium ${r.tipe === 'Mortalitas' ? 'text-red-500' : ''}`}>{r.ekor}</td>
-                <td className="px-6 py-4 truncate max-w-[200px]">{r.keterangan}</td>
+                <td className={`px-6 py-4 font-medium ${r['Jenis Evaluasi'] === 'Mortalitas' ? 'text-red-500' : ''}`}>{r['Jumlah Ekor Terdampak']}</td>
+                <td className="px-6 py-4 truncate max-w-[200px]">{r['Keterangan Tambahan']}</td>
                 <td className="px-6 py-4">
                    {isModerator ? (
                      <button className="text-blue-500 font-bold hover:underline text-xs">Edit (Moderator)</button>
@@ -349,16 +371,28 @@ const InputUsahaView = ({ user }) => (
   </div>
 );
 
-const MOCK_USAHA = [
-  { idAkun: 'REGULAR001', waktu: '13/04/2026 07:15', tipe: 'Keluar', item: 'Konsentrat BR-1', kategori: 'Pakan', jml: '10 Sak', total: '1.500.000' },
-  { idAkun: 'REGULAR001', waktu: '14/04/2026 08:00', tipe: 'Keluar', item: 'Vitamin B-Kompleks', kategori: 'Kesehatan', jml: '5 Botol', total: '150.000' },
-  { idAkun: 'REGULAR002', waktu: '15/04/2026 16:30', tipe: 'Keluar', item: 'Semen Beku Limousin', kategori: 'Reproduksi', jml: '2 Dosis', total: '200.000' },
-  { idAkun: 'REGULAR002', waktu: '16/04/2026 09:05', tipe: 'Masuk', item: 'Sapi Potong Hidup', kategori: 'Hasil Ternak Utama', jml: '3 Ekor', total: '45.000.000' },
-];
-
 const RiwayatUsahaView = ({ user }) => {
   const isModerator = user.Role === 'Moderator';
-  const displayedRecords = MOCK_USAHA.filter(r => isModerator || r.idAkun === user['ID Akun']);
+  const [displayedRecords, setDisplayedRecords] = useState([]);
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    fetch(GAS_URL, {
+      method: 'POST',
+      body: JSON.stringify({ action: 'getUsaha', userId: user['ID Akun'], role: user.Role })
+    })
+    .then(res => res.json())
+    .then(res => {
+      if (res.status === 'success') {
+         setDisplayedRecords(res.data.reverse());
+      }
+      setIsLoading(false);
+    })
+    .catch(err => {
+      console.error(err);
+      setIsLoading(false);
+    });
+  }, [user]);
 
   return (
     <div className="bg-white dark:bg-gray-900 rounded-3xl border border-gray-100 dark:border-gray-800 shadow-sm overflow-hidden">
@@ -381,26 +415,33 @@ const RiwayatUsahaView = ({ user }) => {
             </tr>
           </thead>
           <tbody className="divide-y divide-gray-100 dark:divide-gray-800">
-            {displayedRecords.length === 0 && (
+            {isLoading && (
+              <tr><td colSpan="6" className="text-center py-8 text-gray-500">Memuat data keuangan...</td></tr>
+            )}
+            {!isLoading && displayedRecords.length === 0 && (
               <tr><td colSpan="6" className="text-center py-8 text-gray-500">Belum ada data usaha.</td></tr>
             )}
-            {displayedRecords.map((r, idx) => (
+            {!isLoading && displayedRecords.map((r, idx) => (
               <tr key={idx} className="hover:bg-gray-50 dark:hover:bg-gray-800/50">
-                <td className="px-4 py-3 text-xs whitespace-nowrap">{r.waktu}</td>
-                {isModerator && <td className="px-4 py-3 font-medium text-xs text-blue-600">{r.idAkun}</td>}
+                <td className="px-4 py-3 text-xs whitespace-nowrap">
+                  {r['Timestamp'] ? new Date(r['Timestamp']).toLocaleString() : '-'}
+                </td>
+                {isModerator && <td className="px-4 py-3 font-medium text-xs text-blue-600">{r['ID Akun']}</td>}
                 <td className="px-4 py-3">
-                  {r.tipe === 'Keluar' ? (
+                  {r['Tipe Arus Kas'] === 'Pengeluaran' ? (
                     <span className="flex items-center gap-1 text-red-500 font-bold bg-red-50 dark:bg-red-900/20 px-2 py-1 rounded w-max text-[10px]"><ChevronRight className="rotate-90" size={14}/> Keluar</span>
                   ) : (
                     <span className="flex items-center gap-1 text-green-500 font-bold bg-green-50 dark:bg-green-900/20 px-2 py-1 rounded w-max text-[10px]"><ChevronRight className="-rotate-90" size={14}/> Masuk</span>
                   )}
                 </td>
                 <td className="px-4 py-3">
-                  <div className="font-bold text-gray-800 dark:text-gray-200">{r.item}</div>
-                  <div className="text-[10px]">{r.kategori}</div>
+                  <div className="font-bold text-gray-800 dark:text-gray-200">{r['Nama Barang / Item']}</div>
+                  <div className="text-[10px]">{r['Kategori Transaksi']}</div>
                 </td>
-                <td className="px-4 py-3 text-xs">{r.jml}</td>
-                <td className={`px-4 py-3 font-extrabold ${r.tipe === 'Masuk' ? 'text-green-600 dark:text-green-400' : 'text-gray-900 dark:text-white'}`}>{r.total}</td>
+                <td className="px-4 py-3 text-xs">{r['Jumlah Pembelian']} {r['Satuan Beli']}</td>
+                <td className={`px-4 py-3 font-extrabold ${r['Tipe Arus Kas'] !== 'Pengeluaran' ? 'text-green-600 dark:text-green-400' : 'text-gray-900 dark:text-white'}`}>
+                  {r['Total Harga Transaksi']}
+                </td>
               </tr>
             ))}
           </tbody>
@@ -433,13 +474,7 @@ const ProfilView = ({ user, setUser }) => {
       const base64String = reader.result.split(',')[1];
       
       try {
-        // Simulasi POST. Ini hanya mengupdate base64 ke local state agar preview jalan 
-        // secara instan sembari request ke GAS.
-        // Di kenyataan, kita menembak endpoint Web App Google Apps Script.
-        
-        // Membangun payload action 'uploadProfilePicture' sesuai `GoogleAppsScript.js`
-        /*
-        const response = await fetch('YOUR_GAS_ENDPOINT', {
+        const response = await fetch(GAS_URL, {
            method: 'POST',
            body: JSON.stringify({
               action: 'uploadProfilePicture',
@@ -451,19 +486,18 @@ const ProfilView = ({ user, setUser }) => {
            })
         });
         const resJson = await response.json();
-        // ... if success update src with resJson.data.fileUrl
-        */
-
-        const newUser = { ...user, 'Foto Profil': reader.result };
-        setUser(newUser);
-        localStorage.setItem('satuternak_user', JSON.stringify(newUser));
         
-        setTimeout(() => {
+        if (resJson.status === 'success') {
+          const newUser = { ...user, 'Foto Profil': resJson.data.fileUrl };
+          setUser(newUser);
+          localStorage.setItem('satuternak_user', JSON.stringify(newUser));
           alert("✓ Foto profil berhasil tersimpan di Link Folder Penyimpanan secara aman!");
-          setIsUploading(false);
-        }, 1000);
+        } else {
+          throw new Error(resJson.message || "Unknown error");
+        }
       } catch (error) {
         alert("Gagal mengupload: " + error.message);
+      } finally {
         setIsUploading(false);
       }
     };

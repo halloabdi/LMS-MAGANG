@@ -632,49 +632,15 @@ export function LandingPage() {
     showToast('info', 'Harap Tunggu', 'Mencoba masuk ke sistem...');
 
     try {
-      const response = await fetch('https://docs.google.com/spreadsheets/d/1gJN7Ej04Cn1IIFXDFISLlAv_cHgrOLqWXl9z7sGoFyg/gviz/tq?tqx=out:csv&sheet=InfoAkun');
-      const csvText = await response.text();
+      const response = await fetch('https://script.google.com/macros/s/AKfycbw8PPdSeOky1W3VIWur2hgnEqsshfMKFie7EMPNEzfoBrr7aW56eMtak14LUem3s3jE/exec', {
+        method: 'POST',
+        body: JSON.stringify({ action: 'login', emailOrUsername: loginEmail, password: loginPassword })
+      });
       
-      const rows = [];
-      let row = [];
-      let currentVal = '';
-      let inQuotes = false;
-      for (let i = 0; i < csvText.length; i++) {
-        const char = csvText[i];
-        if (char === '"') {
-          if (inQuotes && csvText[i+1] === '"') { currentVal += '"'; i++; }
-          else { inQuotes = !inQuotes; }
-        } else if (char === ',' && !inQuotes) {
-          row.push(currentVal); currentVal = '';
-        } else if (char === '\n' && !inQuotes) {
-          row.push(currentVal); rows.push(row); row = []; currentVal = '';
-        } else if (char !== '\r') {
-          currentVal += char;
-        }
-      }
-      if (row.length || currentVal) { row.push(currentVal); rows.push(row); }
+      const resJson = await response.json();
 
-      const headers = rows[0];
-      let userFound = null;
-
-      for (let j = 1; j < rows.length; j++) {
-        const r = rows[j];
-        if (!r[1]) continue;
-        const username = r[1];
-        const email = r[2];
-        const pass = r[11];
-
-        if ((username === loginEmail || email === loginEmail) && pass === loginPassword) {
-          userFound = {};
-          headers.forEach((h, idx) => {
-            if (h !== "Password") userFound[h] = r[idx];
-          });
-          break;
-        }
-      }
-
-      if (userFound) {
-        localStorage.setItem('satuternak_user', JSON.stringify(userFound));
+      if (resJson.status === 'success') {
+        localStorage.setItem('satuternak_user', JSON.stringify(resJson.data));
         setShowLogin(false);
         showToast('success', 'Login Berhasil', 'Mengarahkan ke Dashboard...');
         setTimeout(() => {
@@ -682,10 +648,10 @@ export function LandingPage() {
           window.location.pathname = '/Dashboard';
         }, 1000);
       } else {
-        showToast('error', 'Gagal', 'Username/Email atau Password salah!');
+        showToast('error', 'Gagal', resJson.message || 'Username/Email atau Password salah!');
       }
     } catch (error) {
-      showToast('error', 'Koneksi Gagal', 'Gagal terhubung ke server database.');
+      showToast('error', 'Koneksi Gagal', 'Gagal terhubung ke server database. Error: ' + error.message);
     } finally {
       setIsLoggingIn(false);
     }
