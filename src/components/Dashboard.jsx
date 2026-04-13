@@ -420,20 +420,45 @@ const InputRekordingView = ({ user }) => {
     jumlah: '', 
     keterangan: '',
     satuanPakan: 'Kg',
-    beratSak: '50'
+    beratSak: '50',
+    bobotMode: 'RataRata',
+    bobotRata: '',
+    bobotSamples: ['', '', '']
   });
   const [loading, setLoading] = useState(false);
 
   const HOURS = Array.from({length: 24}, (_, i) => String(i).padStart(2, '0'));
   const MINUTES = Array.from({length: 60}, (_, i) => String(i).padStart(2, '0'));
 
+  const getAverageBobot = () => {
+    const valid = form.bobotSamples.map(Number).filter(n => n > 0);
+    if (valid.length === 0) return 0;
+    return (valid.reduce((a, b) => a + b, 0) / valid.length).toFixed(2);
+  };
+
+  const handleAddSample = () => setForm({...form, bobotSamples: [...form.bobotSamples, '']});
+  const handleRemoveSample = (index) => {
+    if (form.bobotSamples.length > 3) {
+      const newSamples = [...form.bobotSamples];
+      newSamples.splice(index, 1);
+      setForm({...form, bobotSamples: newSamples});
+    } else {
+      alert("Minimal 3 sampel ekor diperlukan untuk rata-rata valid!");
+    }
+  };
+  const handleSampleChange = (index, val) => {
+    const newSamples = [...form.bobotSamples];
+    newSamples[index] = val;
+    setForm({...form, bobotSamples: newSamples});
+  };
+
   const handleSubmit = (e) => {
     e.preventDefault();
-    if (!form.jenis || !form.jenisHewan || !form.jumlah) return alert("Pilih evaluasi, jenis ternak, dan jumlah ekor/pakan!");
+    if (!form.jenis || !form.jenisHewan) return alert("Pilih evaluasi dan jenis ternak!");
+    if (form.jenis !== 'Pencatatan Bobot Badan' && !form.jumlah) return alert("Harap isikan jumlah!");
     setLoading(true);
 
     const ds = form.tanggal instanceof Date ? form.tanggal : new Date();
-    // Parse waktu dari jam dan menit
     ds.setHours(parseInt(form.jam, 10));
     ds.setMinutes(parseInt(form.menit, 10));
 
@@ -456,13 +481,29 @@ const InputRekordingView = ({ user }) => {
        finalJumlah = finalJumlah * (Number(form.beratSak) || 0);
     }
 
-    if (form.jenis === 'Populasi Awal Masuk') submitPayload["Jumlah Populasi Awal Masuk Ternak"] = finalJumlah;
-    else if (form.jenis === 'Penambahan Populasi Ternak') submitPayload["Jumlah Penambahan Populasi Ternak"] = finalJumlah;
-    else if (form.jenis === 'Kematian Ternak (Mortalitas)') submitPayload["Jumlah Kematian Ternak"] = finalJumlah;
-    else if (form.jenis === 'Program Vaksinasi') submitPayload["Jumlah Ternak Di Vaksin"] = finalJumlah;
-    else if (form.jenis === 'Pemberian Pakan') submitPayload["Jumlah Pemberian Pakan (Kg)"] = finalJumlah;
-    else if (form.jenis === 'Stok Gudang') submitPayload["Jumlah Stok Gudang (Kg)"] = finalJumlah;
-    else submitPayload["Jumlah Ekor Terdampak"] = finalJumlah;
+    if (form.jenis === 'Pencatatan Bobot Badan') {
+      let bobotRataPayload = "";
+      let bobotSamplesPayload = "";
+      if (form.bobotMode === 'RataRata') {
+        if (!form.bobotRata) { setLoading(false); return alert("Harap isikan nilai Rata-rata bobot!"); }
+        bobotRataPayload = form.bobotRata;
+      } else {
+        const valid = form.bobotSamples.map(Number).filter(n => n > 0);
+        if (valid.length < 3) { setLoading(false); return alert("Minimal 3 sampel bobot valid diperlukan!"); }
+        bobotRataPayload = getAverageBobot();
+        bobotSamplesPayload = valid.join(', ');
+      }
+      submitPayload["Bobot Badan Rata-Rata Keseluruhan dari Total Populasi"] = bobotRataPayload;
+      if (bobotSamplesPayload) submitPayload["Bobot Badan Per Ekor"] = bobotSamplesPayload;
+    } else {
+      if (form.jenis === 'Populasi Awal Masuk') submitPayload["Jumlah Populasi Awal Masuk Ternak"] = finalJumlah;
+      else if (form.jenis === 'Penambahan Populasi Ternak') submitPayload["Jumlah Penambahan Populasi Ternak"] = finalJumlah;
+      else if (form.jenis === 'Kematian Ternak (Mortalitas)') submitPayload["Jumlah Kematian Ternak"] = finalJumlah;
+      else if (form.jenis === 'Program Vaksinasi') submitPayload["Jumlah Ternak Di Vaksin"] = finalJumlah;
+      else if (form.jenis === 'Pemberian Pakan') submitPayload["Jumlah Pemberian Pakan (Kg)"] = finalJumlah;
+      else if (form.jenis === 'Stok Gudang') submitPayload["Jumlah Stok Gudang (Kg)"] = finalJumlah;
+      else submitPayload["Jumlah Ekor Terdampak"] = finalJumlah;
+    }
 
     fetch(GAS_URL, {
       method: "POST",
@@ -483,7 +524,10 @@ const InputRekordingView = ({ user }) => {
             jumlah: '', 
             keterangan: '',
             satuanPakan: 'Kg',
-            beratSak: '50'
+            beratSak: '50',
+            bobotMode: 'RataRata',
+            bobotRata: '',
+            bobotSamples: ['', '', '']
           }); 
         }
         setLoading(false);
@@ -536,7 +580,7 @@ const InputRekordingView = ({ user }) => {
             <ModernSelect
                value={form.jenis}
                onChange={(v) => setForm({ ...form, jenis: v })}
-               options={['Populasi Awal Masuk', 'Penambahan Populasi Ternak', 'Kematian Ternak (Mortalitas)', 'Program Vaksinasi', 'Pemberian Pakan', 'Stok Gudang', 'Lainnya']}
+               options={['Populasi Awal Masuk', 'Penambahan Populasi Ternak', 'Kematian Ternak (Mortalitas)', 'Program Vaksinasi', 'Pencatatan Bobot Badan', 'Pemberian Pakan', 'Stok Gudang', 'Lainnya']}
                placeholder="- Pilih Kejadian -"
             />
           </div>
@@ -547,25 +591,67 @@ const InputRekordingView = ({ user }) => {
             <label className="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-1">Jenis Ternak</label>
             <input type="text" required value={form.jenisHewan} onChange={e => setForm({ ...form, jenisHewan: e.target.value })} placeholder="Cth: Sapi Potong / Kambing" className="w-full px-4 py-3 rounded-xl bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 outline-none focus:ring-2 focus:ring-green-500 font-medium cursor-text" />
           </div>
-          <div>
-            <label className="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-1">
-              {(form.jenis === 'Pemberian Pakan' || form.jenis === 'Stok Gudang') ? "Jumlah Kuantitas" : "Jumlah Ekor Terkait Kejadian"}
-            </label>
-            <div className="flex gap-2">
-              <input type="number" required value={form.jumlah} onChange={e => setForm({ ...form, jumlah: e.target.value })} placeholder="Cth: 10" className="w-full px-4 py-3 rounded-xl bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 outline-none focus:ring-2 focus:ring-green-500 font-medium flex-1 cursor-text" />
-              
-              {(form.jenis === 'Pemberian Pakan' || form.jenis === 'Stok Gudang') && (
-                <div className="w-[120px] relative z-[40]">
-                  <ModernSelect 
-                    value={form.satuanPakan} 
-                    onChange={v => setForm({...form, satuanPakan: v})} 
-                    options={['Kg', 'Sak']} 
-                    placeholder="Satuan" 
-                  />
-                </div>
-              )}
+          {form.jenis !== 'Pencatatan Bobot Badan' && (
+            <div>
+              <label className="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-1">
+                {(form.jenis === 'Pemberian Pakan' || form.jenis === 'Stok Gudang') ? "Jumlah Kuantitas" : "Jumlah Ekor Terkait Kejadian"}
+              </label>
+              <div className="flex gap-2">
+                <input type="number" required={form.jenis !== 'Pencatatan Bobot Badan'} value={form.jumlah} onChange={e => setForm({ ...form, jumlah: e.target.value })} placeholder="Cth: 10" className="w-full px-4 py-3 rounded-xl bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 outline-none focus:ring-2 focus:ring-green-500 font-medium flex-1 cursor-text" />
+                
+                {(form.jenis === 'Pemberian Pakan' || form.jenis === 'Stok Gudang') && (
+                  <div className="w-[120px] relative z-[40]">
+                    <ModernSelect 
+                      value={form.satuanPakan} 
+                      onChange={v => setForm({...form, satuanPakan: v})} 
+                      options={['Kg', 'Sak']} 
+                      placeholder="Satuan" 
+                    />
+                  </div>
+                )}
+              </div>
             </div>
-          </div>
+          )}
+
+          <AnimatePresence>
+            {form.jenis === 'Pencatatan Bobot Badan' && (
+              <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }} exit={{ opacity: 0, height: 0 }} className="overflow-hidden md:col-span-2">
+                <div className="p-5 bg-blue-50/50 dark:bg-blue-900/20 rounded-2xl border border-blue-100 dark:border-blue-800/50 mt-1 space-y-4">
+                  <div>
+                    <label className="block text-sm font-bold text-blue-800 dark:text-blue-300 mb-2">Metode Pencatatan Bobot</label>
+                    <div className="w-full relative z-[45]">
+                      <ModernSelect value={form.bobotMode === 'RataRata' ? 'Isi Rata-rata Langsung' : 'Hitung dari Sampel Per Ekor'} onChange={v => setForm({...form, bobotMode: v === 'Isi Rata-rata Langsung' ? 'RataRata' : 'PerEkor'})} options={['Isi Rata-rata Langsung', 'Hitung dari Sampel Per Ekor']} />
+                    </div>
+                  </div>
+
+                  {form.bobotMode === 'RataRata' ? (
+                    <div>
+                      <label className="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-1">Bobot Badan Rata-rata (Kg)</label>
+                      <input type="number" step="0.01" required={form.jenis === 'Pencatatan Bobot Badan'} placeholder="Cth: 1.5" value={form.bobotRata} onChange={e => setForm({...form, bobotRata: e.target.value})} className="w-full px-4 py-3 rounded-xl bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 outline-none focus:ring-2 focus:ring-blue-500 font-medium cursor-text" />
+                    </div>
+                  ) : (
+                    <div className="space-y-3">
+                      <label className="block text-sm font-bold text-gray-700 dark:text-gray-300">Input Sampel Bobot Per Ekor (Kg)</label>
+                      <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
+                        {form.bobotSamples.map((samp, idx) => (
+                          <div key={idx} className="relative group">
+                            <input type="number" step="0.01" placeholder={`Ekor ${idx+1}`} value={samp} onChange={e => handleSampleChange(idx, e.target.value)} className="w-full px-4 py-2.5 rounded-xl bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 outline-none focus:ring-2 focus:ring-blue-500 font-medium cursor-text pr-8 text-center" />
+                            <button type="button" onClick={() => handleRemoveSample(idx)} className="absolute right-2 top-1/2 -translate-y-1/2 text-red-300 hover:text-red-500 opacity-0 group-hover:opacity-100 transition-opacity"><X size={16} /></button>
+                          </div>
+                        ))}
+                      </div>
+                      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 pt-2 border-t border-blue-100 dark:border-blue-800/50 mt-2">
+                        <button type="button" onClick={handleAddSample} className="text-sm px-4 py-2 bg-blue-100 hover:bg-blue-200 dark:bg-blue-900/40 dark:hover:bg-blue-800 text-blue-700 dark:text-blue-300 font-bold rounded-lg transition-colors flex items-center gap-1 mt-2 sm:mt-0"><Plus size={16}/> Tambah Sampel</button>
+                        <div className="px-4 py-2 bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-300 font-bold rounded-lg text-sm border border-green-200 dark:border-green-800">
+                            Rata-rata Terkalkulasi: {getAverageBobot()} Kg
+                        </div>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </motion.div>
+            )}
+          </AnimatePresence>
         </div>
 
         {/* INJECTION UNTUK INPUT BERAT SAK */}
@@ -688,8 +774,32 @@ const RiwayatRekordingView = ({ user, onChangeTab }) => {
   const [showIPCalc, setShowIPCalc] = useState(false);
   const [ipData, setIpData] = useState(null);
   const [showMissingData, setShowMissingData] = useState(false);
-  const [manualData, setManualData] = useState({ totalPakan: '', bobotAkhir: '', satuanPakan: 'Kg', beratSak: '50', modeInputActive: false });
+  const [manualData, setManualData] = useState({ 
+    totalPakan: '', bobotAkhir: '', satuanPakan: 'Kg', beratSak: '50', modeInputActive: false,
+    bobotMode: 'RataRata', bobotRata: '', bobotSamples: ['', '', '']
+  });
   const [isSavingManual, setIsSavingManual] = useState(false);
+
+  const getManualAverageBobot = () => {
+    const valid = manualData.bobotSamples.map(Number).filter(n => n > 0);
+    if (valid.length === 0) return 0;
+    return (valid.reduce((a, b) => a + b, 0) / valid.length).toFixed(2);
+  };
+  const handleAddManualSample = () => setManualData({...manualData, bobotSamples: [...manualData.bobotSamples, '']});
+  const handleRemoveManualSample = (index) => {
+    if (manualData.bobotSamples.length > 3) {
+      const newSamples = [...manualData.bobotSamples];
+      newSamples.splice(index, 1);
+      setManualData({...manualData, bobotSamples: newSamples});
+    } else {
+      alert("Minimal 3 sampel ekor diperlukan!");
+    }
+  };
+  const handleManualSampleChange = (index, val) => {
+    const newSamples = [...manualData.bobotSamples];
+    newSamples[index] = val;
+    setManualData({...manualData, bobotSamples: newSamples});
+  };
 
   const fetchRecords = () => {
     setLoading(true);
@@ -776,8 +886,12 @@ const RiwayatRekordingView = ({ user, onChangeTab }) => {
     const sumPakan = pakanArr.reduce((acc, curr) => acc + (Number(curr['Jumlah Pemberian Pakan (Kg)'] || curr['Total Konsumsi Pakan (Kg)']) || 0), 0);
     
     // Auto extract Harvest weight if it exists mapped manually
-    const bobotArr = recordsToUse.filter(r => r['Jenis Evaluasi'] === 'Kalkulasi Manual IP' && r['Bobot Panen (Kg)']);
-    const lastBobot = bobotArr.length > 0 ? Number(bobotArr[bobotArr.length - 1]['Bobot Panen (Kg)']) : "";
+    const bobotArr = recordsToUse.filter(r => r['Jenis Evaluasi'] === 'Kalkulasi Manual IP' || r['Jenis Evaluasi'] === 'Pencatatan Bobot Badan');
+    let lastBobot = "";
+    if (bobotArr.length > 0) {
+      const lastR = bobotArr[bobotArr.length - 1];
+      lastBobot = Number(lastR['Bobot Badan Rata-Rata Keseluruhan dari Total Populasi'] || lastR['Bobot Panen (Kg)']);
+    }
 
     setIpData({
       jenis: finalJenisForm,
@@ -805,7 +919,19 @@ const RiwayatRekordingView = ({ user, onChangeTab }) => {
   };
 
   const handleSaveManualData = () => {
-    if (!manualData.totalPakan || !manualData.bobotAkhir) return alert("Lengkapi data yang kosong!");
+    let finalBobotRata = 0;
+    let bobotSamplesPayload = "";
+    if (manualData.bobotMode === 'RataRata') {
+      if (!manualData.bobotRata) return alert("Harap isikan bobot rata-rata!");
+      finalBobotRata = manualData.bobotRata;
+    } else {
+      const valid = manualData.bobotSamples.map(Number).filter(n => n > 0);
+      if (valid.length < 3) return alert("Minimal 3 sampel bobot valid diperlukan!");
+      finalBobotRata = getManualAverageBobot();
+      bobotSamplesPayload = valid.join(', ');
+    }
+
+    if (!manualData.totalPakan || !finalBobotRata) return alert("Lengkapi data yang kosong!");
     setIsSavingManual(true);
 
     let finalPakan = Number(manualData.totalPakan) || 0;
@@ -821,9 +947,10 @@ const RiwayatRekordingView = ({ user, onChangeTab }) => {
       "Role": user.Role,
       "Jenis Evaluasi": "Kalkulasi Manual IP",
       "Total Konsumsi Pakan (Kg)": finalPakan,
-      "Bobot Panen (Kg)": manualData.bobotAkhir,
+      "Bobot Badan Rata-Rata Keseluruhan dari Total Populasi": finalBobotRata,
       "Keterangan Tambahan": "Data Ekstra Disimpan via Missing Data Validator"
     };
+    if (bobotSamplesPayload) payload["Bobot Badan Per Ekor"] = bobotSamplesPayload;
 
     fetch(GAS_URL, {
       method: "POST",
@@ -858,10 +985,14 @@ const RiwayatRekordingView = ({ user, onChangeTab }) => {
           {user.Role === 'Moderator' && (
             <div className="w-full md:w-1/4">
               <label className="block text-xs font-bold text-gray-500 dark:text-gray-400 mb-1">Pilih Anggota</label>
-              <select value={selectedAkun} onChange={e => setSelectedAkun(e.target.value)} className="w-full px-3 py-2.5 rounded-xl bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 outline-none text-sm dark:text-white focus:border-green-500 transition-colors">
-                <option value="Semua">Semua Anggota</option>
-                {uniqueUsers.map(u => <option key={u} value={u}>{getUserName(u)}</option>)}
-              </select>
+              <div className="w-full relative z-[110]">
+                 <ModernSelect 
+                   options={[{label: "Semua Anggota", value: "Semua"}, ...uniqueUsers.map(u => ({label: getUserName(u), value: u}))]}
+                   value={selectedAkun === 'Semua' ? 'Semua Anggota' : getUserName(selectedAkun)}
+                   onChange={v => setSelectedAkun(v.value || v)}
+                   placeholder="Pilih Anggota"
+                 />
+              </div>
             </div>
           )}
           <div className="w-full md:w-1/4 relative z-[100]">
@@ -969,11 +1100,37 @@ const RiwayatRekordingView = ({ user, onChangeTab }) => {
                           <p className="text-xs text-blue-600 dark:text-blue-400 mt-2 font-medium">Beban Pakan Dihitung: {Number(manualData.totalPakan||0) * Number(manualData.beratSak||0)} Kg</p>
                        </div>
                     )}
-                    <div>
-                      <label className="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-1">Bobot Panen / Akhir Rata-rata (Kg)</label>
-                      <input type="number" value={manualData.bobotAkhir} onChange={e => setManualData({...manualData, bobotAkhir: e.target.value})} placeholder="Cth: 2.1" className="w-full px-4 py-3 rounded-xl border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 text-gray-800 dark:text-gray-200" />
+                    <div className="pt-2">
+                      <label className="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-2">Metode Pencatatan Bobot Panen/Akhir</label>
+                      <div className="w-full relative z-[45]">
+                        <ModernSelect value={manualData.bobotMode === 'RataRata' ? 'Isi Rata-rata Langsung' : 'Hitung dari Sampel Per Ekor'} onChange={v => setManualData({...manualData, bobotMode: v === 'Isi Rata-rata Langsung' ? 'RataRata' : 'PerEkor'})} options={['Isi Rata-rata Langsung', 'Hitung dari Sampel Per Ekor']} />
+                      </div>
                     </div>
-                    
+
+                    {manualData.bobotMode === 'RataRata' ? (
+                      <div>
+                        <label className="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-1">Bobot Panen / Akhir Rata-rata (Kg)</label>
+                        <input type="number" step="0.01" value={manualData.bobotRata} onChange={e => setManualData({...manualData, bobotRata: e.target.value})} placeholder="Cth: 2.1" className="w-full px-4 py-3 rounded-xl border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 text-gray-800 dark:text-gray-200" />
+                      </div>
+                    ) : (
+                      <div className="space-y-3 bg-gray-50 dark:bg-gray-800/50 p-4 rounded-xl border border-gray-100 dark:border-gray-800">
+                        <label className="block text-sm font-bold text-gray-700 dark:text-gray-300">Input Sampel Bobot Per Ekor (Kg)</label>
+                        <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 max-h-[160px] overflow-y-auto pr-1 custom-scrollbar">
+                          {manualData.bobotSamples.map((samp, idx) => (
+                            <div key={idx} className="relative group">
+                              <input type="number" step="0.01" placeholder={`Ekor ${idx+1}`} value={samp} onChange={e => handleManualSampleChange(idx, e.target.value)} className="w-full px-4 py-2.5 rounded-xl bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 outline-none focus:ring-2 focus:ring-blue-500 font-medium cursor-text pr-8 text-center" />
+                              <button type="button" onClick={() => handleRemoveManualSample(idx)} className="absolute right-2 top-1/2 -translate-y-1/2 text-red-300 hover:text-red-500 opacity-0 group-hover:opacity-100 transition-opacity"><X size={16} /></button>
+                            </div>
+                          ))}
+                        </div>
+                        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 pt-2 border-t border-gray-200 dark:border-gray-700 mt-2">
+                          <button type="button" onClick={handleAddManualSample} className="text-sm px-4 py-2 bg-blue-100/50 hover:bg-blue-200 dark:bg-blue-900/40 dark:hover:bg-blue-800 text-blue-700 dark:text-blue-300 font-bold rounded-lg transition-colors flex items-center gap-1 mt-2 sm:mt-0"><Plus size={16}/> Tambah Sampel</button>
+                          <div className="px-4 py-2 bg-green-100/50 dark:bg-green-900/30 text-green-800 dark:text-green-300 font-bold rounded-lg text-sm border border-green-200 dark:border-green-800">
+                              Rata-rata: {getManualAverageBobot()} Kg
+                          </div>
+                        </div>
+                      </div>
+                    )}
                     <button disabled={isSavingManual} onClick={handleSaveManualData} className="w-full py-3.5 bg-green-600 hover:bg-green-700 text-white font-bold rounded-xl mt-2 transition-all flex justify-center items-center gap-2">
                        {isSavingManual ? "Menyimpan ke Sheet..." : <><Save size={18} /> Simpan ke Database & Lanjut IP</>}
                     </button>
