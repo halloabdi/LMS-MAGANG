@@ -15,7 +15,7 @@ import Dashboard from './components/Dashboard';
 const GAS_URL = 'https://script.google.com/macros/s/AKfycbx-QH-7eY81o9X9uw1cxpTxnnNRlJ-hZbUsgy5oUKIF642jnA3BawrcHIqwT0RLt7o/exec';
 
 // --- DATA FROM ORIGINAL JS ---
-    // Berita kini dimuat dari Database Google Apps Script
+// Berita kini dimuat dari Database Google Apps Script
 
 const sponsorsData = [
   {
@@ -441,19 +441,19 @@ export function LandingPage() {
       try {
         const parsed = JSON.parse(rawData);
         if (parsed && parsed.expiry) {
-           if (Date.now() > parsed.expiry) {
-             localStorage.removeItem('satuternak_user'); // Sesi habis
-           } else {
-             // Valid, lompat ke dashboard
-             window.location.hash = '';
-             window.location.pathname = '/Dashboard';
-           }
+          if (Date.now() > parsed.expiry) {
+            localStorage.removeItem('satuternak_user'); // Sesi habis
+          } else {
+            // Valid, lompat ke dashboard
+            window.location.hash = '';
+            window.location.pathname = '/Dashboard';
+          }
         } else if (parsed) {
-           // Format lama tanpa expiry
-           window.location.hash = '';
-           window.location.pathname = '/Dashboard';
+          // Format lama tanpa expiry
+          window.location.hash = '';
+          window.location.pathname = '/Dashboard';
         }
-      } catch(e) {}
+      } catch (e) { }
     }
   }, []);
 
@@ -463,11 +463,11 @@ export function LandingPage() {
       method: "POST",
       body: JSON.stringify({ action: "getBerita" })
     })
-    .then(r => r.json())
-    .then(res => {
-      if (res.status === 'success') {
-         // Transform data dari array object Spreadsheet
-         const formatted = res.data.map(item => ({
+      .then(r => r.json())
+      .then(res => {
+        if (res.status === 'success') {
+          // Transform data dari array object Spreadsheet
+          const formatted = res.data.map(item => ({
             id: item['ID Berita'],
             title: item['Judul'],
             category: item['Kategori'],
@@ -475,11 +475,11 @@ export function LandingPage() {
             author: item['Penulis'],
             content: item['Konten'],
             isPinned: item['isPinned'] === "Ya"
-         }));
-         setNewsData(formatted);
-      }
-    })
-    .catch(console.error);
+          }));
+          setNewsData(formatted);
+        }
+      })
+      .catch(console.error);
   }, []);
 
   const pinnedNews = newsData.filter(n => n.isPinned);

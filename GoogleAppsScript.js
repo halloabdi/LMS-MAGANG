@@ -13,7 +13,7 @@ function doPost(e) {
 
     if (action === "login") return handleLogin(data.emailOrUsername, data.password);
     if (action === "uploadProfilePicture") return handleUpload(data);
-    
+
     // CRUD DATA
     if (action === "getRekording") return getSheetData("DataRekording", data.userId, data.role);
     if (action === "getUsaha") return getSheetData("DataUsaha", data.userId, data.role);
@@ -45,7 +45,7 @@ function doPost(e) {
 // ============================================
 function initializeMissingSheets() {
   const ss = SpreadsheetApp.openById(SPREADSHEET_ID);
-  
+
   // 1. Notifikasi
   if (!ss.getSheetByName("Notifikasi")) {
     const notifSheet = ss.insertSheet("Notifikasi");
@@ -61,7 +61,7 @@ function initializeMissingSheets() {
     beritaSheet.appendRow(["ID Berita", "Kategori", "Judul", "Thumbnail URL", "Penulis", "Konten", "isPinned", "Waktu Publish"]);
     beritaSheet.setFrozenRows(1);
     beritaSheet.getRange("A1:H1").setFontWeight("bold").setBackground("#f3f4f6");
-    
+
     // Auto-populate 3 berita default agar tak kosong
     const now = new Date().toISOString();
     const defaultNews = [
@@ -106,7 +106,7 @@ function getUsers(callerUserId, callerRole) {
   const data = sheet.getDataRange().getValues();
   const headers = data[0];
   const result = [];
-  
+
   const idAkunIndex = headers.indexOf("ID Akun");
 
   for (let i = 1; i < data.length; i++) {
@@ -120,7 +120,7 @@ function getUsers(callerUserId, callerRole) {
       // Jika yang request bukan moderator dan baris ini BUKAN dirinya sndiri, 
       // JANGAN PERNAH berikan password orang lain!
       if (header === "Password" && callerRole !== "Moderator" && row[idAkunIndex] !== callerUserId) {
-        obj[header] = "***"; 
+        obj[header] = "***";
       } else {
         obj[header] = row[index];
       }
@@ -206,11 +206,11 @@ function extractFolderId(url) {
 function handleUpload(payload) {
   var folderId = extractFolderId(payload.folderUrl);
   if (!folderId) return respondError("GAGAL_PARSE_URL: Format URL Link Folder Penyimpanan Anda tidak mengandung ID Google Drive yang sah.");
-  
+
   var folder;
   try {
     folder = DriveApp.getFolderById(folderId);
-  } catch(e) {
+  } catch (e) {
     // Beri pesan detail ekstrim atas kesalahan permission/DriveApp
     return respondError(
       "AKSES_DITOLAK_DRIVE: Skrip gagal masuk ke Google Drive dengan Error (" + e.message + "). " +
@@ -221,7 +221,7 @@ function handleUpload(payload) {
 
   var data = Utilities.base64Decode(payload.base64Data);
   var blob = Utilities.newBlob(data, payload.mimeType, payload.fileName);
-  
+
   var file = folder.createFile(blob);
   file.setSharing(DriveApp.Access.ANYONE_WITH_LINK, DriveApp.Permission.VIEW);
   var fileUrl = file.getUrl();
@@ -235,7 +235,7 @@ function handleUpload(payload) {
       break;
     }
   }
-  
+
   return respondSuccess({ fileUrl: fileUrl, message: "Foto Profil berhasil diunggah ke Google Drive dan Database terupdate!" });
 }
 
@@ -245,35 +245,35 @@ function handleUpload(payload) {
 function getSheetData(sheetName, userId, role) {
   var sheet = SpreadsheetApp.openById(SPREADSHEET_ID).getSheetByName(sheetName);
   if (!sheet) return respondError("Sheet " + sheetName + " tidak ditemukan");
-  
+
   var data = sheet.getDataRange().getValues();
   if (data.length <= 1) return respondSuccess([]); // Kosong 
 
   var headers = data[0];
   var result = [];
-  
+
   // Deteksi di mana ID Relasi Akun disimpan pada Header Name
   var idAkunIndex = headers.indexOf("ID Akun");
   if (idAkunIndex === -1) idAkunIndex = headers.indexOf("Penerima (ID Akun/Semua)"); // Untuk Notifikasi
-  
+
   for (var i = 1; i < data.length; i++) {
     var row = data[i];
-    
+
     // Fitur Notifikasi: Tampilkan pesan khusus ke pengguna atau "Semua" (Broadcast Global)
     if (sheetName === "Notifikasi" && role !== "Moderator") {
-        const receiver = row[idAkunIndex];
-        if (receiver !== "Semua" && receiver !== userId) {
-            continue;
-        }
+      const receiver = row[idAkunIndex];
+      if (receiver !== "Semua" && receiver !== userId) {
+        continue;
+      }
     } else {
-        // LAYER VERIFIKASI BIASA (Untuk DataUsaha & DataRekording)
-        if (role !== "Moderator" && idAkunIndex !== -1) {
+      // LAYER VERIFIKASI BIASA (Untuk DataUsaha & DataRekording)
+      if (role !== "Moderator" && idAkunIndex !== -1) {
         if (row[idAkunIndex] !== userId) {
-            continue;
+          continue;
         }
-        }
+      }
     }
-    
+
     const obj = {};
     headers.forEach((header, index) => {
       // JSON Serialization untuk Tanggal
@@ -314,7 +314,7 @@ function deleteRow(sheetName, matchColumnName, matchValue) {
   for (let i = data.length - 1; i >= 1; i--) {
     if (data[i][colIndex] == matchValue) { // Gunakan '==' agar ID numerik dan string match
       sheet.deleteRow(i + 1);
-      return respondSuccess({ success: true, message: "Data baris ke-" + (i+1) + " terhapus!" });
+      return respondSuccess({ success: true, message: "Data baris ke-" + (i + 1) + " terhapus!" });
     }
   }
 

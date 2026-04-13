@@ -575,7 +575,8 @@ const NotifikasiView = ({ user, isModerator }) => {
 // ==========================================
 const KelolaBeritaView = ({ user }) => {
   const [berita, setBerita] = useState([]);
-  const [form, setForm] = useState({ judul: '', konten: '', url: '', pin: 'Tidak' });
+  const [form, setForm] = useState({ judul: '', konten: '', url: '', pin: 'Tidak', kategori: 'Umum' });
+  const [isUploading, setIsUploading] = useState(false);
 
   const fetchBerita = () => {
     fetch(GAS_URL, { method: 'POST', body: JSON.stringify({ action: 'getBerita' }) })
@@ -585,34 +586,78 @@ const KelolaBeritaView = ({ user }) => {
 
   const handlePost = (e) => {
     e.preventDefault();
+    if (!form.url) return alert("Thumbnail belum diunggah!");
     fetch(GAS_URL, {
       method: "POST",
       body: JSON.stringify({
         action: "addBerita",
-        payload: ['BRT-' + Date.now(), 'Umum', form.judul, form.url, user['Nama Lengkap'], form.konten, form.pin, new Date().toISOString()]
+        payload: ['BRT-' + Date.now(), form.kategori, form.judul, form.url, user['Nama Lengkap'], form.konten, form.pin, new Date().toISOString()]
       })
     }).then(r => r.json()).then(res => {
-      if (res.status === 'success') { alert("Berita Dipublish!"); fetchBerita(); }
+      if (res.status === 'success') { alert("Berita Dipublish!"); fetchBerita(); setForm({ judul: '', konten: '', url: '', pin: 'Tidak', kategori: 'Umum' }); }
     });
+  };
+
+  const handleFileSelect = async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    if (!user['Link Folder Penyimpanan'] || user['Link Folder Penyimpanan'] === '-') return alert("Akun Anda tak terhubung dengan folder Google Drive!");
+    
+    setIsUploading(true);
+    const reader = new FileReader();
+    reader.onloadend = async () => {
+      const base64String = reader.result.split(',')[1];
+      try {
+        const response = await fetch(GAS_URL, {
+           method: 'POST',
+           body: JSON.stringify({ action: 'uploadProfilePicture', userId: user['ID Akun'], base64Data: base64String, mimeType: file.type, fileName: file.name, folderUrl: user['Link Folder Penyimpanan'] })
+        });
+        const resJson = await response.json();
+        if (resJson.status === 'success') {
+          setForm({ ...form, url: resJson.data.fileUrl });
+        } else alert("Error Drive: " + resJson.message);
+      } catch (error) { alert("Network Error"); } 
+      finally { setIsUploading(false); }
+    };
+    reader.readAsDataURL(file);
   };
 
   const handleDelete = (id) => {
     if (!confirm("Yakin hapus?")) return;
     fetch(GAS_URL, { method: "POST", body: JSON.stringify({ action: "deleteBerita", idBerita: id }) }).then(() => fetchBerita());
-  }
+  };
 
   return (
     <div className="space-y-6">
       <form onSubmit={handlePost} className="bg-white p-6 rounded-3xl border border-gray-100 shadow-sm space-y-4">
-        <h3 className="font-bold text-lg">Buat Artikel Berita</h3>
-        <div className="grid grid-cols-2 gap-4">
+        <h3 className="font-bold text-lg mb-2">Buat Artikel Berita</h3>
+        
+        <label className="block w-full h-32 md:h-48 rounded-2xl border-2 border-dashed border-gray-300 dark:border-gray-700 bg-gray-50 flex flex-col items-center justify-center cursor-pointer relative overflow-hidden group">
+          {isUploading ? (
+            <div className="flex flex-col items-center">
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-green-500 mb-2"></div>
+              <span className="text-xs font-bold text-gray-500">Mengunggah Gambar ke G-Drive...</span>
+            </div>
+          ) : form.url ? (
+            <img src={form.url} className="w-full h-full object-cover group-hover:brightness-75 transition-all" alt="Thumbnail" />
+          ) : (
+            <div className="flex flex-col items-center text-gray-400">
+               <FileEdit className="mb-2" size={32}/>
+               <span className="text-sm font-bold">Klik untuk Unggah Thumbnail Berita</span>
+            </div>
+          )}
+          {(!isUploading && form.url) && <div className="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"><span className="text-white font-bold text-sm">Ganti Gambar</span></div>}
+          <input type="file" accept="image/*" onChange={handleFileSelect} className="hidden" disabled={isUploading} />
+        </label>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <input required type="text" placeholder="Judul Klikbait" value={form.judul} onChange={e => setForm({ ...form, judul: e.target.value })} className="px-4 py-3 rounded-xl bg-gray-50 outline-none text-sm border border-gray-200" />
-          <input required type="text" placeholder="URL Foto Thumbnail" value={form.url} onChange={e => setForm({ ...form, url: e.target.value })} className="px-4 py-3 rounded-xl bg-gray-50 outline-none text-sm border border-gray-200" />
+          <ModernSelect value={form.kategori} onChange={v => setForm({ ...form, kategori: v })} options={['Umum', 'Peternakan', 'Ekonomi', 'Politik', 'Pendidikan', 'Teknologi']} placeholder="Kategori/Tag" />
         </div>
         <textarea required placeholder="Konten Ekstensif..." value={form.konten} onChange={e => setForm({ ...form, konten: e.target.value })} className="w-full px-4 py-3 rounded-xl bg-gray-50 outline-none resize-none h-32 text-sm border border-gray-200"></textarea>
-        <div className="flex justify-between items-center">
-          <div className="flex gap-2 items-center">Pin di Atas? <ModernSelect value={form.pin} onChange={v => setForm({ ...form, pin: v })} options={['Ya', 'Tidak']} placeholder="Pilih" /></div>
-          <button type="submit" className="px-6 py-3 bg-gray-900 text-white font-bold rounded-xl text-sm shadow">Publikasi Live</button>
+        <div className="flex justify-between items-center bg-gray-50 p-2 pl-4 rounded-xl border border-gray-200">
+          <div className="flex gap-4 items-center text-sm font-bold text-gray-600">Pin Layar Depan? <div className="w-32"><ModernSelect value={form.pin} onChange={v => setForm({ ...form, pin: v })} options={['Ya', 'Tidak']} placeholder="Pilih" /></div></div>
+          <button type="submit" className="px-8 py-3 bg-gray-900 text-white font-bold rounded-xl text-sm shadow cursor-pointer">Publikasi Live</button>
         </div>
       </form>
 

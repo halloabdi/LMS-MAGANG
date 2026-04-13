@@ -6,14 +6,48 @@
 body {
   margin: 0;
   font-family: 'Poppins', sans-serif;
-  overflow-x: hidden; /* Mencegah scroll horizontal yang tidak diinginkan */
+  overflow-x: hidden;
+  /* Mencegah scroll horizontal yang tidak diinginkan */
+}
+
+/* Custom Scrollbar Modern - Global */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: #f1f5f9;
+  border-radius: 4px;
+}
+
+.dark ::-webkit-scrollbar-track {
+  background: #1e293b;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 4px;
+}
+
+.dark ::-webkit-scrollbar-thumb {
+  background: #475569;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #94a3b8;
+}
+
+.dark ::-webkit-scrollbar-thumb:hover {
+  background: #64748b;
 }
 
 /* Custom Scrollbar Hide untuk bagian Partner/Menu */
 .hide-scrollbar::-webkit-scrollbar {
-    display: none;
+  display: none;
 }
+
 .hide-scrollbar {
-    -ms-overflow-style: none;
-    scrollbar-width: none;
+  -ms-overflow-style: none;
+  scrollbar-width: none;
 }
