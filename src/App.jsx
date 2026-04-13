@@ -12,56 +12,10 @@ import { motion, AnimatePresence } from 'framer-motion';
 import HitungIPTernak from './components/HitungIPTernak';
 import Dashboard from './components/Dashboard';
 
-// --- DATA FROM USER ---
-const aboutText = "Website SATUTERNAK adalah platform digital gratis yang dirancang secara spesifik bagi peternak skala rakyat untuk mengelola rekam jejak pemeliharaan dan menganalisis kelayakan usaha. Aplikasi berbasis situs web ini dibangun menggunakan arsitektur pemrograman yang ringan agar responsif dan mudah diakses meskipun peternak berada di wilayah pelosok dengan keterbatasan sinyal internet.";
+const GAS_URL = 'https://script.google.com/macros/s/AKfycbw8PPdSeOky1W3VIWur2hgnEqsshfMKFie7EMPNEzfoBrr7aW56eMtak14LUem3s3jE/exec';
 
-const newsData = [
-  {
-    id: 1,
-    title: "Tengkulak Sapi Menangis Darah!",
-    category: "Peternakan, Ekonomi",
-    isPinned: true,
-    thumbnail: "https://i.ibb.co.com/27YG689r/Gemini-Generated-Image-4kz96f4kz96f4kz9.jpg",
-    author: "Moderator Abdi",
-    content: "Era penindasan harga oleh tengkulak di pedesaan kini resmi berakhir dengan kehancuran total. Peternak kecil tidak lagi perlu merasa takut dan pasrah saat menjual hewan peliharaan mereka ke pasar. Kehadiran platform revolusioner SATUTERNAK telah menjelma menjadi perisai utama bagi para pahlawan pangan kita di daerah. Melalui fitur kalkulator cerdasnya, aplikasi ini mampu menghitung beban biaya operasional hingga ke tetes keringat terakhir peternak. Peternak kini memiliki senjata data mutlak untuk menolak tawaran harga murah yang tidak masuk akal dari makelar. Bahkan, aplikasi super canggih ini bisa diakses secara gratis tanpa menyedot kuota internet warga yang terbatas. Sistem pelaporan grafiknya langsung menyadarkan peternak akan kerugian nyata yang selama ini berhasil disembunyikan oleh para tengkulak. Berkat bimbingan SATUTERNAK, kesejahteraan ekonomi keluarga peternak mulai merangkak naik dengan pesat karena margin keuntungan mereka terlindungi. Tidak ada lagi cerita tangisan kesedihan peternak yang merugi setelah banting tulang memelihara sapi berbulan-bulan lamanya. SATUTERNAK sungguh menjadi bukti nyata bahwa inovasi digital mampu membawa kemerdekaan finansial di tingkat akar rumput."
-  },
-  {
-    id: 2,
-    title: "Peternak Sepuh Tak Lagi Gaptek!",
-    category: "Pendidikan, Peternakan, Teknologi",
-    isPinned: true,
-    thumbnail: "https://i.ibb.co.com/LX4xHYdP/Gemini-Generated-Image-d5037nd5037nd503.jpg",
-    author: "Moderator Abdi",
-    content: "Siapa sangka kakek-kakek di pelosok desa saat ini sangat mahir mengoperasikan layar sentuh ponsel mereka? Pandangan meremehkan terhadap kemampuan peternak lanjut usia kini berhasil dipatahkan dengan sangat telak. Semua keajaiban luar biasa ini terjadi murni berkat antarmuka super ramah dari situs web SATUTERNAK. Sistem inovatif ini sengaja dirancang sangat ringan sehingga sama sekali tidak membuat ponsel pintar lawas menjadi lemot. Hanya dengan beberapa sentuhan jari, lansia bisa mengarsipkan foto dan data sapi mereka langsung ke penyimpanan awan yang aman. Kecanggihan SATUTERNAK juga dilengkapi dengan perpustakaan digital berisi ribuan panduan medis hewan yang sangat praktis dan mudah dibaca. Pilihan huruf yang besar membuat mata tua mereka tidak cepat lelah saat mencari resep jamu darurat untuk ternaknya. Kolaborasi apik antara pemuda desa sebagai tutor dan peternak sepuh pun terjalin harmonis berkat jembatan platform ini. Kini, peternak tradisional telah bertransformasi pesat menjadi masyarakat melek literasi data yang sangat membanggakan daerahnya. SATUTERNAK berhasil meruntuhkan dinding ketidaktahuan teknologi dan membawa cahaya kemajuan digital ke jantung kandang sapi."
-  },
-  {
-    id: 3,
-    title: "Rahasia Cuan Peternak Tiba-tiba Meroket",
-    category: "Ekonomi, Peternakan",
-    isPinned: false,
-    thumbnail: "https://i.ibb.co.com/xK9QQph2/Gemini-Generated-Image-z2khmmz2khmmz2kh.jpg",
-    author: "Moderator Abdi",
-    content: "Fenomena lonjakan keuntungan drastis yang dialami kelompok peternak lokal saat ini sukses membuat banyak pihak tercengang. Rahasia di balik kesuksesan finansial ini ternyata bukanlah sebuah sihir atau penglaris dagangan semata. Platform SATUTERNAK adalah satu-satunya kunci utama yang membuka gerbang kekayaan bagi para pengrajin daging di pedesaan. Aplikasi kebanggaan ini dengan jujur membongkar kenyataan pahit mengenai biaya pakan siluman yang selama ini sering diabaikan pembudidaya. Setelah disadarkan oleh hitungan kejam SATUTERNAK, peternak menjadi jauh lebih cermat dan pintar dalam mengelola uang dompet mereka. Mereka didorong keberaniannya untuk beralih mengolah daging sapi menjadi bakso dan sosis beku yang bernilai jual sangat tinggi. Strategi hilirisasi pangan yang dikawal ketat oleh perhitungan aplikasi ini terbukti sangat ampuh melipatgandakan margin keuntungan rumah tangga. Tidak akan ada lagi keluh kesah putus asa akibat anjloknya harga jual sapi hidup secara mendadak di pasaran. SATUTERNAK ternyata tidak hanya mencatat angka harian, tetapi juga mendidik peternak menjadi wirausaha agribisnis kelas wahid. Kemandirian ekonomi desa yang kokoh akhirnya terwujud berkat dedikasi platform gratis tanpa biaya langganan ini."
-  },
-  {
-    id: 4,
-    title: "Swasembada Pangan 2029 Bukan Mimpi!",
-    category: "Politik, Ekonomi, Peternakan",
-    isPinned: false,
-    thumbnail: "https://i.ibb.co.com/6RDpcCmd/Gemini-Generated-Image-45er8k45er8k45er.jpg",
-    author: "Moderator Abdi",
-    content: "Presiden RI telah memberikan instruksi tegas untuk memfokuskan anggaran nasional tahun 2026 pada percepatan program swasembada pangan. Dalam merealisasikan visi besar tersebut, sektor ketahanan protein hewani dari peternakan menjadi salah satu tulang punggung yang paling krusial. Menjawab tantangan kenegaraan ini, aplikasi SATUTERNAK tampil di garis terdepan sebagai solusi digital pedesaan yang paling revolusioner. Melalui sistem pencatatan data presisi, SATUTERNAK secara langsung membantu para peternak lokal meningkatkan efisiensi produksi daging harian mereka. Peternak kini mampu memprediksi waktu panen dan mengelola biaya ransum pakan secara terukur tanpa sedikit pun pemborosan. Hal ini sangat efektif memastikan pasokan daging domestik tetap melimpah dan berkualitas tinggi tanpa harus terus bergantung pada keran impor. Selain itu, fitur kalkulator otomatis di dalam platform gratis ini sukses menjaga margin keuntungan agar peternak tidak gulung tikar. Berkat SATUTERNAK, para pelaku usaha mikro di perbatasan kini memiliki fondasi ekonomi yang tangguh untuk terus berproduksi secara berkelanjutan. Aplikasi ini menjadi bukti nyata yang menakjubkan bahwa inovasi teknologi karya anak bangsa mampu menopang agenda strategis pemerintah pusat. Jalan menuju kedaulatan pangan 2029 kini semakin terbuka lebar dan pasti berkat pahlawan siber bernama SATUTERNAK."
-  },
-  {
-    id: 5,
-    title: "Stok Pakan Ternak Terancam!",
-    category: "Peternakan, Lingkungan",
-    isPinned: false,
-    thumbnail: "https://i.ibb.co.com/LDck44Qk/Gemini-Generated-Image-k3takk3takk3takk.jpg",
-    author: "Moderator Abdi",
-    content: "Badan Meteorologi, Klimatologi, dan Geofisika (BMKG) memprediksi musim kemarau tahun ini akan tiba lebih cepat dan berlangsung lebih lama di sebagian besar wilayah Indonesia. Fenomena iklim ini tentu menjadi perhatian serius bagi para peternak di pedesaan, terutama mereka yang sangat bergantung pada pakan hijauan segar. Cuaca panas yang ekstrem berpotensi menyebabkan rumput di padang penggembalaan mengering dan mati dalam waktu singkat sehingga sumber pakan alami menipis drastis. Menipisnya ketersediaan pakan berkualitas akan berdampak langsung pada penurunan kondisi fisik, bobot badan, serta daya tahan tubuh ternak warga terhadap penyakit. Situasi ini jika dibiarkan tanpa penanganan yang tepat dapat memicu kerugian ekonomi yang besar bagi masyarakat yang mengandalkan hewan ternak sebagai tabungan mereka. Menghadapi ancaman ini, peternak diimbau untuk segera melakukan persiapan matang guna mengantisipasi potensi kelangkaan pakan yang mungkin terjadi di bulan-bulan mendatang. Salah satu solusi praktis yang bisa diterapkan adalah dengan mulai mengolah limbah pertanian, seperti jerami padi, menjadi pakan alternatif yang lebih tahan lama. Teknik pembuatan pakan awetan atau pakan fermentasi sederhana perlu segera disosialisasikan dan dipraktikkan secara masif di tingkat kelompok tani. Pemerintah daerah melalui dinas terkait diharapkan juga dapat memberikan pendampingan teknis dan memastikan ketersediaan cadangan pakan di wilayah-wilayah yang paling terdampak kekeringan. Dengan persiapan yang baik dan kepedulian bersama, diharapkan para peternak dapat melewati masa-masa sulit ini tanpa harus mengalami kebangkrutan tragis."
-  }
-];
+// --- DATA FROM ORIGINAL JS ---
+    // Berita kini dimuat dari Database Google Apps Script
 
 const sponsorsData = [
   {
@@ -476,10 +430,60 @@ export function LandingPage() {
   const openModal = (type, data) => setModalState({ isOpen: true, type, data });
   const closeModal = () => setModalState({ isOpen: false, type: null, data: null });
 
-  const [currentPinnedIndex, setCurrentPinnedIndex] = useState(0);
+  const [newsData, setNewsData] = useState([]);
+  const [currentNewsPage, setCurrentNewsPage] = useState(1);
+  const [rememberLogin, setRememberLogin] = useState(true);
+
+  // AUTO REDIRECT LOGIC
+  useEffect(() => {
+    const rawData = localStorage.getItem('satuternak_user');
+    if (rawData) {
+      try {
+        const parsed = JSON.parse(rawData);
+        if (parsed && parsed.expiry) {
+           if (Date.now() > parsed.expiry) {
+             localStorage.removeItem('satuternak_user'); // Sesi habis
+           } else {
+             // Valid, lompat ke dashboard
+             window.location.hash = '';
+             window.location.pathname = '/Dashboard';
+           }
+        } else if (parsed) {
+           // Format lama tanpa expiry
+           window.location.hash = '';
+           window.location.pathname = '/Dashboard';
+        }
+      } catch(e) {}
+    }
+  }, []);
+
+  // FETCH NEWS DATA DARI GOOGLE APPS SCRIPT
+  useEffect(() => {
+    fetch(GAS_URL, {
+      method: "POST",
+      body: JSON.stringify({ action: "getBerita" })
+    })
+    .then(r => r.json())
+    .then(res => {
+      if (res.status === 'success') {
+         // Transform data dari array object Spreadsheet
+         const formatted = res.data.map(item => ({
+            id: item['ID Berita'],
+            title: item['Judul'],
+            category: item['Kategori'],
+            thumbnail: item['Thumbnail URL'],
+            author: item['Penulis'],
+            content: item['Konten'],
+            isPinned: item['isPinned'] === "Ya"
+         }));
+         setNewsData(formatted);
+      }
+    })
+    .catch(console.error);
+  }, []);
+
   const pinnedNews = newsData.filter(n => n.isPinned);
   const regularNews = newsData.filter(n => !n.isPinned);
-  const [currentNewsPage, setCurrentNewsPage] = useState(1);
   const totalNewsPages = Math.ceil(regularNews.length / 4);
 
   const [activeService, setActiveService] = useState(null);
@@ -636,11 +640,17 @@ export function LandingPage() {
         method: 'POST',
         body: JSON.stringify({ action: 'login', emailOrUsername: loginEmail, password: loginPassword })
       });
-      
+
       const resJson = await response.json();
 
       if (resJson.status === 'success') {
-        localStorage.setItem('satuternak_user', JSON.stringify(resJson.data));
+        const payloadToSave = { ...resJson.data };
+        if (rememberLogin) {
+          payloadToSave.expiry = Date.now() + (30 * 24 * 60 * 60 * 1000); // 30 hari dari sekarang
+        } else {
+          payloadToSave.expiry = Date.now() + (24 * 60 * 60 * 1000); // 1 hari saja (default minimal)
+        }
+        localStorage.setItem('satuternak_user', JSON.stringify(payloadToSave));
         setShowLogin(false);
         showToast('success', 'Login Berhasil', 'Mengarahkan ke Dashboard...');
         setTimeout(() => {
@@ -671,6 +681,7 @@ export function LandingPage() {
     return str.slice(0, num) + '...';
   };
 
+  const [currentPinnedIndex, setCurrentPinnedIndex] = useState(0);
   useEffect(() => {
     if (pinnedNews.length <= 1) return;
 
@@ -727,7 +738,7 @@ export function LandingPage() {
             <input type="password" value={loginPassword} onChange={e => setLoginPassword(e.target.value)} className="w-full px-4 py-3 rounded-xl bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 focus:ring-2 focus:ring-green-500 outline-none" placeholder="••••••••" required disabled={isLoggingIn} />
           </div>
           <div className="flex items-center">
-            <input type="checkbox" id="remember" className="w-4 h-4 text-green-600 rounded focus:ring-green-500 border-gray-300" defaultChecked />
+            <input type="checkbox" id="remember" className="w-4 h-4 text-green-600 rounded focus:ring-green-500 border-gray-300" checked={rememberLogin} onChange={(e) => setRememberLogin(e.target.checked)} />
             <label htmlFor="remember" className="ml-2 block text-sm text-gray-700 dark:text-gray-300">
               Ingat Saya 30 Hari
             </label>
@@ -1219,7 +1230,7 @@ export function LandingPage() {
             {/* Regular News */}
             <div className="h-full flex flex-col pt-2">
               <AnimatePresence mode="wait">
-                <motion.div 
+                <motion.div
                   key={currentNewsPage}
                   initial={{ opacity: 0, scale: 0.95, y: 20 }}
                   animate={{ opacity: 1, scale: 1, y: 0 }}
@@ -1255,47 +1266,47 @@ export function LandingPage() {
               {/* Pagination Controls */}
               {(totalNewsPages > 1 || regularNews.length > 0) && (
                 <div className="flex justify-center items-center gap-1.5 md:gap-2 mt-6 pt-2 shrink-0">
-                  <button 
-                     onClick={() => setCurrentNewsPage(p => Math.max(1, p - 1))}
-                     disabled={currentNewsPage === 1}
-                     className="px-3 py-1.5 md:px-4 md:py-2 text-xs md:text-sm font-bold bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 rounded-xl hover:bg-gray-100 dark:hover:bg-gray-700 disabled:opacity-50 disabled:cursor-not-allowed shadow transition-all duration-300 flex items-center gap-1 border border-gray-100 dark:border-gray-700"
+                  <button
+                    onClick={() => setCurrentNewsPage(p => Math.max(1, p - 1))}
+                    disabled={currentNewsPage === 1}
+                    className="px-3 py-1.5 md:px-4 md:py-2 text-xs md:text-sm font-bold bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 rounded-xl hover:bg-gray-100 dark:hover:bg-gray-700 disabled:opacity-50 disabled:cursor-not-allowed shadow transition-all duration-300 flex items-center gap-1 border border-gray-100 dark:border-gray-700"
                   >
-                     <ChevronLeft size={16} /> <span className="hidden md:inline">Before</span>
+                    <ChevronLeft size={16} /> <span className="hidden md:inline">Before</span>
                   </button>
-                  
+
                   {Array.from({ length: totalNewsPages > 0 ? totalNewsPages : 1 }, (_, i) => i + 1).map(page => {
-                     if (
-                       page === 1 || 
-                       page === totalNewsPages || 
-                       page === currentNewsPage ||
-                       (page === currentNewsPage - 1 && page > 1) ||
-                       (page === currentNewsPage + 1 && page < totalNewsPages)
-                     ) {
-                        return (
-                           <button
-                              key={page}
-                              onClick={() => setCurrentNewsPage(page)}
-                              className={`w-8 h-8 md:w-10 md:h-10 text-xs md:text-sm font-bold rounded-xl shadow transition-all duration-300 flex items-center justify-center border ${currentNewsPage === page ? 'bg-gradient-to-br from-green-500 to-blue-600 text-white scale-110 shadow-green-500/30 border-transparent' : 'bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 border-gray-100 dark:border-gray-700'}`}
-                           >
-                              {page}
-                           </button>
-                        )
-                     }
-                     if (
-                       (page === currentNewsPage - 2 && page > 1) || 
-                       (page === currentNewsPage + 2 && page < totalNewsPages)
-                     ) {
-                        return <span key={page} className="text-gray-500 font-bold px-1 md:px-2">...</span>;
-                     }
-                     return null;
+                    if (
+                      page === 1 ||
+                      page === totalNewsPages ||
+                      page === currentNewsPage ||
+                      (page === currentNewsPage - 1 && page > 1) ||
+                      (page === currentNewsPage + 1 && page < totalNewsPages)
+                    ) {
+                      return (
+                        <button
+                          key={page}
+                          onClick={() => setCurrentNewsPage(page)}
+                          className={`w-8 h-8 md:w-10 md:h-10 text-xs md:text-sm font-bold rounded-xl shadow transition-all duration-300 flex items-center justify-center border ${currentNewsPage === page ? 'bg-gradient-to-br from-green-500 to-blue-600 text-white scale-110 shadow-green-500/30 border-transparent' : 'bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 border-gray-100 dark:border-gray-700'}`}
+                        >
+                          {page}
+                        </button>
+                      )
+                    }
+                    if (
+                      (page === currentNewsPage - 2 && page > 1) ||
+                      (page === currentNewsPage + 2 && page < totalNewsPages)
+                    ) {
+                      return <span key={page} className="text-gray-500 font-bold px-1 md:px-2">...</span>;
+                    }
+                    return null;
                   })}
 
-                  <button 
-                     onClick={() => setCurrentNewsPage(p => Math.min(totalNewsPages, p + 1))}
-                     disabled={currentNewsPage === totalNewsPages || totalNewsPages === 0}
-                     className="px-3 py-1.5 md:px-4 md:py-2 text-xs md:text-sm font-bold bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 rounded-xl hover:bg-gray-100 dark:hover:bg-gray-700 disabled:opacity-50 disabled:cursor-not-allowed shadow transition-all duration-300 flex items-center gap-1 border border-gray-100 dark:border-gray-700"
+                  <button
+                    onClick={() => setCurrentNewsPage(p => Math.min(totalNewsPages, p + 1))}
+                    disabled={currentNewsPage === totalNewsPages || totalNewsPages === 0}
+                    className="px-3 py-1.5 md:px-4 md:py-2 text-xs md:text-sm font-bold bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 rounded-xl hover:bg-gray-100 dark:hover:bg-gray-700 disabled:opacity-50 disabled:cursor-not-allowed shadow transition-all duration-300 flex items-center gap-1 border border-gray-100 dark:border-gray-700"
                   >
-                     <span className="hidden md:inline">Next</span> <ChevronRight size={16} />
+                    <span className="hidden md:inline">Next</span> <ChevronRight size={16} />
                   </button>
                 </div>
               )}
