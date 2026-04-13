@@ -3,7 +3,7 @@ import {
   LayoutDashboard, FileEdit, History, Wallet, Receipt,
   BookOpen, Bell, User, LogOut, ChevronRight, Activity,
   AlertTriangle, Settings, Newspaper, UserCog, Edit,
-  Save, Trash2, MoreVertical, X, Check, Search, ChevronDown, Plus, Eye
+  Save, Trash2, MoreVertical, X, Check, Search, ChevronDown, Plus, Eye, LayoutGrid
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import DatePicker from 'react-datepicker';
@@ -93,6 +93,7 @@ const ModernSelect = ({ value, onChange, options, placeholder }) => {
 export default function Dashboard() {
   const [activeTab, setActiveTab] = useState('overview');
   const [user, setUser] = useState(null);
+  const [showMobileMenu, setShowMobileMenu] = useState(false);
 
   useEffect(() => {
     window.scrollTo(0, 0);
@@ -129,6 +130,16 @@ export default function Dashboard() {
     TAB_MENUS.push({ id: 'kelola-berita', label: 'Kelola Berita', icon: Newspaper });
   }
   TAB_MENUS.push({ id: 'profil', label: 'Profil Saya', icon: User });
+
+  const MOBILE_FRONT_MENUS = [
+    { id: 'overview', label: 'Overview', icon: LayoutDashboard },
+    { id: 'input-rekording', label: 'Input R krd', icon: FileEdit },
+    { id: 'lainnya', label: 'Lainnya', icon: LayoutGrid },
+    { id: 'input-usaha', label: 'Input Ush', icon: Wallet },
+    { id: 'profil', label: 'Profil Saya', icon: User }
+  ];
+
+  const HIDDEN_MENUS = TAB_MENUS.filter(m => !['overview', 'input-rekording', 'input-usaha', 'profil'].includes(m.id));
 
   const navItemClass = (id) => `
     flex items-center gap-3 px-4 py-3 rounded-2xl md:rounded-xl transition-all cursor-pointer font-semibold w-full
@@ -233,25 +244,72 @@ export default function Dashboard() {
 
       {/* Mobile Bottom Navigation */}
       <nav className="md:hidden fixed bottom-0 left-0 w-full bg-white/95 dark:bg-gray-900/95 backdrop-blur-md border-t border-gray-200 dark:border-gray-800 pb-safe z-40">
-        <div className="flex flex-row overflow-x-auto custom-scrollbar px-2 py-2 gap-2 pb-6">
-          {TAB_MENUS.map(menu => (
+        <div className="flex justify-around items-center px-1 py-1 pb-4">
+          {MOBILE_FRONT_MENUS.map(menu => (
             <button
               key={menu.id}
-              onClick={() => setActiveTab(menu.id)}
-              className={`flex-shrink-0 flex flex-col items-center justify-center w-[72px] h-14 rounded-2xl transition-all
-                ${activeTab === menu.id ? 'bg-green-50 dark:bg-green-900/30 text-green-600 dark:text-green-400' : 'text-gray-500'}
+              onClick={() => {
+                if (menu.id === 'lainnya') {
+                  setShowMobileMenu(true);
+                } else {
+                  setActiveTab(menu.id);
+                  setShowMobileMenu(false);
+                }
+              }}
+              className={`flex-shrink-0 flex flex-col items-center justify-center w-16 h-14 rounded-2xl transition-all
+                ${(activeTab === menu.id || (menu.id === 'lainnya' && showMobileMenu)) ? 'bg-green-50 dark:bg-green-900/30 text-green-600 dark:text-green-400' : 'text-gray-500 hover:text-gray-900 dark:hover:text-gray-300'}
               `}
             >
-              <menu.icon size={22} className={activeTab === menu.id ? '-translate-y-0.5 transition-transform' : ''} />
-              <span className="text-[9px] font-bold mt-1 text-center leading-tight truncate w-full px-1">{menu.label.replace('Rekording', 'R krd').replace('Usaha', 'Ush')}</span>
+              <menu.icon size={22} className={(activeTab === menu.id || (menu.id === 'lainnya' && showMobileMenu)) ? '-translate-y-0.5 transition-transform' : ''} />
+              <span className="text-[9px] font-bold mt-1 text-center leading-tight truncate w-full px-1">{menu.label}</span>
             </button>
           ))}
-          <button onClick={handleLogout} className="flex-shrink-0 flex flex-col items-center justify-center w-[72px] h-14 rounded-2xl text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20">
-            <LogOut size={22} />
-            <span className="text-[9px] font-bold mt-1">Keluar</span>
-          </button>
         </div>
       </nav>
+
+      {/* Mobile Popup Menu (Lainnya) */}
+      <AnimatePresence>
+        {showMobileMenu && (
+          <div className="md:hidden fixed inset-0 z-[110] flex flex-col justify-end items-center pointer-events-none pb-[5.5rem] px-4">
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="absolute inset-0 bg-black/20 backdrop-blur-[2px] pointer-events-auto"
+              onClick={() => setShowMobileMenu(false)}
+            />
+            <motion.div
+              initial={{ opacity: 0, y: 20, scale: 0.9 }}
+              animate={{ opacity: 1, y: 0, scale: 1 }}
+              exit={{ opacity: 0, y: 10, scale: 0.9 }}
+              transition={{ type: "spring", stiffness: 400, damping: 25 }}
+              className="relative bg-white/95 dark:bg-gray-800/95 backdrop-blur-xl rounded-3xl shadow-[0_-10px_40px_rgba(0,0,0,0.15)] border border-gray-200/60 dark:border-gray-700/60 p-2 flex flex-col gap-1 w-64 pointer-events-auto z-10 mb-2"
+            >
+              <div className="px-3 py-2 border-b border-gray-100 dark:border-gray-700 mb-1 flex items-center justify-center">
+                <span className="text-[10px] font-extrabold text-gray-400 dark:text-gray-500 uppercase tracking-widest">Menu Lainnya</span>
+              </div>
+              {HIDDEN_MENUS.map((m) => (
+                <button
+                  key={m.id}
+                  onClick={() => { setActiveTab(m.id); setShowMobileMenu(false); }}
+                  className={`flex items-center gap-3 px-4 py-3 rounded-2xl transition-colors ${activeTab === m.id ? 'bg-green-100 dark:bg-green-900/40 text-green-700 dark:text-green-400' : 'hover:bg-gray-100/80 dark:hover:bg-gray-700/50 text-gray-700 dark:text-gray-300'}`}
+                >
+                  <m.icon size={20} className={activeTab === m.id ? 'text-green-600 dark:text-green-400' : 'text-gray-500 dark:text-gray-400'} />
+                  <span className="font-bold text-xs">{m.label}</span>
+                </button>
+              ))}
+              <div className="my-1 border-t border-gray-100 dark:border-gray-700"></div>
+              <button
+                onClick={() => { setShowMobileMenu(false); handleLogout(); }}
+                className="flex items-center gap-3 px-4 py-3 rounded-2xl transition-colors text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20"
+              >
+                <LogOut size={20} />
+                <span className="font-bold text-xs">Keluar</span>
+              </button>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }
@@ -352,7 +410,14 @@ const OverviewView = ({ user, setTab }) => {
 // INPUT VIEWS 
 // ==========================================
 const InputRekordingView = ({ user }) => {
-  const [form, setForm] = useState({ jenis: '', tanggal: new Date(), jenisHewan: '', jumlah: '', keterangan: '' });
+  const [form, setForm] = useState({ 
+    jenis: '', 
+    tanggal: new Date(), 
+    waktu: new Date().toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' }), 
+    jenisHewan: '', 
+    jumlah: '', 
+    keterangan: '' 
+  });
   const [loading, setLoading] = useState(false);
 
   const handleSubmit = (e) => {
@@ -361,6 +426,11 @@ const InputRekordingView = ({ user }) => {
     setLoading(true);
 
     const ds = form.tanggal instanceof Date ? form.tanggal : new Date();
+    // Parse waktu
+    const [hours, minutes] = form.waktu.split(':');
+    ds.setHours(parseInt(hours, 10));
+    ds.setMinutes(parseInt(minutes, 10));
+
     const localIsoString = new Date(ds.getTime() - ds.getTimezoneOffset() * 60000).toISOString().slice(0, 16);
 
     let submitPayload = {
@@ -389,7 +459,8 @@ const InputRekordingView = ({ user }) => {
       })
     })
       .then(r => r.json()).then(res => {
-        if (res.status === 'success') { alert("Pencatatan Berhasil Disimpan!"); setForm({ jenis: '', tanggal: new Date(), jenisHewan: '', jumlah: '', keterangan: '' }); }
+        const resetWaktu = new Date().toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' });
+        if (res.status === 'success') { alert("Pencatatan Berhasil Disimpan!"); setForm({ jenis: '', tanggal: new Date(), waktu: resetWaktu, jenisHewan: '', jumlah: '', keterangan: '' }); }
         setLoading(false);
       }).catch(() => setLoading(false));
   };
@@ -398,7 +469,7 @@ const InputRekordingView = ({ user }) => {
     <div className="bg-white dark:bg-gray-900 rounded-3xl p-6 md:p-8 border border-gray-100 dark:border-gray-800 shadow-sm">
       <h3 className="text-xl font-bold mb-6">Pencatatan Ternak Harian</h3>
       <form onSubmit={handleSubmit} className="space-y-5 max-w-2xl">
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+        <div className="grid grid-cols-1 gap-5">
           <div>
             <label className="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-1">Jenis Evaluasi</label>
             <ModernSelect
@@ -408,20 +479,28 @@ const InputRekordingView = ({ user }) => {
               placeholder="- Pilih Kejadian -"
             />
           </div>
-          <div>
-            <label className="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-1">Tanggal & Waktu</label>
-            <DatePicker
-              selected={form.tanggal instanceof Date ? form.tanggal : new Date()}
-              onChange={(date) => setForm({ ...form, tanggal: date })}
-              showTimeInput
-              timeFormat="HH:mm"
-              timeInputLabel="Input Waktu:"
-              dateFormat="d MMMM yyyy, HH:mm"
-              className="w-full px-4 py-3 rounded-xl bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 outline-none focus:ring-2 focus:ring-green-500 font-medium cursor-pointer"
-              calendarClassName="modern-datepicker-calendar"
-              wrapperClassName="w-full relative z-[50]"
-              popperPlacement="bottom-start"
-            />
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <label className="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-1">Pilih Tanggal</label>
+              <DatePicker
+                selected={form.tanggal instanceof Date ? form.tanggal : new Date()}
+                onChange={(date) => setForm({ ...form, tanggal: date })}
+                dateFormat="d MMMM yyyy"
+                className="w-full px-4 py-3 rounded-xl bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 outline-none focus:ring-2 focus:ring-green-500 font-medium cursor-pointer"
+                calendarClassName="modern-datepicker-calendar"
+                wrapperClassName="w-full relative z-[50]"
+                popperPlacement="bottom-start"
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-1">Pilih Jam</label>
+              <input
+                type="time"
+                value={form.waktu}
+                onChange={(e) => setForm({ ...form, waktu: e.target.value })}
+                className="w-full px-4 py-3 rounded-xl bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 outline-none focus:ring-2 focus:ring-green-500 font-bold text-gray-900 dark:text-white cursor-pointer modern-time-field shadow-inner"
+              />
+            </div>
           </div>
         </div>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
