@@ -206,50 +206,46 @@ function SETUP_IZIN_GOOGLE_DRIVE_DISINI() {
 }
 
 // ============================================
-// UPLOAD HANDLER
+// UPLOAD HANDLER (OTOMATIK KE GOOGLE DRIVE ADMIN)
 // ============================================
-function extractFolderId(url) {
-  var match = url.match(/folders\/([a-zA-Z0-9-_]+)/);
-  if (match) return match[1];
-  match = url.match(/id=([a-zA-Z0-9-_]+)/);
-  if (match) return match[1];
-  return null;
-}
-
 function handleUpload(payload) {
-  var folderId = extractFolderId(payload.folderUrl);
-  if (!folderId) return respondError("GAGAL_PARSE_URL: Format URL Link Folder Penyimpanan Anda tidak mengandung ID Google Drive yang sah.");
-
-  var folder;
   try {
-    folder = DriveApp.getFolderById(folderId);
-  } catch (e) {
-    // Beri pesan detail ekstrim atas kesalahan permission/DriveApp
-    return respondError(
-      "AKSES_DITOLAK_DRIVE: Skrip gagal masuk ke Google Drive dengan Error (" + e.message + "). " +
-      "Ini terjadi karena saat Anda mendeploy/menempel kode '.js' ini ke Apps Script, Anda tak pernah menekan tombol 'Run' (Jalankan) untuk memberi otorisasi akses DriveApp ke email Google Anda. " +
-      "SOLUSI MANTAP: Buka kembali Apps Script. Di bagian KIRI ATAS tempat milih fungsi (dropdown), pilih fungsi 'SETUP_IZIN_GOOGLE_DRIVE_DISINI'. Klik tombol 'Run' (Jalankan). Saat muncul popup Warning, pilih 'Advanced / Lanjutan' >> 'Ke URL Tidak Aman', barulah berikan ALLOW/IZINKAN."
-    );
-  }
-
-  var data = Utilities.base64Decode(payload.base64Data);
-  var blob = Utilities.newBlob(data, payload.mimeType, payload.fileName);
-
-  var file = folder.createFile(blob);
-  file.setSharing(DriveApp.Access.ANYONE_WITH_LINK, DriveApp.Permission.VIEW);
-  var fileUrl = file.getUrl();
-
-  // Update URL Foto Profil di InfoAkun BERDASARKAN user YANG MENGUPLOAD (Aman & Spesifik)
-  var sheet = SpreadsheetApp.openById(SPREADSHEET_ID).getSheetByName("InfoAkun");
-  var dataSheet = sheet.getDataRange().getValues();
-  for (var i = 1; i < dataSheet.length; i++) {
-    if (dataSheet[i][0] === payload.userId) { // Mengunci hanya pada ID Akun yang sedang login
-      sheet.getRange(i + 1, 9).setValue(fileUrl); // Kolom 9 (I) adalah "Foto Profil"
-      break;
+    const FOLDER_NAME = "FOLDER_UPLOAD_SATUTERNAK";
+    var folders = DriveApp.getFoldersByName(FOLDER_NAME);
+    var folder;
+    
+    // Gunakan folder sentral jika ada, buat baru jika belum
+    if (folders.hasNext()) {
+      folder = folders.next();
+    } else {
+      folder = DriveApp.createFolder(FOLDER_NAME);
+      folder.setSharing(DriveApp.Access.ANYONE_WITH_LINK, DriveApp.Permission.VIEW);
     }
-  }
 
-  return respondSuccess({ fileUrl: fileUrl, message: "Aman! Foto Profil berhasil diunggah ke Google Drive dan InfoAkun terupdate spesifik pada akun Anda!" });
+    // Dekode file
+    var data = Utilities.base64Decode(payload.base64Data);
+    var blob = Utilities.newBlob(data, payload.mimeType, payload.fileName);
+
+    // Buat file dan posisikan sharing agar dapat dimuat oleh public link .png/.jpg
+    var file = folder.createFile(blob);
+    file.setSharing(DriveApp.Access.ANYONE_WITH_LINK, DriveApp.Permission.VIEW);
+    var fileUrl = file.getUrl();
+
+    // Timpa URL ke dalam Sheet InfoAkun secara presisi pada Role pengupload
+    var sheet = SpreadsheetApp.openById(SPREADSHEET_ID).getSheetByName("InfoAkun");
+    var dataSheet = sheet.getDataRange().getValues();
+    for (var i = 1; i < dataSheet.length; i++) {
+      if (dataSheet[i][0] === payload.userId) { 
+        sheet.getRange(i + 1, 9).setValue(fileUrl); // Kolom 9 (I) Foto Profil
+        break;
+      }
+    }
+
+    return respondSuccess({ fileUrl: fileUrl, message: "Foto Anda kini 100% berhasil tertanam di Google Spreadsheets dan Google Drive tanpa perlu capek mikirin Link Kolom M!" });
+
+  } catch (e) {
+    return respondError("DITOLAK KARENA BUKAN OWNER ASLI/BELUM IZIN: " + e.message);
+  }
 }
 
 // ============================================
