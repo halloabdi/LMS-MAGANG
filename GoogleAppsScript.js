@@ -311,12 +311,21 @@ function addRow(sheetName, payloadArrayOrObj) {
   if (!sheet) return respondError("Sheet " + sheetName + " tidak ditemukan");
 
   if (!Array.isArray(payloadArrayOrObj) && typeof payloadArrayOrObj === 'object') {
-    const dataRange = sheet.getDataRange().getValues();
-    const headers = dataRange[0];
-    const row = new Array(headers.length).fill("");
+    let headers = sheet.getDataRange().getValues()[0] || [];
     
+    // Auto-tambah kolom baru di Spreadsheet jika Payload memiliki Key yang belum ada di Header
+    let headersAdded = false;
+    Object.keys(payloadArrayOrObj).forEach(key => {
+      if (!headers.includes(key)) {
+        headers.push(key);
+        sheet.getRange(1, headers.length).setValue(key);
+        sheet.getRange(1, headers.length).setFontWeight("bold").setBackground("#e0f2fe");
+        headersAdded = true;
+      }
+    });
+
+    const row = new Array(headers.length).fill("");
     headers.forEach((header, i) => {
-      // Map based on JSON keys (e.g., {'Jumlah Populasi Awal Masuk Ternak': 100})
       if (payloadArrayOrObj[header] !== undefined) {
         row[i] = payloadArrayOrObj[header];
       }
