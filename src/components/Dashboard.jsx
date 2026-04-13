@@ -7,7 +7,7 @@ import {
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
-const GAS_URL = 'https://script.google.com/macros/s/AKfycbwGwkw48rscg4Bg8cp9SqcQY5NzceW4hoSr_6RmvUh0thjIBnjKGXs-AaFYDDhV4I_-/exec';
+const GAS_URL = 'https://script.google.com/macros/s/AKfycbxIxAAlgTcPEKji_pnmENYqOA20gODinPj1w6jPW2nS2Yp5XSp-FhMZcQGQLydNcvVC/exec';
 
 const formatIndoNumber = (numStr) => {
   const num = Number(numStr) || 0;
