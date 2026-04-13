@@ -27,18 +27,18 @@ const parseIndoDate = (dateStr) => {
   if (!dateStr) return '-';
   const d = new Date(dateStr);
   if (!isNaN(d.getTime())) {
-    return d.toLocaleString('id-ID', { 
-      day: 'numeric', month: 'short', year: 'numeric', 
-      hour: '2-digit', minute: '2-digit' 
+    return d.toLocaleString('id-ID', {
+      day: 'numeric', month: 'short', year: 'numeric',
+      hour: '2-digit', minute: '2-digit'
     });
   }
   // Fallback for DD/MM/YYYY HH:mm format if natively unparseable
   const parts = String(dateStr).split(/[ \/:]+/);
   if (parts.length >= 5) {
-     const nd = new Date(parts[2], parts[1]-1, parts[0], parts[3], parts[4]);
-     if (!isNaN(nd.getTime())) {
-       return nd.toLocaleString('id-ID', { day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' });
-     }
+    const nd = new Date(parts[2], parts[1] - 1, parts[0], parts[3], parts[4]);
+    if (!isNaN(nd.getTime())) {
+      return nd.toLocaleString('id-ID', { day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' });
+    }
   }
   return dateStr;
 };
@@ -287,7 +287,7 @@ const OverviewView = ({ user, setTab }) => {
             if (trKey) amountStr = r[trKey];
           }
           let amount = Number(String(amountStr).replace(/[^0-9.-]+/g, ""));
-          
+
           if (kasType.includes('pemasukan')) asset += amount;
           else if (kasType.includes('pengeluaran')) asset -= amount;
         });
@@ -353,15 +353,15 @@ const InputRekordingView = ({ user }) => {
     setLoading(true);
 
     let submitPayload = {
-       "TimeStamp": form.tanggal,
-       "ID Akun": user['ID Akun'],
-       "Username": user['Username'],
-       "Nama Lengkap": user['Nama Lengkap'],
-       "Role": user.Role,
-       "Jenis Ternak": form.jenisHewan,
-       "Catatan Kondisi Ternak": form.keterangan || '-',
-       "Keterangan Tambahan": form.keterangan || '-',
-       "Jenis Evaluasi": form.jenis
+      "TimeStamp": form.tanggal,
+      "ID Akun": user['ID Akun'],
+      "Username": user['Username'],
+      "Nama Lengkap": user['Nama Lengkap'],
+      "Role": user.Role,
+      "Jenis Ternak": form.jenisHewan,
+      "Catatan Kondisi Ternak": form.keterangan || '-',
+      "Keterangan Tambahan": form.keterangan || '-',
+      "Jenis Evaluasi": form.jenis
     };
 
     if (form.jenis === 'Populasi Awal Masuk') submitPayload["Jumlah Populasi Awal Masuk Ternak"] = form.jumlah;
@@ -677,21 +677,21 @@ const KelolaBeritaView = ({ user }) => {
     const file = e.target.files[0];
     if (!file) return;
     if (!user['Link Folder Penyimpanan'] || user['Link Folder Penyimpanan'] === '-') return alert("Akun Anda tak terhubung dengan folder Google Drive!");
-    
+
     setIsUploading(true);
     const reader = new FileReader();
     reader.onloadend = async () => {
       const base64String = reader.result.split(',')[1];
       try {
         const response = await fetch(GAS_URL, {
-           method: 'POST',
-           body: JSON.stringify({ action: 'uploadProfilePicture', userId: user['ID Akun'], base64Data: base64String, mimeType: file.type, fileName: file.name, folderUrl: user['Link Folder Penyimpanan'] })
+          method: 'POST',
+          body: JSON.stringify({ action: 'uploadProfilePicture', userId: user['ID Akun'], base64Data: base64String, mimeType: file.type, fileName: file.name, folderUrl: user['Link Folder Penyimpanan'] })
         });
         const resJson = await response.json();
         if (resJson.status === 'success') {
           setForm({ ...form, url: resJson.data.fileUrl });
         } else alert("Error Drive: " + resJson.message);
-      } catch (error) { alert("Network Error"); } 
+      } catch (error) { alert("Network Error"); }
       finally { setIsUploading(false); }
     };
     reader.readAsDataURL(file);
@@ -706,24 +706,27 @@ const KelolaBeritaView = ({ user }) => {
     <div className="space-y-6">
       <form onSubmit={handlePost} className="bg-white p-6 rounded-3xl border border-gray-100 shadow-sm space-y-4">
         <h3 className="font-bold text-lg mb-2">Buat Artikel Berita</h3>
-        
-        <label className="block w-full h-32 md:h-48 rounded-2xl border-2 border-dashed border-gray-300 dark:border-gray-700 bg-gray-50 flex flex-col items-center justify-center cursor-pointer relative overflow-hidden group">
-          {isUploading ? (
-            <div className="flex flex-col items-center">
-              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-green-500 mb-2"></div>
-              <span className="text-xs font-bold text-gray-500">Mengunggah Gambar ke G-Drive...</span>
-            </div>
-          ) : form.url ? (
-            <img src={form.url} className="w-full h-full object-cover group-hover:brightness-75 transition-all" alt="Thumbnail" />
-          ) : (
-            <div className="flex flex-col items-center text-gray-400">
-               <FileEdit className="mb-2" size={32}/>
-               <span className="text-sm font-bold">Klik untuk Unggah Thumbnail Berita</span>
-            </div>
-          )}
-          {(!isUploading && form.url) && <div className="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"><span className="text-white font-bold text-sm">Ganti Gambar</span></div>}
-          <input type="file" accept="image/*" onChange={handleFileSelect} className="hidden" disabled={isUploading} />
-        </label>
+
+        <div className="space-y-2">
+          <label className="block w-full h-32 md:h-48 rounded-2xl border-2 border-dashed border-gray-300 dark:border-gray-700 bg-gray-50 flex flex-col items-center justify-center cursor-pointer relative overflow-hidden group">
+            {isUploading ? (
+              <div className="flex flex-col items-center">
+                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-green-500 mb-2"></div>
+                <span className="text-xs font-bold text-gray-500">Mengunggah ke Database...</span>
+              </div>
+            ) : form.url ? (
+              <img src={form.url} className="w-full h-full object-cover group-hover:brightness-75 transition-all" alt="Thumbnail" />
+            ) : (
+              <div className="flex flex-col items-center text-gray-400">
+                <FileEdit className="mb-2" size={32} />
+                <span className="text-sm font-bold text-center px-4">Klik untuk Unggah Gambar<br /><span className="text-xs font-normal">atau Tempel Link URL di bawah</span></span>
+              </div>
+            )}
+            {(!isUploading && form.url) && <div className="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"><span className="text-white font-bold text-sm">Ganti Gambar</span></div>}
+            <input type="file" accept="image/*" onChange={handleFileSelect} className="hidden" disabled={isUploading} />
+          </label>
+          <input type="url" placeholder="...Atau tempel Direct Link Gambar (.jpg/.png) di sini" value={form.url} onChange={e => setForm({ ...form, url: e.target.value })} className="w-full px-4 py-2 rounded-xl bg-gray-50 border border-gray-200 outline-none text-xs font-medium focus:ring-1 focus:ring-green-500 text-gray-600" />
+        </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <input required type="text" placeholder="Judul Klikbait" value={form.judul} onChange={e => setForm({ ...form, judul: e.target.value })} className="px-4 py-3 rounded-xl bg-gray-50 outline-none text-sm border border-gray-200" />
