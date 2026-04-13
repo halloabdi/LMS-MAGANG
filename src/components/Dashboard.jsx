@@ -269,25 +269,33 @@ const OverviewView = ({ user, setTab }) => {
     ]).then(([resRek, resUsh]) => {
       let pop = 0;
       let asset = 0;
+      
+      const safeParse = val => {
+        if (!val || val === '-') return 0;
+        const parsed = Number(String(val).replace(/[^0-9.-]+/g, ""));
+        return isNaN(parsed) ? 0 : parsed;
+      };
+
       if (resRek.status === 'success') {
         resRek.data.forEach(r => {
-          // Menghitung Populasi Aktif (Awal + Penambahan - Kematian)
-          pop += Number(r['Jumlah Populasi Awal Masuk Ternak'] || 0);
-          pop += Number(r['Jumlah Penambahan Populasi Ternak'] || 0);
-          pop -= Number(r['Jumlah Kematian Ternak'] || 0);
+          // Menghitung Populasi Aktif (Awal + Penambahan - Kematian) dengan aman
+          pop += safeParse(r['Jumlah Populasi Awal Masuk Ternak']);
+          pop += safeParse(r['Jumlah Penambahan Populasi Ternak']);
+          pop -= safeParse(r['Jumlah Kematian Ternak']);
         });
       }
       if (resUsh.status === 'success') {
         resUsh.data.forEach(r => {
           // Cari kolom Tipe Arus Kas dan Total Transaksi secara dinamis/kasar
           let kasType = String(r['Tipe Arus Kas'] || '').toLowerCase();
-          let amountStr = r['Total Harga Transaksi'] || r['Total Transaksi (Kotor)'] || r['Total Transaksi (Jenis Aset)'] || r['Total Transaksi'] || r['Total Dasar'] || 0;
-          if (!amountStr) {
+          let amountStr = String(r['Total Harga Transaksi'] || r['Total Transaksi (Kotor)'] || r['Total Transaksi (Jenis Aset)'] || r['Total Transaksi'] || r['Total Dasar'] || 0);
+          
+          if (!amountStr || amountStr === '0' || amountStr.trim() === '-') {
             let trKey = Object.keys(r).find(k => k.toLowerCase().includes('total transaksi'));
-            if (trKey) amountStr = r[trKey];
+            if (trKey) amountStr = String(r[trKey]);
           }
-          let amount = Number(String(amountStr).replace(/[^0-9.-]+/g, ""));
-
+          let amount = safeParse(amountStr);
+          
           if (kasType.includes('pemasukan')) asset += amount;
           else if (kasType.includes('pengeluaran')) asset -= amount;
         });
