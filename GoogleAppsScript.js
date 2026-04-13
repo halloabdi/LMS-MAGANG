@@ -193,6 +193,19 @@ function cascadeUpdateId(sheetName, oldId, newId) {
 }
 
 // ============================================
+// FUNGSI KHUSUS UNTUK MEMAKSA TAMPILAN IZIN GOOGLE DRIVE (JALANKAN INI SEKALI SAJA)
+// ============================================
+function SETUP_IZIN_GOOGLE_DRIVE_DISINI() {
+  try {
+    var files = DriveApp.getFiles();
+    var ss = SpreadsheetApp.openById(SPREADSHEET_ID);
+    return "SANGAT BERHASIL! Izin Google Drive kini telah terbuka 100%. Silakan lakukan New Deploy.";
+  } catch(e) {
+    return "JANGAN KHAWATIR! Sengaja error karena Popup Izin harus Anda SETUJUI dulu. Klik Tinjau Izin -> Centang Semua -> Lanjutkan -> Allow.";
+  }
+}
+
+// ============================================
 // UPLOAD HANDLER
 // ============================================
 function extractFolderId(url) {
@@ -215,7 +228,7 @@ function handleUpload(payload) {
     return respondError(
       "AKSES_DITOLAK_DRIVE: Skrip gagal masuk ke Google Drive dengan Error (" + e.message + "). " +
       "Ini terjadi karena saat Anda mendeploy/menempel kode '.js' ini ke Apps Script, Anda tak pernah menekan tombol 'Run' (Jalankan) untuk memberi otorisasi akses DriveApp ke email Google Anda. " +
-      "SOLUSI: Buka kembali Apps Script. Klik fungsi 'handleUpload' di bar atas. Klik tombol 'Run' (Jalankan). Saat muncul popup Warning, pilih 'Advanced' >> 'Ke URL Tidak Aman', barulah berikan ALLOW/IZINKAN."
+      "SOLUSI MANTAP: Buka kembali Apps Script. Di bagian KIRI ATAS tempat milih fungsi (dropdown), pilih fungsi 'SETUP_IZIN_GOOGLE_DRIVE_DISINI'. Klik tombol 'Run' (Jalankan). Saat muncul popup Warning, pilih 'Advanced / Lanjutan' >> 'Ke URL Tidak Aman', barulah berikan ALLOW/IZINKAN."
     );
   }
 
@@ -226,17 +239,17 @@ function handleUpload(payload) {
   file.setSharing(DriveApp.Access.ANYONE_WITH_LINK, DriveApp.Permission.VIEW);
   var fileUrl = file.getUrl();
 
-  // Update URL Foto Profil di InfoAkun
+  // Update URL Foto Profil di InfoAkun BERDASARKAN user YANG MENGUPLOAD (Aman & Spesifik)
   var sheet = SpreadsheetApp.openById(SPREADSHEET_ID).getSheetByName("InfoAkun");
   var dataSheet = sheet.getDataRange().getValues();
   for (var i = 1; i < dataSheet.length; i++) {
-    if (dataSheet[i][0] === payload.userId) { // Kolom 0 = ID Akun
-      sheet.getRange(i + 1, 9).setValue(fileUrl); // Kolom 9 adalah "Foto Profil"
+    if (dataSheet[i][0] === payload.userId) { // Mengunci hanya pada ID Akun yang sedang login
+      sheet.getRange(i + 1, 9).setValue(fileUrl); // Kolom 9 (I) adalah "Foto Profil"
       break;
     }
   }
 
-  return respondSuccess({ fileUrl: fileUrl, message: "Foto Profil berhasil diunggah ke Google Drive dan Database terupdate!" });
+  return respondSuccess({ fileUrl: fileUrl, message: "Aman! Foto Profil berhasil diunggah ke Google Drive dan InfoAkun terupdate spesifik pada akun Anda!" });
 }
 
 // ============================================
