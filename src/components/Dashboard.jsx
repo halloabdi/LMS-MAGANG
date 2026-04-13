@@ -413,12 +413,16 @@ const InputRekordingView = ({ user }) => {
   const [form, setForm] = useState({ 
     jenis: '', 
     tanggal: new Date(), 
-    waktu: new Date().toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' }), 
+    jam: new Date().getHours().toString().padStart(2, '0'),
+    menit: new Date().getMinutes().toString().padStart(2, '0'),
     jenisHewan: '', 
     jumlah: '', 
     keterangan: '' 
   });
   const [loading, setLoading] = useState(false);
+
+  const HOURS = Array.from({length: 24}, (_, i) => String(i).padStart(2, '0'));
+  const MINUTES = Array.from({length: 60}, (_, i) => String(i).padStart(2, '0'));
 
   const handleSubmit = (e) => {
     e.preventDefault();
@@ -426,10 +430,9 @@ const InputRekordingView = ({ user }) => {
     setLoading(true);
 
     const ds = form.tanggal instanceof Date ? form.tanggal : new Date();
-    // Parse waktu
-    const [hours, minutes] = form.waktu.split(':');
-    ds.setHours(parseInt(hours, 10));
-    ds.setMinutes(parseInt(minutes, 10));
+    // Parse waktu dari jam dan menit
+    ds.setHours(parseInt(form.jam, 10));
+    ds.setMinutes(parseInt(form.menit, 10));
 
     const localIsoString = new Date(ds.getTime() - ds.getTimezoneOffset() * 60000).toISOString().slice(0, 16);
 
@@ -459,17 +462,63 @@ const InputRekordingView = ({ user }) => {
       })
     })
       .then(r => r.json()).then(res => {
-        const resetWaktu = new Date().toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' });
-        if (res.status === 'success') { alert("Pencatatan Berhasil Disimpan!"); setForm({ jenis: '', tanggal: new Date(), waktu: resetWaktu, jenisHewan: '', jumlah: '', keterangan: '' }); }
+        if (res.status === 'success') { 
+          alert("Pencatatan Berhasil Disimpan!"); 
+          setForm({ 
+            jenis: '', 
+            tanggal: new Date(), 
+            jam: new Date().getHours().toString().padStart(2, '0'),
+            menit: new Date().getMinutes().toString().padStart(2, '0'),
+            jenisHewan: '', 
+            jumlah: '', 
+            keterangan: '' 
+          }); 
+        }
         setLoading(false);
       }).catch(() => setLoading(false));
   };
 
   return (
-    <div className="bg-white dark:bg-gray-900 rounded-3xl p-6 md:p-8 border border-gray-100 dark:border-gray-800 shadow-sm">
+    <div className="bg-white dark:bg-gray-900 rounded-3xl p-6 md:p-8 border border-gray-100 dark:border-gray-800 shadow-sm relative z-10">
       <h3 className="text-xl font-bold mb-6">Pencatatan Ternak Harian</h3>
       <form onSubmit={handleSubmit} className="space-y-5 max-w-2xl">
-        <div className="grid grid-cols-1 gap-5">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-5 relative z-[60]">
+          <div>
+            <label className="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-1">Pilih Tanggal</label>
+            <DatePicker
+              selected={form.tanggal instanceof Date ? form.tanggal : new Date()}
+              onChange={(date) => setForm({ ...form, tanggal: date })}
+              dateFormat="d MMMM yyyy"
+              className="w-full px-4 py-3 rounded-xl bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 outline-none focus:ring-2 focus:ring-green-500 font-medium cursor-pointer relative z-[60]"
+              calendarClassName="modern-datepicker-calendar"
+              wrapperClassName="w-full relative z-[60]"
+              popperPlacement="bottom-start"
+            />
+          </div>
+          <div>
+            <label className="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-1">Pilih Jam</label>
+            <div className="flex gap-2 relative z-[60]">
+              <div className="w-1/2">
+                <ModernSelect
+                  value={form.jam}
+                  onChange={(v) => setForm({ ...form, jam: v })}
+                  options={HOURS}
+                  placeholder="Jam"
+                />
+              </div>
+              <div className="flex items-center text-gray-400 font-bold">:</div>
+              <div className="w-1/2">
+                <ModernSelect
+                  value={form.menit}
+                  onChange={(v) => setForm({ ...form, menit: v })}
+                  options={MINUTES}
+                  placeholder="Menit"
+                />
+              </div>
+            </div>
+          </div>
+        </div>
+        <div className="grid grid-cols-1 gap-5 relative z-[50]">
           <div>
             <label className="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-1">Jenis Evaluasi</label>
             <ModernSelect
@@ -478,29 +527,6 @@ const InputRekordingView = ({ user }) => {
               options={['Populasi Awal Masuk', 'Penambahan Populasi Ternak', 'Kematian Ternak (Mortalitas)', 'Program Vaksinasi', 'Lainnya']}
               placeholder="- Pilih Kejadian -"
             />
-          </div>
-          <div className="grid grid-cols-2 gap-3">
-            <div>
-              <label className="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-1">Pilih Tanggal</label>
-              <DatePicker
-                selected={form.tanggal instanceof Date ? form.tanggal : new Date()}
-                onChange={(date) => setForm({ ...form, tanggal: date })}
-                dateFormat="d MMMM yyyy"
-                className="w-full px-4 py-3 rounded-xl bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 outline-none focus:ring-2 focus:ring-green-500 font-medium cursor-pointer"
-                calendarClassName="modern-datepicker-calendar"
-                wrapperClassName="w-full relative z-[50]"
-                popperPlacement="bottom-start"
-              />
-            </div>
-            <div>
-              <label className="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-1">Pilih Jam</label>
-              <input
-                type="time"
-                value={form.waktu}
-                onChange={(e) => setForm({ ...form, waktu: e.target.value })}
-                className="w-full px-4 py-3 rounded-xl bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 outline-none focus:ring-2 focus:ring-green-500 font-bold text-gray-900 dark:text-white cursor-pointer modern-time-field shadow-inner"
-              />
-            </div>
           </div>
         </div>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
