@@ -12,7 +12,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import HitungIPTernak from './components/HitungIPTernak';
 import Dashboard from './components/Dashboard';
 
-const GAS_URL = 'https://script.google.com/macros/s/AKfycbxwj05hSzJj--x5YCh-BrBcsM-3sGypKqj-Vp4jPf1U_oyE-VwGpQvdr_EVbtwumAjB/exec';
+const GAS_URL = 'https://script.google.com/macros/s/AKfycbySu3THdMbdj61t2jhA-d-ICbvE7Dn6L82NQQrscfx56InSfINq8L0rRMuDJpqqfCOV/exec';
 
 // --- DATA FROM ORIGINAL JS ---
 // Berita kini dimuat dari Database Google Apps Script
