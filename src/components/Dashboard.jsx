@@ -6,6 +6,8 @@ import {
   Save, Trash2, MoreVertical, X, Check, Search, ChevronDown, Plus, Eye
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
+import DatePicker from 'react-datepicker';
+import 'react-datepicker/dist/react-datepicker.css';
 
 const GAS_URL = 'https://script.google.com/macros/s/AKfycbxAo4T6fGrjBhd1D7khfIzVns7gn4tQM4XasNmocegNDpvMHlFH44vw-SJ7z8mCmkU3/exec';
 
@@ -350,9 +352,7 @@ const OverviewView = ({ user, setTab }) => {
 // INPUT VIEWS 
 // ==========================================
 const InputRekordingView = ({ user }) => {
-  const getLocalDatetimePattern = () => new Date(new Date().getTime() - new Date().getTimezoneOffset() * 60000).toISOString().slice(0, 16);
-  
-  const [form, setForm] = useState({ jenis: '', tanggal: getLocalDatetimePattern(), jenisHewan: '', jumlah: '', keterangan: '' });
+  const [form, setForm] = useState({ jenis: '', tanggal: new Date(), jenisHewan: '', jumlah: '', keterangan: '' });
   const [loading, setLoading] = useState(false);
 
   const handleSubmit = (e) => {
@@ -360,8 +360,11 @@ const InputRekordingView = ({ user }) => {
     if (!form.jenis || !form.jenisHewan || !form.jumlah) return alert("Pilih evaluasi, jenis ternak, dan jumlah ekor!");
     setLoading(true);
 
+    const ds = form.tanggal instanceof Date ? form.tanggal : new Date();
+    const localIsoString = new Date(ds.getTime() - ds.getTimezoneOffset() * 60000).toISOString().slice(0, 16);
+
     let submitPayload = {
-      "TimeStamp": form.tanggal,
+      "TimeStamp": localIsoString,
       "ID Akun": user['ID Akun'],
       "Username": user['Username'],
       "Nama Lengkap": user['Nama Lengkap'],
@@ -386,7 +389,7 @@ const InputRekordingView = ({ user }) => {
       })
     })
       .then(r => r.json()).then(res => {
-        if (res.status === 'success') { alert("Pencatatan Berhasil Disimpan!"); setForm({ jenis: '', tanggal: getLocalDatetimePattern(), jenisHewan: '', jumlah: '', keterangan: '' }); }
+        if (res.status === 'success') { alert("Pencatatan Berhasil Disimpan!"); setForm({ jenis: '', tanggal: new Date(), jenisHewan: '', jumlah: '', keterangan: '' }); }
         setLoading(false);
       }).catch(() => setLoading(false));
   };
@@ -407,7 +410,19 @@ const InputRekordingView = ({ user }) => {
           </div>
           <div>
             <label className="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-1">Tanggal & Waktu</label>
-            <input type="datetime-local" required value={form.tanggal} onChange={e => setForm({ ...form, tanggal: e.target.value })} className="w-full px-4 py-3 rounded-xl bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 outline-none focus:ring-2 focus:ring-green-500 font-medium" />
+            <DatePicker
+              selected={form.tanggal instanceof Date ? form.tanggal : new Date()}
+              onChange={(date) => setForm({ ...form, tanggal: date })}
+              showTimeSelect
+              timeFormat="HH:mm"
+              timeIntervals={15}
+              timeCaption="Waktu"
+              dateFormat="d MMMM yyyy, HH:mm"
+              className="w-full px-4 py-3 rounded-xl bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 outline-none focus:ring-2 focus:ring-green-500 font-medium cursor-pointer"
+              calendarClassName="modern-datepicker-calendar"
+              wrapperClassName="w-full relative z-[50]"
+              popperPlacement="bottom-start"
+            />
           </div>
         </div>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
