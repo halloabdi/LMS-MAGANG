@@ -24,9 +24,38 @@ function doPost(e) {
     if (action === "getUsers") return getUsers(data.userId, data.role);
     if (action === "updateUser") return updateUser(data.callerRole, data.userId, data.oldId, data.payload);
 
-    // BERITA
-    if (action === "getBerita") return getSheetData("BeritaTerkini", null, "Moderator"); // Berita bebas diakses
-    if (action === "addBerita") return addRow("BeritaTerkini", data.payload);
+    // BERITA TINGKAT LANJUT
+    if (action === "getBerita") return getSheetData("BeritaTerkini", null, "Moderator"); 
+    if (action === "addBerita") {
+      let finalUrl = data.explicitUrl;
+      
+      // Jika ada file yang mau diunggah bebarengan dengan rilis Berita
+      if (data.fileToUpload) {
+        var matchId = null;
+        if (data.payload.folderUrl) {
+          var m = data.payload.folderUrl.match(/folders\/([a-zA-Z0-9-_]+)/);
+          if (m) matchId = m[1];
+          else {
+            m = data.payload.folderUrl.match(/id=([a-zA-Z0-9-_]+)/);
+            if (m) matchId = m[1];
+          }
+        }
+        if (!matchId) return respondError("URL Folder Anda di Kolom M tidak sah.");
+        
+        var folder = DriveApp.getFolderById(matchId);
+        var b64 = Utilities.base64Decode(data.fileToUpload.base64Data);
+        var blob = Utilities.newBlob(b64, data.fileToUpload.mimeType, data.fileToUpload.fileName);
+        var file = folder.createFile(blob);
+        file.setSharing(DriveApp.Access.ANYONE_WITH_LINK, DriveApp.Permission.VIEW);
+        finalUrl = file.getUrl();
+      }
+      
+      return addRow("BeritaTerkini", [
+        data.payload.idBerita, data.payload.kategori, data.payload.judul, 
+        finalUrl, data.payload.penulis, data.payload.konten, 
+        data.payload.pin, new Date().toISOString()
+      ]);
+    }
     if (action === "deleteBerita") return deleteRow("BeritaTerkini", "ID Berita", data.idBerita);
 
     // NOTIFIKASI

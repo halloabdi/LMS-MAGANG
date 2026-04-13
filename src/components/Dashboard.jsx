@@ -667,38 +667,53 @@ const KelolaBeritaView = ({ user }) => {
 
   const handlePost = (e) => {
     e.preventDefault();
-    if (!form.url) return alert("Thumbnail belum diunggah!");
+    if (!form.url && !form.fileBase64) return alert("Thumbnail belum dipilih!");
+
+    setIsUploading(true);
     fetch(GAS_URL, {
       method: "POST",
       body: JSON.stringify({
         action: "addBerita",
-        payload: ['BRT-' + Date.now(), form.kategori, form.judul, form.url, user['Nama Lengkap'], form.konten, form.pin, new Date().toISOString()]
+        payload: {
+          idBerita: 'BRT-' + Date.now(),
+          kategori: form.kategori,
+          judul: form.judul,
+          penulis: user['Nama Lengkap'],
+          konten: form.konten,
+          pin: form.pin,
+          userId: user['ID Akun'],
+          folderUrl: user['Link Folder Penyimpanan']
+        },
+        fileToUpload: form.fileBase64 ? {
+          base64Data: form.fileBase64,
+          mimeType: form.mimeType,
+          fileName: 'Thumb_' + Date.now() + '_' + form.fileName
+        } : null,
+        explicitUrl: form.fileBase64 ? null : form.url
       })
     }).then(r => r.json()).then(res => {
-      if (res.status === 'success') { alert("Berita Dipublish!"); fetchBerita(); setForm({ judul: '', konten: '', url: '', pin: 'Tidak', kategori: 'Umum' }); }
+      setIsUploading(false);
+      if (res.status === 'success') { 
+        alert("Berita Dipublish!"); 
+        fetchBerita(); 
+        setForm({ judul: '', konten: '', url: '', pin: 'Tidak', kategori: 'Umum' }); 
+      } else alert("Error: " + res.message);
+    }).catch(err => { 
+      setIsUploading(false); 
+      alert("Gagal koneksi server!"); 
     });
   };
 
-  const handleFileSelect = async (e) => {
+  const handleFileSelect = (e) => {
     const file = e.target.files[0];
     if (!file) return;
-    if (!user['Link Folder Penyimpanan'] || user['Link Folder Penyimpanan'] === '-') return alert("Akun Anda tak terhubung dengan folder Google Drive!");
-
-    setIsUploading(true);
+    
+    // Tampilkan preview foto baru secara lokal seketika
+    const previewUrl = URL.createObjectURL(file);
+    
     const reader = new FileReader();
-    reader.onloadend = async () => {
-      const base64String = reader.result.split(',')[1];
-      try {
-        const response = await fetch(GAS_URL, {
-          method: 'POST',
-          body: JSON.stringify({ action: 'uploadProfilePicture', userId: user['ID Akun'], base64Data: base64String, mimeType: file.type, fileName: file.name, folderUrl: user['Link Folder Penyimpanan'] })
-        });
-        const resJson = await response.json();
-        if (resJson.status === 'success') {
-          setForm({ ...form, url: resJson.data.fileUrl });
-        } else alert("Error Drive: " + resJson.message);
-      } catch (error) { alert("Network Error"); }
-      finally { setIsUploading(false); }
+    reader.onload = () => {
+      setForm({ ...form, url: previewUrl, fileBase64: reader.result.split(',')[1], mimeType: file.type, fileName: file.name });
     };
     reader.readAsDataURL(file);
   };
