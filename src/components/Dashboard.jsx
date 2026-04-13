@@ -23,6 +23,26 @@ const formatRupiahFull = (num) => {
   return new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 }).format(num);
 };
 
+const parseIndoDate = (dateStr) => {
+  if (!dateStr) return '-';
+  const d = new Date(dateStr);
+  if (!isNaN(d.getTime())) {
+    return d.toLocaleString('id-ID', { 
+      day: 'numeric', month: 'short', year: 'numeric', 
+      hour: '2-digit', minute: '2-digit' 
+    });
+  }
+  // Fallback for DD/MM/YYYY HH:mm format if natively unparseable
+  const parts = String(dateStr).split(/[ \/:]+/);
+  if (parts.length >= 5) {
+     const nd = new Date(parts[2], parts[1]-1, parts[0], parts[3], parts[4]);
+     if (!isNaN(nd.getTime())) {
+       return nd.toLocaleString('id-ID', { day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' });
+     }
+  }
+  return dateStr;
+};
+
 // --- MODERN DROP DOWN ---
 const ModernSelect = ({ value, onChange, options, placeholder }) => {
   const [isOpen, setIsOpen] = useState(false);
@@ -448,7 +468,7 @@ const RiwayatRekordingView = ({ user }) => {
         <table className="w-full text-left text-sm text-gray-600">
           <thead className="bg-gray-50 text-gray-500">
             <tr>
-              <th className="px-6 py-4">Nasabah</th><th className="px-6 py-4">Tanggal</th><th className="px-6 py-4">Evaluasi</th>
+              <th className="px-6 py-4">Nasabah</th><th className="px-6 py-4">Waktu & Tanggal</th><th className="px-6 py-4">Evaluasi</th>
               <th className="px-6 py-4">Jumlah</th><th className="px-6 py-4">Catatan</th>
             </tr>
           </thead>
@@ -456,10 +476,10 @@ const RiwayatRekordingView = ({ user }) => {
             {loading ? <tr><td colSpan="5" className="text-center p-6">Loading...</td></tr> : records.map((r, i) => (
               <tr key={i} className="hover:bg-gray-50">
                 <td className="px-6 py-4">{r['ID Akun']}</td>
-                <td className="px-6 py-4">{new Date(r['Tanggal & Waktu']).toLocaleDateString('id')}</td>
+                <td className="px-6 py-4">{parseIndoDate(r['TimeStamp'] || r['Tanggal & Waktu'] || r['Tanggal'])}</td>
                 <td className="px-6 py-4"><span className="px-3 py-1 bg-blue-100 text-blue-700 rounded-full font-bold text-xs">{r['Jenis Evaluasi']}</span></td>
-                <td className="px-6 py-4">{r['Jumlah Ekor Terdampak']}</td>
-                <td className="px-6 py-4">{r['Keterangan Tambahan']}</td>
+                <td className="px-6 py-4">{r['Jumlah Ekor Terdampak'] || r['Jumlah Populasi Awal Masuk Ternak'] || r['Jumlah Kematian Ternak'] || '-'}</td>
+                <td className="px-6 py-4 truncate max-w-[200px]">{r['Keterangan Tambahan'] || r['Catatan Kondisi Ternak']}</td>
               </tr>
             ))}
           </tbody>
@@ -485,17 +505,18 @@ const RiwayatUsahaView = ({ user }) => {
         <table className="w-full text-left text-sm text-gray-600">
           <thead className="bg-gray-50 text-gray-500">
             <tr>
-              <th className="px-6 py-4">Nasabah</th><th className="px-6 py-4">Tipe & Item</th>
+              <th className="px-6 py-4">Nasabah</th><th className="px-6 py-4">Waktu Transaksi</th><th className="px-6 py-4">Tipe & Item</th>
               <th className="px-6 py-4">Vol</th><th className="px-6 py-4 underline">Nominal (Rp)</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-gray-100">
-            {loading ? <tr><td colSpan="4" className="text-center p-6">Loading...</td></tr> : usaha.map((r, i) => (
+            {loading ? <tr><td colSpan="5" className="text-center p-6">Loading...</td></tr> : usaha.map((r, i) => (
               <tr key={i} className="hover:bg-gray-50">
                 <td className="px-6 py-4">{r['ID Akun']}</td>
-                <td className="px-6 py-4 font-bold text-gray-800">{r['Nama Barang / Item']} <div className="font-normal text-xs text-gray-400">{r['Tipe Arus Kas']}</div></td>
-                <td className="px-6 py-4">{r['Jumlah Pembelian']} {r['Satuan Beli']}</td>
-                <td className="px-6 py-4 font-extrabold text-gray-900">{formatRupiahFull(r['Total Harga Transaksi'])}</td>
+                <td className="px-6 py-4 whitespace-nowrap text-gray-500">{parseIndoDate(r['TimeStamp'] || r['Tanggal & Waktu'] || r['Tanggal'])}</td>
+                <td className="px-6 py-4 font-bold text-gray-800">{r['Nama Barang / Item'] || r['Nama Item']} <div className="font-normal text-xs text-gray-400">{r['Tipe Arus Kas']}</div></td>
+                <td className="px-6 py-4">{r['Jumlah Pembelian'] || r['Jml']} {r['Satuan Beli']}</td>
+                <td className="px-6 py-4 font-extrabold text-gray-900">{formatRupiahFull(r['Total Harga Transaksi'] || r['Total Transaksi (Kotor)'])}</td>
               </tr>
             ))}
           </tbody>
