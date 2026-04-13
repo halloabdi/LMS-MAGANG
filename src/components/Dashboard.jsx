@@ -774,6 +774,7 @@ const RiwayatRekordingView = ({ user, onChangeTab }) => {
   const [showIPCalc, setShowIPCalc] = useState(false);
   const [ipData, setIpData] = useState(null);
   const [isMissingDataMode, setIsMissingDataMode] = useState(false);
+  const [showMissingData, setShowMissingData] = useState(false);
 
   const fetchRecords = () => {
     setLoading(true);
@@ -886,7 +887,12 @@ const RiwayatRekordingView = ({ user, onChangeTab }) => {
     const hasPakanInfo = filteredRecords.some(r => r['Jenis Evaluasi'] === 'Pemberian Pakan' || r['Jenis Evaluasi'] === 'Kalkulasi Manual IP');
     const hasBobotInfo = filteredRecords.some(r => r['Jenis Evaluasi'] === 'Kalkulasi Manual IP' || r['Jenis Evaluasi'] === 'Pencatatan Bobot Badan' || r['Bobot Panen (Kg)']);
     
-    setIsMissingDataMode(!(hasPakanInfo && hasBobotInfo));
+    if (!(hasPakanInfo && hasBobotInfo)) {
+       setShowMissingData(true);
+       return;
+    }
+    
+    setIsMissingDataMode(false);
     runCalculation(filteredRecords);
   };
 
@@ -967,6 +973,39 @@ const RiwayatRekordingView = ({ user, onChangeTab }) => {
           </table>
         </div>
       </div>
+
+      {/* MISSING DATA GATEWAY OVERLAY */}
+      <AnimatePresence>
+        {showMissingData && (
+          <motion.div 
+            initial={{ opacity: 0 }} 
+            animate={{ opacity: 1 }} 
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-[150] bg-gray-900/60 backdrop-blur-sm flex items-center justify-center p-4 lg:p-0"
+          >
+            <motion.div 
+              initial={{ scale: 0.9, y: 30 }} 
+              animate={{ scale: 1, y: 0 }} 
+              exit={{ scale: 0.9, y: -30 }} 
+              className="bg-white dark:bg-gray-900 rounded-3xl p-6 lg:p-8 max-w-xl w-full shadow-2xl relative border border-gray-100 dark:border-gray-800"
+            >
+               <button onClick={() => setShowMissingData(false)} className="absolute top-4 right-4 p-2 text-gray-400 hover:text-gray-800 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-gray-800 rounded-full transition-colors"><X size={20}/></button>
+               
+               <div className="flex items-center gap-3 mb-4 text-amber-500">
+                 <div className="p-3 bg-amber-100 dark:bg-amber-500/20 rounded-2xl"><AlertTriangle size={24} /></div>
+                 <h3 className="text-xl font-bold text-gray-800 dark:text-white">Data Kalkulasi Belum Lengkap</h3>
+               </div>
+               
+               <p className="text-gray-600 dark:text-gray-400 mb-6 font-medium">Terdapat data esensial yang kosong di riwayat Anda (khususnya rekaman <b>Pemberian Pakan</b> atau <b>Bobot</b>). Silahkan lengkapi melalui Input Rekording Harian normal atau input manual terintegrasi.</p>
+
+               <div className="flex flex-col sm:flex-row gap-3">
+                 <button onClick={() => { setShowMissingData(false); onChangeTab('Input Rekording'); }} className="flex-1 py-3.5 bg-gray-100 hover:bg-gray-200 dark:bg-gray-800 dark:hover:bg-gray-700 text-gray-800 dark:text-gray-200 font-bold rounded-xl transition-colors text-sm">Buka Menu Input Rekording</button>
+                 <button onClick={() => { setShowMissingData(false); setIsMissingDataMode(true); runCalculation(filteredRecords); }} className="flex-1 py-3.5 bg-amber-500 hover:bg-amber-600 text-white font-bold rounded-xl shadow-lg transition-colors shadow-amber-500/30 text-sm">Lakukan Input Manual Ekstra</button>
+               </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       {/* IP CALC OVERLAY */}
       <AnimatePresence>
