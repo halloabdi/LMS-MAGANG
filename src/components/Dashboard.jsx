@@ -9,14 +9,12 @@ import { motion, AnimatePresence } from 'framer-motion';
 
 const GAS_URL = 'https://script.google.com/macros/s/AKfycbwGwkw48rscg4Bg8cp9SqcQY5NzceW4hoSr_6RmvUh0thjIBnjKGXs-AaFYDDhV4I_-/exec';
 
-// --- FORMATTER HELPER ---
 const formatIndoNumber = (numStr) => {
   const num = Number(numStr) || 0;
   if (num >= 1e12) return (num / 1e12).toFixed(1) + ' Tr';
   if (num >= 1e9) return (num / 1e9).toFixed(1) + ' M';
   if (num >= 1e6) return (num / 1e6).toFixed(1) + ' Jt';
-  if (num >= 1e3) return (num / 1e3).toFixed(1) + ' Rb';
-  return num.toString();
+  return num.toLocaleString('id-ID'); // Tidak disingkat untuk Ribuan (Rb)
 };
 
 const formatRupiahFull = (num) => {
@@ -269,7 +267,7 @@ const OverviewView = ({ user, setTab }) => {
     ]).then(([resRek, resUsh]) => {
       let pop = 0;
       let asset = 0;
-      
+
       const safeParse = val => {
         if (!val || val === '-') return 0;
         const parsed = Number(String(val).replace(/[^0-9.-]+/g, ""));
@@ -289,13 +287,13 @@ const OverviewView = ({ user, setTab }) => {
           // Cari kolom Tipe Arus Kas dan Total Transaksi secara dinamis/kasar
           let kasType = String(r['Tipe Arus Kas'] || '').toLowerCase();
           let amountStr = String(r['Total Harga Transaksi'] || r['Total Transaksi (Kotor)'] || r['Total Transaksi (Jenis Aset)'] || r['Total Transaksi'] || r['Total Dasar'] || 0);
-          
+
           if (!amountStr || amountStr === '0' || amountStr.trim() === '-') {
             let trKey = Object.keys(r).find(k => k.toLowerCase().includes('total transaksi'));
             if (trKey) amountStr = String(r[trKey]);
           }
           let amount = safeParse(amountStr);
-          
+
           if (kasType.includes('pemasukan')) asset += amount;
           else if (kasType.includes('pengeluaran')) asset -= amount;
         });
@@ -313,7 +311,7 @@ const OverviewView = ({ user, setTab }) => {
         >
           <div className="absolute -right-4 -top-4 opacity-10 group-hover:opacity-20 transition-opacity"><Activity size={100} /></div>
           <h3 className="font-bold mb-1 opacity-80">Populasi Aktif</h3>
-          <p className="text-4xl font-extrabold font-['Poppins']">{formatIndoNumber(summary.populasi)} <span className="text-lg opacity-80 font-medium">Ekor</span></p>
+          <p className="text-4xl font-extrabold font-['Poppins'] tracking-tight">{Number(summary.populasi).toLocaleString('id-ID')} <span className="text-lg opacity-80 font-medium">Ekor</span></p>
           <p className="text-xs opacity-70 mt-4 flex items-center gap-1 group-hover:translate-x-1 transition-transform cursor-pointer">Klik Lihat Rincian Rekording <ChevronRight size={14} /></p>
         </div>
 
