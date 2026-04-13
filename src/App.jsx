@@ -696,7 +696,7 @@ export function LandingPage() {
 
   const marqueeSponsors = [...sponsorsData, ...sponsorsData, ...sponsorsData, ...sponsorsData];
 
-  const LoginModal = () => (
+  const renderLoginModal = () => (
     <div className="fixed inset-0 z-[120] flex items-center justify-center p-4">
       <motion.div
         initial={{ opacity: 0 }}
@@ -910,7 +910,8 @@ export function LandingPage() {
             onClose={() => setToast(null)}
           />
         )}
-        {showLogin && <LoginModal />}
+        {/* --- MODAL LOGIN PINTASAN --- */}
+        {showLogin && renderLoginModal()}
       </AnimatePresence>
 
       {/* --- Header (Desktop & Tablet) --- */}
