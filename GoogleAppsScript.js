@@ -31,7 +31,6 @@ function doPost(e) {
     if (action === "addBerita") {
       let finalUrl = data.explicitUrl;
       
-      // Jika ada file yang mau diunggah bebarengan dengan rilis Berita
       if (data.fileToUpload) {
         var matchId = null;
         if (data.payload.folderUrl) {
@@ -45,7 +44,14 @@ function doPost(e) {
         if (!matchId) return respondError("URL Folder Anda di Kolom M tidak sah.");
         
         var folder = DriveApp.getFolderById(matchId);
-        var b64 = Utilities.base64Decode(data.fileToUpload.base64Data);
+        
+        // PEMBERSIHAN BASE64 UNTUK BERITA
+        var cleanBase64Berita = data.fileToUpload.base64Data;
+        if (cleanBase64Berita.indexOf("base64,") !== -1) {
+          cleanBase64Berita = cleanBase64Berita.split("base64,")[1];
+        }
+
+        var b64 = Utilities.base64Decode(cleanBase64Berita);
         var blob = Utilities.newBlob(b64, data.fileToUpload.mimeType, data.fileToUpload.fileName);
         var file = folder.createFile(blob);
         file.setSharing(DriveApp.Access.ANYONE_WITH_LINK, DriveApp.Permission.VIEW);
@@ -257,21 +263,22 @@ function extractFolderId(url) {
 
 function handleUpload(payload) {
   var folderId = extractFolderId(payload.folderUrl);
-  if (!folderId) return respondError("GAGAL_URL_FOLDER: Link Folder Penyimpanan Anda pada Kolom M tidak sah. Isikan Link asli folder Google Drive Anda.");
-  if (!folderId) return respondError("GAGAL_PARSE_URL: Format Link Folder Penyimpanan pada Kolom M Anda tidak mengandung ID Google Drive yang sah. Harap periksa kembali.");
+  if (!folderId) return respondError("GAGAL_URL_FOLDER: Link Folder Penyimpanan Anda pada Kolom M tidak sah.");
 
   var folder;
   try {
     folder = DriveApp.getFolderById(folderId);
   } catch (e) {
-    return respondError(
-      "AKSES_DITOLAK_DRIVE: Skrip gagal mengakses Link Folder Penyimpanan yang Anda tautkan di Kolom M. Error utama: " + e.message + ". " +
-      "MOHON BACA SOLUSI INI: Ganti fungsi di tombol biru Jalankan/Run ke 'AKTIFKAN_IZIN_DRIVE_SEKARANG' lalu jalankan. " +
-      "Pastikan folder Drive tersebut telah diset Akses Siapa Saja (Anyone with link) - Editor Google Drive."
-    );
+    return respondError("AKSES_DITOLAK_DRIVE: Skrip gagal mengakses Folder. Pastikan izin akses Drive sudah Anyone with link.");
   }
 
-  var data = Utilities.base64Decode(payload.base64Data);
+  // PEMBERSIHAN BASE64 SEBELUM DECODE
+  var cleanBase64 = payload.base64Data;
+  if (cleanBase64.indexOf("base64,") !== -1) {
+    cleanBase64 = cleanBase64.split("base64,")[1];
+  }
+
+  var data = Utilities.base64Decode(cleanBase64);
   var blob = Utilities.newBlob(data, payload.mimeType, payload.fileName);
 
   var file = folder.createFile(blob);
@@ -280,14 +287,16 @@ function handleUpload(payload) {
 
   var sheet = SpreadsheetApp.openById(SPREADSHEET_ID).getSheetByName("InfoAkun");
   var dataSheet = sheet.getDataRange().getValues();
+  
   for (var i = 1; i < dataSheet.length; i++) {
-    if (dataSheet[i][0] === payload.userId) {
-      sheet.getRange(i + 1, 9).setValue(fileUrl); // Kolom 9 (I) Foto Profil
+    // GANTI KE == AGAR TOLERAN TERHADAP STRING VS NUMBER
+    if (dataSheet[i][0] == payload.userId) { 
+      sheet.getRange(i + 1, 9).setValue(fileUrl); // Sukses masuk ke Kolom I
       break;
     }
   }
 
-  return respondSuccess({ fileUrl: fileUrl, message: "Foto Anda kini 100% berhasil masuk ke dalam Folder Kolom M Anda sendiri!" });
+  return respondSuccess({ fileUrl: fileUrl, message: "Foto berhasil diupload!" });
 }
 
 // ============================================
