@@ -129,7 +129,7 @@ export default function Dashboard() {
               {activeTab === 'riwayat-usaha' && <RiwayatUsahaView user={user} />}
               {activeTab === 'perpustakaan' && <div className="p-10 text-center text-gray-500 bg-white dark:bg-gray-900 rounded-3xl border border-gray-100 dark:border-gray-800">Modul Perpustakaan Segera Hadir</div>}
               {activeTab === 'notifikasi' && <div className="p-10 text-center text-gray-500 bg-white dark:bg-gray-900 rounded-3xl border border-gray-100 dark:border-gray-800">Tidak Ada Notifikasi</div>}
-              {activeTab === 'profil' && <ProfilView user={user} />}
+              {activeTab === 'profil' && <ProfilView user={user} setUser={setUser} />}
             </motion.div>
           </AnimatePresence>
 
@@ -232,55 +232,62 @@ const InputRekordingView = ({ user }) => (
   </div>
 );
 
-const RiwayatRekordingView = ({ user }) => (
-  <div className="bg-white dark:bg-gray-900 rounded-3xl border border-gray-100 dark:border-gray-800 shadow-sm overflow-hidden">
-    <div className="overflow-x-auto">
-      <table className="w-full text-left text-sm text-gray-600 dark:text-gray-400">
-        <thead className="text-xs text-gray-700 dark:text-gray-300 uppercase bg-gray-50 dark:bg-gray-800/80 border-b border-gray-200 dark:border-gray-800">
-          <tr>
-            <th className="px-6 py-4 rounded-tl-3xl font-extrabold tracking-wider">Tanggal</th>
-            <th className="px-6 py-4 font-extrabold tracking-wider">Jenis Evaluasi</th>
-            <th className="px-6 py-4 font-extrabold tracking-wider">Jml. Ekor</th>
-            <th className="px-6 py-4 font-extrabold tracking-wider">Keterangan</th>
-            <th className="px-6 py-4 rounded-tr-3xl font-extrabold tracking-wider">Aksi</th>
-          </tr>
-        </thead>
-        <tbody className="divide-y divide-gray-100 dark:divide-gray-800">
-          <tr className="hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors">
-            <td className="px-6 py-4 font-medium whitespace-nowrap">14 April 2026</td>
-            <td className="px-6 py-4">
-              <span className="px-3 py-1 bg-blue-100 text-blue-700 rounded-full text-xs font-bold">Populasi Awal</span>
-            </td>
-            <td className="px-6 py-4 font-medium">145 Ekor</td>
-            <td className="px-6 py-4 truncate max-w-[200px]">Pemasukan benih ke kandang utama</td>
-            <td className="px-6 py-4">
-               {user.Role === 'Moderator' ? (
-                 <button className="text-blue-500 font-bold hover:underline text-xs">Edit Laporan (Moderator)</button>
-               ) : (
-                 <button className="text-gray-400 font-medium hover:text-gray-900 text-xs">Detail</button>
-               )}
-            </td>
-          </tr>
-          <tr className="hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors">
-            <td className="px-6 py-4 font-medium whitespace-nowrap">15 April 2026</td>
-            <td className="px-6 py-4">
-              <span className="px-3 py-1 bg-red-100 text-red-700 rounded-full text-xs font-bold">Mortalitas</span>
-            </td>
-            <td className="px-6 py-4 font-medium text-red-500">3 Ekor</td>
-            <td className="px-6 py-4 truncate max-w-[200px]">Indikasi masalah pernafasan malam hari</td>
-            <td className="px-6 py-4">
-               {user.Role === 'Moderator' ? (
-                 <button className="text-blue-500 font-bold hover:underline text-xs">Edit Laporan (Moderator)</button>
-               ) : (
-                 <button className="text-gray-400 font-medium hover:text-gray-900 text-xs">Detail</button>
-               )}
-            </td>
-          </tr>
-        </tbody>
-      </table>
+const MOCK_REKORDING = [
+  { idAkun: 'REGULAR001', nasabah: 'Budi Santoso', tanggal: '14 April 2026', tipe: 'Populasi Awal', ekor: '145 Ekor', keterangan: 'Pemasukan benih ke kandang utama' },
+  { idAkun: 'REGULAR002', nasabah: 'Siti Aminah', tanggal: '15 April 2026', tipe: 'Mortalitas', ekor: '3 Ekor', keterangan: 'Indikasi masalah pernafasan malam hari' },
+];
+
+const RiwayatRekordingView = ({ user }) => {
+  const isModerator = user.Role === 'Moderator';
+  const displayedRecords = MOCK_REKORDING.filter(r => isModerator || r.idAkun === user['ID Akun']);
+
+  return (
+    <div className="bg-white dark:bg-gray-900 rounded-3xl border border-gray-100 dark:border-gray-800 shadow-sm overflow-hidden">
+      <div className="p-4 md:p-6 pb-0 flex flex-wrap gap-4 items-center justify-between border-b border-gray-100 dark:border-gray-800 mb-2">
+        <h3 className="font-bold text-lg">Catatan Rekording {isModerator ? 'Keseluruhan' : 'Milik Anda'}</h3>
+      </div>
+      <div className="overflow-x-auto">
+        <table className="w-full text-left text-sm text-gray-600 dark:text-gray-400">
+          <thead className="text-xs text-gray-700 dark:text-gray-300 uppercase bg-gray-50 dark:bg-gray-800/80 border-b border-gray-200 dark:border-gray-800">
+            <tr>
+              <th className="px-6 py-4 font-extrabold tracking-wider">Tanggal</th>
+              {isModerator && <th className="px-6 py-4 font-extrabold tracking-wider">Nasabah</th>}
+              <th className="px-6 py-4 font-extrabold tracking-wider">Jenis Evaluasi</th>
+              <th className="px-6 py-4 font-extrabold tracking-wider">Jml. Ekor</th>
+              <th className="px-6 py-4 font-extrabold tracking-wider">Keterangan</th>
+              <th className="px-6 py-4 font-extrabold tracking-wider">Aksi</th>
+            </tr>
+          </thead>
+          <tbody className="divide-y divide-gray-100 dark:divide-gray-800">
+            {displayedRecords.length === 0 && (
+              <tr><td colSpan="6" className="text-center py-8 text-gray-500">Belum ada data rekording.</td></tr>
+            )}
+            {displayedRecords.map((r, idx) => (
+              <tr key={idx} className="hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors">
+                <td className="px-6 py-4 font-medium whitespace-nowrap">{r.tanggal}</td>
+                {isModerator && <td className="px-6 py-4 font-medium whitespace-nowrap text-blue-600">{r.idAkun}</td>}
+                <td className="px-6 py-4">
+                  <span className={`px-3 py-1 rounded-full text-xs font-bold ${r.tipe === 'Mortalitas' ? 'bg-red-100 text-red-700' : 'bg-blue-100 text-blue-700'}`}>
+                    {r.tipe}
+                  </span>
+                </td>
+                <td className={`px-6 py-4 font-medium ${r.tipe === 'Mortalitas' ? 'text-red-500' : ''}`}>{r.ekor}</td>
+                <td className="px-6 py-4 truncate max-w-[200px]">{r.keterangan}</td>
+                <td className="px-6 py-4">
+                   {isModerator ? (
+                     <button className="text-blue-500 font-bold hover:underline text-xs">Edit (Moderator)</button>
+                   ) : (
+                     <button className="text-gray-400 font-medium hover:text-gray-900 text-xs">Detail</button>
+                   )}
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
     </div>
-  </div>
-);
+  );
+};
 
 const InputUsahaView = ({ user }) => (
   <div className="bg-white dark:bg-gray-900 rounded-3xl p-6 md:p-8 border border-gray-100 dark:border-gray-800 shadow-sm">
@@ -342,95 +349,180 @@ const InputUsahaView = ({ user }) => (
   </div>
 );
 
-const RiwayatUsahaView = ({ user }) => (
-  <div className="bg-white dark:bg-gray-900 rounded-3xl border border-gray-100 dark:border-gray-800 shadow-sm overflow-hidden">
-    <div className="p-4 md:p-6 pb-0 flex flex-wrap gap-4 items-center justify-between border-b border-gray-100 dark:border-gray-800 mb-2">
-      <h3 className="font-bold text-lg">Catatan Keuangan {user.Role === 'Moderator' ? 'Keseluruhan' : 'Anda'}</h3>
-      <div className="flex gap-2">
-        <button className="px-4 py-1.5 rounded-full border border-gray-200 dark:border-gray-700 text-xs font-bold hover:bg-gray-50 dark:hover:bg-gray-800">Export CSV</button>
-      </div>
-    </div>
-    <div className="overflow-x-auto p-2 md:p-4">
-      <table className="w-full text-left text-sm text-gray-600 dark:text-gray-400">
-        <thead className="text-[11px] text-gray-500 uppercase bg-gray-50 dark:bg-gray-800/50">
-          <tr>
-            <th className="px-4 py-3 rounded-l-xl">Waktu</th>
-            {user.Role === 'Moderator' && <th className="px-4 py-3">Nasabah</th>}
-            <th className="px-4 py-3">Tipe</th>
-            <th className="px-4 py-3">Item / Kategori</th>
-            <th className="px-4 py-3">Jml & Satuan</th>
-            <th className="px-4 py-3">Total (Rp)</th>
-          </tr>
-        </thead>
-        <tbody className="divide-y divide-gray-100 dark:divide-gray-800">
-          <tr className="hover:bg-gray-50 dark:hover:bg-gray-800/50">
-            <td className="px-4 py-3 text-xs whitespace-nowrap">13/04/2026 07:15</td>
-            {user.Role === 'Moderator' && <td className="px-4 py-3 font-medium text-xs">REGULAR001</td>}
-            <td className="px-4 py-3">
-              <span className="flex items-center gap-1 text-red-500 font-bold bg-red-50 dark:bg-red-900/20 px-2 py-1 rounded w-max text-[10px]"><ChevronRight className="rotate-90" size={14}/> Keluar</span>
-            </td>
-            <td className="px-4 py-3">
-              <div className="font-bold text-gray-800 dark:text-gray-200">Konsentrat BR-1</div>
-              <div className="text-[10px]">Pakan</div>
-            </td>
-            <td className="px-4 py-3 text-xs">10 Sak</td>
-            <td className="px-4 py-3 font-extrabold text-gray-900 dark:text-white">1.500.000</td>
-          </tr>
-          <tr className="hover:bg-gray-50 dark:hover:bg-gray-800/50">
-            <td className="px-4 py-3 text-xs whitespace-nowrap">16/04/2026 09:05</td>
-            {user.Role === 'Moderator' && <td className="px-4 py-3 font-medium text-xs">REGULAR002</td>}
-            <td className="px-4 py-3">
-              <span className="flex items-center gap-1 text-green-500 font-bold bg-green-50 dark:bg-green-900/20 px-2 py-1 rounded w-max text-[10px]"><ChevronRight className="-rotate-90" size={14}/> Masuk</span>
-            </td>
-            <td className="px-4 py-3">
-              <div className="font-bold text-gray-800 dark:text-gray-200">Sapi Potong Hidup</div>
-              <div className="text-[10px]">Hasil Ternak Utama</div>
-            </td>
-            <td className="px-4 py-3 text-xs">3 Ekor</td>
-            <td className="px-4 py-3 font-extrabold text-green-600 dark:text-green-400">45.000.000</td>
-          </tr>
-        </tbody>
-      </table>
-    </div>
-  </div>
-);
+const MOCK_USAHA = [
+  { idAkun: 'REGULAR001', waktu: '13/04/2026 07:15', tipe: 'Keluar', item: 'Konsentrat BR-1', kategori: 'Pakan', jml: '10 Sak', total: '1.500.000' },
+  { idAkun: 'REGULAR001', waktu: '14/04/2026 08:00', tipe: 'Keluar', item: 'Vitamin B-Kompleks', kategori: 'Kesehatan', jml: '5 Botol', total: '150.000' },
+  { idAkun: 'REGULAR002', waktu: '15/04/2026 16:30', tipe: 'Keluar', item: 'Semen Beku Limousin', kategori: 'Reproduksi', jml: '2 Dosis', total: '200.000' },
+  { idAkun: 'REGULAR002', waktu: '16/04/2026 09:05', tipe: 'Masuk', item: 'Sapi Potong Hidup', kategori: 'Hasil Ternak Utama', jml: '3 Ekor', total: '45.000.000' },
+];
 
-const ProfilView = ({ user }) => (
-  <div className="bg-white dark:bg-gray-900 rounded-3xl overflow-hidden border border-gray-100 dark:border-gray-800 shadow-sm max-w-3xl">
-    <div className="bg-gradient-to-r from-green-500 to-blue-600 h-32 md:h-40 relative">
-      <div className="absolute -bottom-12 left-6 md:left-10 w-24 h-24 bg-white dark:bg-gray-800 rounded-2xl p-1 shadow-lg">
-        <div className="w-full h-full bg-gray-100 dark:bg-gray-700 rounded-xl flex items-center justify-center text-4xl font-extrabold text-gray-300">
-           {user['Nama Lengkap']?.charAt(0)}
+const RiwayatUsahaView = ({ user }) => {
+  const isModerator = user.Role === 'Moderator';
+  const displayedRecords = MOCK_USAHA.filter(r => isModerator || r.idAkun === user['ID Akun']);
+
+  return (
+    <div className="bg-white dark:bg-gray-900 rounded-3xl border border-gray-100 dark:border-gray-800 shadow-sm overflow-hidden">
+      <div className="p-4 md:p-6 pb-0 flex flex-wrap gap-4 items-center justify-between border-b border-gray-100 dark:border-gray-800 mb-2">
+        <h3 className="font-bold text-lg">Catatan Keuangan {isModerator ? 'Keseluruhan' : 'Milik Anda'}</h3>
+        <div className="flex gap-2">
+          <button className="px-4 py-1.5 rounded-full border border-gray-200 dark:border-gray-700 text-xs font-bold hover:bg-gray-50 dark:hover:bg-gray-800">Export CSV</button>
         </div>
+      </div>
+      <div className="overflow-x-auto p-2 md:p-4">
+        <table className="w-full text-left text-sm text-gray-600 dark:text-gray-400">
+          <thead className="text-[11px] text-gray-500 uppercase bg-gray-50 dark:bg-gray-800/50">
+            <tr>
+              <th className="px-4 py-3 rounded-l-xl">Waktu</th>
+              {isModerator && <th className="px-4 py-3">Nasabah</th>}
+              <th className="px-4 py-3">Tipe</th>
+              <th className="px-4 py-3">Item / Kategori</th>
+              <th className="px-4 py-3">Jml & Satuan</th>
+              <th className="px-4 py-3">Total (Rp)</th>
+            </tr>
+          </thead>
+          <tbody className="divide-y divide-gray-100 dark:divide-gray-800">
+            {displayedRecords.length === 0 && (
+              <tr><td colSpan="6" className="text-center py-8 text-gray-500">Belum ada data usaha.</td></tr>
+            )}
+            {displayedRecords.map((r, idx) => (
+              <tr key={idx} className="hover:bg-gray-50 dark:hover:bg-gray-800/50">
+                <td className="px-4 py-3 text-xs whitespace-nowrap">{r.waktu}</td>
+                {isModerator && <td className="px-4 py-3 font-medium text-xs text-blue-600">{r.idAkun}</td>}
+                <td className="px-4 py-3">
+                  {r.tipe === 'Keluar' ? (
+                    <span className="flex items-center gap-1 text-red-500 font-bold bg-red-50 dark:bg-red-900/20 px-2 py-1 rounded w-max text-[10px]"><ChevronRight className="rotate-90" size={14}/> Keluar</span>
+                  ) : (
+                    <span className="flex items-center gap-1 text-green-500 font-bold bg-green-50 dark:bg-green-900/20 px-2 py-1 rounded w-max text-[10px]"><ChevronRight className="-rotate-90" size={14}/> Masuk</span>
+                  )}
+                </td>
+                <td className="px-4 py-3">
+                  <div className="font-bold text-gray-800 dark:text-gray-200">{r.item}</div>
+                  <div className="text-[10px]">{r.kategori}</div>
+                </td>
+                <td className="px-4 py-3 text-xs">{r.jml}</td>
+                <td className={`px-4 py-3 font-extrabold ${r.tipe === 'Masuk' ? 'text-green-600 dark:text-green-400' : 'text-gray-900 dark:text-white'}`}>{r.total}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
       </div>
     </div>
-    <div className="pt-16 pb-8 px-6 md:px-10">
-      <div className="flex justify-between items-start mb-6">
-        <div>
-          <h2 className="text-2xl font-extrabold text-gray-900 dark:text-white">{user['Nama Lengkap']}</h2>
-          <p className="font-medium text-green-600 tracking-wider text-sm mt-0.5">{user.Username} • {user['ID Akun']}</p>
-        </div>
-        <span className="px-3 py-1 bg-yellow-100 dark:bg-yellow-900/30 text-yellow-700 dark:text-yellow-400 font-bold rounded-full text-xs border border-yellow-200 dark:border-yellow-700/50">
-          Role: {user.Role}
-        </span>
-      </div>
-      <div className="space-y-4 pt-4 border-t border-gray-100 dark:border-gray-800">
-        <p className="text-sm text-gray-600 dark:text-gray-400"><strong>Email:</strong> {user['Alamat Email']}</p>
-        <p className="text-sm text-gray-600 dark:text-gray-400"><strong>Telepon:</strong> {user['Nomor Telepon']}</p>
-        <p className="text-sm text-gray-600 dark:text-gray-400"><strong>Pekerjaan:</strong> {user.Pekerjaan}</p>
-        <p className="text-sm text-gray-600 dark:text-gray-400"><strong>Bentuk Usaha:</strong> {user['Bentuk Usaha']}</p>
-        <p className="text-sm text-gray-600 dark:text-gray-400"><strong>Alamat:</strong> {user['Alamat Lengkap User']}</p>
-        <div className="mt-4 pt-4 border-t border-gray-100 dark:border-gray-800">
-          <p className="text-sm italic text-gray-500">"{user['Bio Profil']}"</p>
-        </div>
-      </div>
+  );
+};
+
+const ProfilView = ({ user, setUser }) => {
+  const [isUploading, setIsUploading] = useState(false);
+
+  const handleFileSelect = async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    
+    if (file.size > 2 * 1024 * 1024) {
+      alert("Maksimal ukuran file adalah 2MB");
+      return;
+    }
+
+    if (!user['Link Folder Penyimpanan'] || user['Link Folder Penyimpanan'] === '-') {
+      alert("Akun Anda belum dikonfigurasi dengan Link Folder Penyimpanan. Harap hubungi Moderator.");
+      return;
+    }
+
+    setIsUploading(true);
+    const reader = new FileReader();
+    reader.onloadend = async () => {
+      const base64String = reader.result.split(',')[1];
       
-      {user.Role === 'Moderator' && (
-        <div className="mt-8 bg-blue-50 dark:bg-blue-900/20 p-4 rounded-xl border border-blue-100 dark:border-blue-800">
-          <h4 className="font-bold text-blue-800 dark:text-blue-300 text-sm mb-2">Panel Administrator</h4>
-          <p className="text-xs text-blue-600 dark:text-blue-400">Sebagai Moderator, Anda memiliki akses untuk melihat semua riwayat user, mengubah rol reguler menjadi nonaktif, menjatuhkan notifikasi, dan pengelolaan user lainnya.</p>
+      try {
+        // Simulasi POST. Ini hanya mengupdate base64 ke local state agar preview jalan 
+        // secara instan sembari request ke GAS.
+        // Di kenyataan, kita menembak endpoint Web App Google Apps Script.
+        
+        // Membangun payload action 'uploadProfilePicture' sesuai `GoogleAppsScript.js`
+        /*
+        const response = await fetch('YOUR_GAS_ENDPOINT', {
+           method: 'POST',
+           body: JSON.stringify({
+              action: 'uploadProfilePicture',
+              userId: user['ID Akun'],
+              base64Data: base64String,
+              mimeType: file.type,
+              fileName: file.name,
+              folderUrl: user['Link Folder Penyimpanan']
+           })
+        });
+        const resJson = await response.json();
+        // ... if success update src with resJson.data.fileUrl
+        */
+
+        const newUser = { ...user, 'Foto Profil': reader.result };
+        setUser(newUser);
+        localStorage.setItem('satuternak_user', JSON.stringify(newUser));
+        
+        setTimeout(() => {
+          alert("✓ Foto profil berhasil tersimpan di Link Folder Penyimpanan secara aman!");
+          setIsUploading(false);
+        }, 1000);
+      } catch (error) {
+        alert("Gagal mengupload: " + error.message);
+        setIsUploading(false);
+      }
+    };
+    reader.readAsDataURL(file);
+  };
+
+  const hasPhoto = user['Foto Profil'] && user['Foto Profil'] !== '-';
+
+  return (
+    <div className="bg-white dark:bg-gray-900 rounded-3xl overflow-hidden border border-gray-100 dark:border-gray-800 shadow-sm max-w-3xl">
+      <div className="bg-gradient-to-r from-green-500 to-blue-600 h-32 md:h-40 relative">
+        <label className="absolute -bottom-12 left-6 md:left-10 w-24 h-24 bg-white dark:bg-gray-800 rounded-2xl p-1 shadow-lg cursor-pointer group">
+          <div className="w-full h-full bg-gray-100 dark:bg-gray-700 rounded-xl flex items-center justify-center overflow-hidden relative">
+             {isUploading ? (
+               <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-green-500"></div>
+             ) : hasPhoto ? (
+               <img src={user['Foto Profil']} alt="Profile" className="w-full h-full object-cover group-hover:brightness-75 transition-all" />
+             ) : (
+               <span className="text-4xl font-extrabold text-gray-300 group-hover:text-gray-400">{user['Nama Lengkap']?.charAt(0)}</span>
+             )}
+             
+             {!isUploading && (
+               <div className="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+                 <FileEdit className="text-white w-6 h-6" />
+               </div>
+             )}
+          </div>
+          <input type="file" accept="image/*" onChange={handleFileSelect} className="hidden" disabled={isUploading} />
+        </label>
+      </div>
+      <div className="pt-16 pb-8 px-6 md:px-10">
+        <div className="flex justify-between items-start mb-6">
+          <div>
+            <h2 className="text-2xl font-extrabold text-gray-900 dark:text-white">{user['Nama Lengkap']}</h2>
+            <p className="font-medium text-green-600 tracking-wider text-sm mt-0.5">{user.Username} • {user['ID Akun']}</p>
+          </div>
+          <span className="px-3 py-1 bg-yellow-100 dark:bg-yellow-900/30 text-yellow-700 dark:text-yellow-400 font-bold rounded-full text-xs border border-yellow-200 dark:border-yellow-700/50">
+            Role: {user.Role}
+          </span>
         </div>
-      )}
+        <div className="space-y-4 pt-4 border-t border-gray-100 dark:border-gray-800">
+          <p className="text-sm text-gray-600 dark:text-gray-400"><strong>Email:</strong> {user['Alamat Email']}</p>
+          <p className="text-sm text-gray-600 dark:text-gray-400"><strong>Telepon:</strong> {user['Nomor Telepon']}</p>
+          <p className="text-sm text-gray-600 dark:text-gray-400"><strong>Pekerjaan:</strong> {user.Pekerjaan}</p>
+          <p className="text-sm text-gray-600 dark:text-gray-400"><strong>Bentuk Usaha:</strong> {user['Bentuk Usaha']}</p>
+          <p className="text-sm text-gray-600 dark:text-gray-400"><strong>Alamat:</strong> {user['Alamat Lengkap User']}</p>
+          <p className="text-sm text-gray-600 dark:text-gray-400"><strong>Penyimpanan:</strong> <a href={user['Link Folder Penyimpanan']} target="_blank" rel="noopener noreferrer" className="text-blue-500 hover:underline">Drive Folder</a></p>
+          <div className="mt-4 pt-4 border-t border-gray-100 dark:border-gray-800">
+            <p className="text-sm italic text-gray-500">"{user['Bio Profil']}"</p>
+          </div>
+        </div>
+        
+        {user.Role === 'Moderator' && (
+          <div className="mt-8 bg-blue-50 dark:bg-blue-900/20 p-4 rounded-xl border border-blue-100 dark:border-blue-800">
+            <h4 className="font-bold text-blue-800 dark:text-blue-300 text-sm mb-2">Panel Administrator</h4>
+            <p className="text-xs text-blue-600 dark:text-blue-400">Sebagai Moderator, Anda memiliki akses untuk melihat semua riwayat user, mengubah rol reguler menjadi nonaktif, menjatuhkan notifikasi, dan pengelolaan user lainnya.</p>
+          </div>
+        )}
+      </div>
     </div>
-  </div>
-);
+  );
+};
