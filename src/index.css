@@ -49,6 +49,9 @@ body {
 
 .hide-scrollbar {
   -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
 /* Modern React Datepicker Overrides */
 .react-datepicker-wrapper {
   width: 100%;
