@@ -306,11 +306,25 @@ function getSheetData(sheetName, userId, role) {
   return respondSuccess(result);
 }
 
-function addRow(sheetName, payloadArray) {
+function addRow(sheetName, payloadArrayOrObj) {
   const sheet = SpreadsheetApp.openById(SPREADSHEET_ID).getSheetByName(sheetName);
   if (!sheet) return respondError("Sheet " + sheetName + " tidak ditemukan");
 
-  sheet.appendRow(payloadArray);
+  if (!Array.isArray(payloadArrayOrObj) && typeof payloadArrayOrObj === 'object') {
+    const dataRange = sheet.getDataRange().getValues();
+    const headers = dataRange[0];
+    const row = new Array(headers.length).fill("");
+    
+    headers.forEach((header, i) => {
+      // Map based on JSON keys (e.g., {'Jumlah Populasi Awal Masuk Ternak': 100})
+      if (payloadArrayOrObj[header] !== undefined) {
+        row[i] = payloadArrayOrObj[header];
+      }
+    });
+    sheet.appendRow(row);
+  } else {
+    sheet.appendRow(payloadArrayOrObj);
+  }
   return respondSuccess({ success: true, message: "Berhasil menambahkan item baru!" });
 }
 

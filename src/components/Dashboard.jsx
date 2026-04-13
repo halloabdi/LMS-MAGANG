@@ -271,14 +271,25 @@ const OverviewView = ({ user, setTab }) => {
       let asset = 0;
       if (resRek.status === 'success') {
         resRek.data.forEach(r => {
-          if (r['Jenis Evaluasi'] === 'Populasi Awal Masuk') pop += Number(r['Jumlah Ekor Terdampak'] || 0);
-          if (r['Jenis Evaluasi'] === 'Angka Kematian (Mortalitas)') pop -= Number(r['Jumlah Ekor Terdampak'] || 0);
+          // Menghitung Populasi Aktif (Awal + Penambahan - Kematian)
+          pop += Number(r['Jumlah Populasi Awal Masuk Ternak'] || 0);
+          pop += Number(r['Jumlah Penambahan Populasi Ternak'] || 0);
+          pop -= Number(r['Jumlah Kematian Ternak'] || 0);
         });
       }
       if (resUsh.status === 'success') {
         resUsh.data.forEach(r => {
-          if (r['Tipe Arus Kas'] === 'Pemasukan') asset += Number(r['Total Harga Transaksi'] || 0);
-          if (r['Tipe Arus Kas'] === 'Pengeluaran') asset -= Number(r['Total Harga Transaksi'] || 0);
+          // Cari kolom Tipe Arus Kas dan Total Transaksi secara dinamis/kasar
+          let kasType = String(r['Tipe Arus Kas'] || '').toLowerCase();
+          let amountStr = r['Total Harga Transaksi'] || r['Total Transaksi (Kotor)'] || r['Total Transaksi (Jenis Aset)'] || r['Total Transaksi'] || r['Total Dasar'] || 0;
+          if (!amountStr) {
+            let trKey = Object.keys(r).find(k => k.toLowerCase().includes('total transaksi'));
+            if (trKey) amountStr = r[trKey];
+          }
+          let amount = Number(String(amountStr).replace(/[^0-9.-]+/g, ""));
+          
+          if (kasType.includes('pemasukan')) asset += amount;
+          else if (kasType.includes('pengeluaran')) asset -= amount;
         });
       }
       setSummary({ populasi: pop, aset: asset });
@@ -333,22 +344,41 @@ const OverviewView = ({ user, setTab }) => {
 // INPUT VIEWS 
 // ==========================================
 const InputRekordingView = ({ user }) => {
-  const [form, setForm] = useState({ jenis: '', tanggal: '', jumlah: '', keterangan: '' });
+  const [form, setForm] = useState({ jenis: '', tanggal: '', jumlah: '', jenisHewan: '', keterangan: '' });
   const [loading, setLoading] = useState(false);
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    if (!form.jenis || !form.tanggal || !form.jumlah) return alert("Harap lengkapi field wajib");
+    if (!form.jenis || !form.tanggal || !form.jumlah || !form.jenisHewan) return alert("Harap lengkapi semua field wajib");
     setLoading(true);
+
+    let submitPayload = {
+       "TimeStamp": form.tanggal,
+       "ID Akun": user['ID Akun'],
+       "Username": user['Username'],
+       "Nama Lengkap": user['Nama Lengkap'],
+       "Role": user.Role,
+       "Jenis Ternak": form.jenisHewan,
+       "Catatan Kondisi Ternak": form.keterangan || '-',
+       "Keterangan Tambahan": form.keterangan || '-',
+       "Jenis Evaluasi": form.jenis
+    };
+
+    if (form.jenis === 'Populasi Awal Masuk') submitPayload["Jumlah Populasi Awal Masuk Ternak"] = form.jumlah;
+    else if (form.jenis === 'Penambahan Populasi Ternak') submitPayload["Jumlah Penambahan Populasi Ternak"] = form.jumlah;
+    else if (form.jenis === 'Kematian Ternak (Mortalitas)') submitPayload["Jumlah Kematian Ternak"] = form.jumlah;
+    else if (form.jenis === 'Program Vaksinasi') submitPayload["Jumlah Ternak Di Vaksin"] = form.jumlah;
+    else submitPayload["Jumlah Ekor Terdampak"] = form.jumlah;
+
     fetch(GAS_URL, {
       method: "POST",
       body: JSON.stringify({
         action: "addRekording",
-        payload: [user['ID Akun'], form.tanggal, form.jenis, form.jumlah, form.keterangan]
+        payload: submitPayload
       })
     })
       .then(r => r.json()).then(res => {
-        if (res.status === 'success') { alert("Disimpan!"); setForm({ jenis: '', tanggal: '', jumlah: '', keterangan: '' }); }
+        if (res.status === 'success') { alert("Disimpan dengan format dinamis!"); setForm({ jenis: '', tanggal: '', jenisHewan: '', jumlah: '', keterangan: '' }); }
         setLoading(false);
       }).catch(() => setLoading(false));
   };
@@ -363,21 +393,27 @@ const InputRekordingView = ({ user }) => {
             <ModernSelect
               value={form.jenis}
               onChange={(v) => setForm({ ...form, jenis: v })}
-              options={['Populasi Awal Masuk', 'Angka Kematian (Mortalitas)', 'Program Vaksinasi', 'Lainnya']}
-              placeholder="- Pilih Evaluasi -"
+              options={['Populasi Awal Masuk', 'Penambahan Populasi Ternak', 'Kematian Ternak (Mortalitas)', 'Program Vaksinasi', 'Lainnya']}
+              placeholder="- Pilih Kejadian -"
             />
           </div>
           <div>
-            <label className="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-1">Tanggal</label>
+            <label className="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-1">Tanggal & Waktu</label>
             <input type="datetime-local" required value={form.tanggal} onChange={e => setForm({ ...form, tanggal: e.target.value })} className="w-full px-4 py-3 rounded-xl bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 outline-none focus:ring-2 focus:ring-green-500 font-medium" />
           </div>
         </div>
-        <div>
-          <label className="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-1">Jumlah Ekor Terdampak</label>
-          <input type="number" required value={form.jumlah} onChange={e => setForm({ ...form, jumlah: e.target.value })} placeholder="Contoh: 10" className="w-full px-4 py-3 rounded-xl bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 outline-none focus:ring-2 focus:ring-green-500 font-medium" />
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+          <div>
+            <label className="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-1">Jenis Ternak</label>
+            <input type="text" required value={form.jenisHewan} onChange={e => setForm({ ...form, jenisHewan: e.target.value })} placeholder="Cth: Sapi Potong / Kambing" className="w-full px-4 py-3 rounded-xl bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 outline-none focus:ring-2 focus:ring-green-500 font-medium" />
+          </div>
+          <div>
+            <label className="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-1">Jumlah Ekor Terkait Kejadian</label>
+            <input type="number" required value={form.jumlah} onChange={e => setForm({ ...form, jumlah: e.target.value })} placeholder="Cth: 10" className="w-full px-4 py-3 rounded-xl bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 outline-none focus:ring-2 focus:ring-green-500 font-medium" />
+          </div>
         </div>
         <div>
-          <label className="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-1">Keterangan / Memo</label>
+          <label className="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-1">Keterangan / Memo (Sebab/Kondisi)</label>
           <textarea rows="3" value={form.keterangan} onChange={e => setForm({ ...form, keterangan: e.target.value })} className="w-full px-4 py-3 rounded-xl bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 outline-none focus:ring-2 focus:ring-green-500 font-medium resize-none"></textarea>
         </div>
         <button disabled={loading} className="px-8 py-3 bg-green-600 font-bold text-white rounded-xl shadow-lg w-full md:w-auto hover:bg-green-700">
@@ -396,11 +432,29 @@ const InputUsahaView = ({ user }) => {
     e.preventDefault();
     if (!form.tipe || !form.kategori || !form.total) return alert("Isian wajib tidak boleh kosong!");
     setLoading(true);
+
+    let submitPayload = {
+      "TimeStamp": new Date().toISOString(),
+      "ID Akun": user['ID Akun'],
+      "Nama Lengkap": user['Nama Lengkap'],
+      "Role": user.Role,
+      "Tipe Arus Kas": form.tipe,
+      "Kategori": form.kategori,
+      "Nama Item": form.nama,
+      "Nama Barang / Item": form.nama,
+      "Jml": form.jumlah,
+      "Jumlah Pembelian": form.jumlah,
+      "Satuan Beli": form.satuan,
+      "Total Transaksi (Kotor)": form.total,
+      "Total Harga Transaksi": form.total,
+      "Bentuk Usaha": user['Bentuk Usaha'] || 'Personal'
+    };
+
     fetch(GAS_URL, {
       method: "POST",
       body: JSON.stringify({
         action: "addUsaha",
-        payload: [user['ID Akun'], new Date().toISOString(), form.tipe, form.kategori, form.nama, form.jumlah, form.satuan, form.total]
+        payload: submitPayload
       })
     })
       .then(r => r.json()).then(res => {
