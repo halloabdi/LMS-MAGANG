@@ -196,10 +196,12 @@ function cascadeUpdateId(sheetName, oldId, newId) {
 // WAKTU PERTAMA KALI: JALANKAN FUNGSI INI DARI EDITOR UNTUK MEMAKSA MUNCULNYA IZIN!
 // ============================================
 function JALANKAN_UNTUK_MENGELUARKAN_IZIN_GO_UNSAFE() {
-  // Tanpa try-catch agar sistem Scanner Google 100% mendeteksi kebutuhan OAuth Drive!
-  var folder = DriveApp.getRootFolder();
+  // HARUS MENGGUNAKAN CREATEFILE! JANGAN diganti ke getRootFolder.
+  // Google butuh melihat perintah createFile ini secara eksplisit untuk membuka pintu masuk (Write Access).
+  var dummy = DriveApp.createFile("Pancingan_Izin_Upload.txt", "Jika file ini muncul, izin Upload berhasil 100%");
+  dummy.setTrashed(true);
   var checkSheet = SpreadsheetApp.openById(SPREADSHEET_ID);
-  return "BERHASIL! Jika Go Unsafe sudah Anda setujui sebelumnya, maka Anda tinggal melakukan Deploy -> Manage Deployments -> New Version.";
+  return "BERHASIL! Google Script kini mendapat Izin Penuh (Write Access) untuk Upload Foto ke Google Drive.";
 }
 
 // ============================================
