@@ -14,6 +14,24 @@ import Dashboard from './components/Dashboard';
 
 const GAS_URL = 'https://script.google.com/macros/s/AKfycbzaco-dXLF5q72ch6Ravny5dsZ19tH8Og-aDUoV2GJeHT_bUuOZ7-k9YbjKmfWR8K-B/exec';
 
+const getPhotoUrl = (url) => {
+  if (!url) return '';
+  if (typeof url !== 'string') return '';
+  if (url.startsWith('data:image')) return url; // Ignore Base64
+  let fileId = null;
+  const dMatch = url.match(/\/d\/([-\w]{15,})/);
+  const idParamMatch = url.match(/[?&]id=([-\w]{15,})/);
+  if (dMatch && dMatch[1]) {
+    fileId = dMatch[1];
+  } else if (idParamMatch && idParamMatch[1]) {
+    fileId = idParamMatch[1];
+  }
+  if (fileId) {
+    return `https://drive.google.com/thumbnail?id=${fileId}&sz=w1000`;
+  }
+  return url;
+};
+
 // --- DATA FROM ORIGINAL JS ---
 // Berita kini dimuat dari Database Google Apps Script
 
@@ -1167,7 +1185,7 @@ export function LandingPage() {
                     className="w-full h-full flex-shrink-0 relative flex flex-col cursor-pointer"
                     onClick={() => openModal('news', news)}
                   >
-                    <img src={news.thumbnail} alt={news.title} className="absolute inset-0 w-full h-full object-cover z-0" />
+                    <img src={getPhotoUrl(news.thumbnail)} alt={news.title} className="absolute inset-0 w-full h-full object-cover z-0" />
                     <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/50 to-black/10 z-10"></div>
 
                     <div className="relative z-20 flex flex-col h-full p-5 md:p-8 text-white">
@@ -1241,7 +1259,7 @@ export function LandingPage() {
                   {regularNews.slice((currentNewsPage - 1) * 4, currentNewsPage * 4).map((news) => (
                     <div key={news.id} className="glass-card rounded-2xl overflow-hidden shadow-md hover:shadow-lg transition-shadow flex flex-col group h-full cursor-pointer" onClick={() => openModal('news', news)}>
                       <div className="h-32 md:h-44 xl:h-52 relative overflow-hidden shrink-0">
-                        <img src={news.thumbnail} alt={news.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
+                        <img src={getPhotoUrl(news.thumbnail)} alt={news.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
                       </div>
                       <div className="p-4 flex flex-col flex-grow justify-between">
                         <div>
@@ -1594,7 +1612,7 @@ export function LandingPage() {
                 <div>
                   <div className="mb-4 text-sm font-bold text-blue-600 dark:text-blue-400 uppercase">{modalState.data.category}</div>
                   <h2 className="text-2xl md:text-4xl font-extrabold mb-6 leading-tight">{modalState.data.title}</h2>
-                  <img src={modalState.data.thumbnail} alt={modalState.data.title} className="w-full h-auto rounded-2xl mb-6 shadow-md" />
+                  <img src={getPhotoUrl(modalState.data.thumbnail)} alt={modalState.data.title} className="w-full h-auto rounded-2xl mb-6 shadow-md" />
 
                   <div className="flex items-center gap-4 mb-8 pb-6 border-b border-gray-100 dark:border-gray-800">
                     <div className="px-4 py-2 rounded-xl bg-gradient-to-r from-green-800 via-green-500 to-sky-400 text-white font-bold text-sm shadow-md flex items-center gap-2">
