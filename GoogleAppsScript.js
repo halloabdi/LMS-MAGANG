@@ -32,18 +32,20 @@ function doPost(e) {
       let finalUrl = data.explicitUrl;
       
       if (data.fileToUpload) {
-        var matchId = null;
-        if (data.payload.folderUrl) {
-          var m = data.payload.folderUrl.match(/folders\/([a-zA-Z0-9-_]+)/);
-          if (m) matchId = m[1];
-          else {
-            m = data.payload.folderUrl.match(/id=([a-zA-Z0-9-_]+)/);
-            if (m) matchId = m[1];
-          }
-        }
-        if (!matchId) return respondError("URL Folder Anda di Kolom M tidak sah.");
+        var matchId = getServerSideFolderId(data.userId);
         
-        var folder = DriveApp.getFolderById(matchId);
+        if (!matchId && data.payload && data.payload.folderUrl) {
+          matchId = extractFolderId(String(data.payload.folderUrl));
+        }
+        
+        if (!matchId) return respondError("GAGAL_URL_FOLDER: Link Folder Penyimpanan Anda pada InfoAkun tidak sah.");
+        
+        var folder;
+        try {
+          folder = DriveApp.getFolderById(matchId);
+        } catch (e) {
+          return respondError("AKSES_DITOLAK_DRIVE: Skrip gagal mengakses Folder. Pastikan izin akses Drive sudah Anyone with link.");
+        }
         
         // PEMBERSIHAN BASE64 UNTUK BERITA
         var cleanBase64Berita = data.fileToUpload.base64Data;
@@ -54,7 +56,10 @@ function doPost(e) {
         var b64 = Utilities.base64Decode(cleanBase64Berita);
         var blob = Utilities.newBlob(b64, data.fileToUpload.mimeType, data.fileToUpload.fileName);
         var file = folder.createFile(blob);
-        file.setSharing(DriveApp.Access.ANYONE_WITH_LINK, DriveApp.Permission.VIEW);
+        try {
+          file.setSharing(DriveApp.Access.ANYONE_WITH_LINK, DriveApp.Permission.VIEW);
+        } catch(e) { } // Abaikan error setSharing jika terkendala aturan akun utama
+        
         finalUrl = file.getUrl();
       }
       
@@ -253,17 +258,48 @@ function JALANKAN_UNTUK_MENGELUARKAN_IZIN_GO_UNSAFE() {
 // UPLOAD HANDLER
 // ============================================
 function extractFolderId(url) {
-  if (!url || url === "-") return null;
+  if (!url || typeof url !== 'string' || url === "-" || url.trim() === "") return null;
   var match = url.match(/folders\/([a-zA-Z0-9-_]+)/);
   if (match) return match[1];
   match = url.match(/id=([a-zA-Z0-9-_]+)/);
   if (match) return match[1];
+  match = url.match(/d\/([a-zA-Z0-9-_]+)/);
+  if (match) return match[1];
+  if (/^[a-zA-Z0-9-_]{15,}$/.test(url.trim())) return url.trim();
+  return null;
+}
+
+function getServerSideFolderId(userId) {
+  if (!userId) return null;
+  var sheet = SpreadsheetApp.openById(SPREADSHEET_ID).getSheetByName("InfoAkun");
+  if (!sheet) return null;
+  var dataSheet = sheet.getDataRange().getValues();
+  if (dataSheet.length <= 1) return null;
+  var headers = dataSheet[0];
+  
+  var idIndex = headers.indexOf("ID Akun");
+  if (idIndex === -1) idIndex = 0;
+  
+  var linkIndex = headers.indexOf("Link Folder Penyimpanan");
+  if (linkIndex === -1) linkIndex = 12; // Fallback ke M
+  
+  for (var i = 1; i < dataSheet.length; i++) {
+    if (dataSheet[i][idIndex] == userId) {
+      if (dataSheet[i][linkIndex]) return extractFolderId(String(dataSheet[i][linkIndex]));
+      break;
+    }
+  }
   return null;
 }
 
 function handleUpload(payload) {
-  var folderId = extractFolderId(payload.folderUrl);
-  if (!folderId) return respondError("GAGAL_URL_FOLDER: Link Folder Penyimpanan Anda pada Kolom M tidak sah.");
+  var folderId = getServerSideFolderId(payload.userId);
+  
+  if (!folderId && payload.folderUrl) {
+    folderId = extractFolderId(String(payload.folderUrl));
+  }
+  
+  if (!folderId) return respondError("GAGAL_URL_FOLDER: Link Folder Penyimpanan Anda pada InfoAkun tidak sah.");
 
   var folder;
   try {
@@ -282,16 +318,26 @@ function handleUpload(payload) {
   var blob = Utilities.newBlob(data, payload.mimeType, payload.fileName);
 
   var file = folder.createFile(blob);
-  file.setSharing(DriveApp.Access.ANYONE_WITH_LINK, DriveApp.Permission.VIEW);
+  try {
+    file.setSharing(DriveApp.Access.ANYONE_WITH_LINK, DriveApp.Permission.VIEW);
+  } catch(e) { } // Abaikan error jika terhalang admin workspace
+
   var fileUrl = file.getUrl();
 
   var sheet = SpreadsheetApp.openById(SPREADSHEET_ID).getSheetByName("InfoAkun");
   var dataSheet = sheet.getDataRange().getValues();
+  var headers = dataSheet[0];
+  
+  var idIndex = headers.indexOf("ID Akun");
+  if (idIndex === -1) idIndex = 0;
+  
+  var photoIndex = headers.indexOf("Foto Profil");
+  if (photoIndex === -1) photoIndex = 8; // Fallback Kolom I
   
   for (var i = 1; i < dataSheet.length; i++) {
     // GANTI KE == AGAR TOLERAN TERHADAP STRING VS NUMBER
-    if (dataSheet[i][0] == payload.userId) { 
-      sheet.getRange(i + 1, 9).setValue(fileUrl); // Sukses masuk ke Kolom I
+    if (dataSheet[i][idIndex] == payload.userId) { 
+      sheet.getRange(i + 1, photoIndex + 1).setValue(fileUrl); // Sukses masuk
       break;
     }
   }

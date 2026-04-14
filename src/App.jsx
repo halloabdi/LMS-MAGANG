@@ -12,7 +12,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import HitungIPTernak from './components/HitungIPTernak';
 import Dashboard from './components/Dashboard';
 
-const GAS_URL = 'https://script.google.com/macros/s/AKfycbySu3THdMbdj61t2jhA-d-ICbvE7Dn6L82NQQrscfx56InSfINq8L0rRMuDJpqqfCOV/exec';
+const GAS_URL = 'https://script.google.com/macros/s/AKfycbzaco-dXLF5q72ch6Ravny5dsZ19tH8Og-aDUoV2GJeHT_bUuOZ7-k9YbjKmfWR8K-B/exec';
 
 // --- DATA FROM ORIGINAL JS ---
 // Berita kini dimuat dari Database Google Apps Script
@@ -636,7 +636,7 @@ export function LandingPage() {
     showToast('info', 'Harap Tunggu', 'Mencoba masuk ke sistem...');
 
     try {
-      const response = await fetch('https://script.google.com/macros/s/AKfycbw8PPdSeOky1W3VIWur2hgnEqsshfMKFie7EMPNEzfoBrr7aW56eMtak14LUem3s3jE/exec', {
+      const response = await fetch(GAS_URL, {
         method: 'POST',
         body: JSON.stringify({ action: 'login', emailOrUsername: loginEmail, password: loginPassword })
       });

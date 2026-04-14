@@ -10,7 +10,7 @@ import DatePicker from 'react-datepicker';
 import 'react-datepicker/dist/react-datepicker.css';
 import HitungIPTernak from './HitungIPTernak';
 
-const GAS_URL = 'https://script.google.com/macros/s/AKfycbySu3THdMbdj61t2jhA-d-ICbvE7Dn6L82NQQrscfx56InSfINq8L0rRMuDJpqqfCOV/exec';
+const GAS_URL = 'https://script.google.com/macros/s/AKfycbzaco-dXLF5q72ch6Ravny5dsZ19tH8Og-aDUoV2GJeHT_bUuOZ7-k9YbjKmfWR8K-B/exec';
 
 const formatIndoNumber = (numStr) => {
   const num = Number(numStr) || 0;
