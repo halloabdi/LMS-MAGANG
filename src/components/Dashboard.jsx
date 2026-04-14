@@ -24,6 +24,24 @@ const formatRupiahFull = (num) => {
   return new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 }).format(num);
 };
 
+const getPhotoUrl = (url) => {
+  if (!url) return '';
+  if (typeof url !== 'string') return '';
+  if (url.startsWith('data:image')) return url; // Ignore Base64
+  let fileId = null;
+  const dMatch = url.match(/\/d\/([-\w]{15,})/);
+  const idParamMatch = url.match(/[?&]id=([-\w]{15,})/);
+  if (dMatch && dMatch[1]) {
+    fileId = dMatch[1];
+  } else if (idParamMatch && idParamMatch[1]) {
+    fileId = idParamMatch[1];
+  }
+  if (fileId) {
+    return `https://drive.google.com/thumbnail?id=${fileId}&sz=w1000`;
+  }
+  return url;
+};
+
 const parseIndoDate = (dateStr) => {
   if (!dateStr) return '-';
   const d = new Date(dateStr);
@@ -161,7 +179,7 @@ export default function Dashboard() {
           </div>
           <div className="flex items-center gap-3 p-3 bg-gray-50 dark:bg-gray-800/50 rounded-2xl border border-gray-100 dark:border-gray-700">
             {user['Foto Profil'] && user['Foto Profil'] !== '-' ? (
-              <img src={user['Foto Profil']} className="w-12 h-12 rounded-xl object-cover shrink-0 border border-gray-200 dark:border-gray-700" alt="Avatar" />
+              <img src={getPhotoUrl(user['Foto Profil'])} className="w-12 h-12 rounded-xl object-cover shrink-0 border border-gray-200 dark:border-gray-700" alt="Avatar" />
             ) : (
               <div className="w-12 h-12 rounded-xl bg-green-100 dark:bg-green-900/50 flex flex-shrink-0 items-center justify-center text-green-700 dark:text-green-400 font-bold text-xl uppercase">
                 {user['Nama Lengkap']?.charAt(0)}
@@ -205,7 +223,7 @@ export default function Dashboard() {
               <div className="text-[10px] font-semibold text-green-600">{user.Role}</div>
             </div>
             {user['Foto Profil'] && user['Foto Profil'] !== '-' ? (
-              <img src={user['Foto Profil']} className="w-8 h-8 rounded-lg object-cover" alt="Avatar" />
+              <img src={getPhotoUrl(user['Foto Profil'])} className="w-8 h-8 rounded-lg object-cover" alt="Avatar" />
             ) : (
               <div className="w-8 h-8 rounded-lg bg-green-100 dark:bg-green-900/50 flex items-center justify-center text-green-700 dark:text-green-400 font-bold text-sm uppercase">
                 {user['Nama Lengkap']?.charAt(0)}
@@ -1240,7 +1258,7 @@ const KelolaBeritaView = ({ user }) => {
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         {berita.map((b, i) => (
           <div key={i} className="bg-white p-4 rounded-2xl border border-gray-100 flex gap-4">
-            <img src={b['Thumbnail URL']} alt="" className="w-20 h-20 object-cover rounded-xl shrink-0" />
+            <img src={getPhotoUrl(b['Thumbnail URL'])} alt="" className="w-20 h-20 object-cover rounded-xl shrink-0" />
             <div>
               <h4 className="font-bold text-sm line-clamp-2">{b.Judul}</h4>
               <p className="text-xs text-gray-500 mt-1 line-clamp-2">{b.Konten}</p>
@@ -1707,7 +1725,7 @@ const ProfilView = ({ user, setUser }) => {
         <label className="absolute -bottom-12 left-10 w-28 h-28 bg-white rounded-3xl p-1 shadow-lg cursor-pointer group z-10">
           <div className="w-full h-full bg-gray-100 rounded-2xl flex items-center justify-center overflow-hidden relative">
             {isUploading ? <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-green-500"></div> :
-              (user['Foto Profil'] && user['Foto Profil'] !== '-' ? <img src={user['Foto Profil']} className="w-full h-full object-cover" /> : <span className="text-4xl font-extrabold text-gray-300">{user['Nama Lengkap']?.charAt(0)}</span>)}
+              (user['Foto Profil'] && user['Foto Profil'] !== '-' ? <img src={getPhotoUrl(user['Foto Profil'])} className="w-full h-full object-cover" /> : <span className="text-4xl font-extrabold text-gray-300">{user['Nama Lengkap']?.charAt(0)}</span>)}
             <div className="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"><FileEdit className="text-white" /></div>
           </div>
           <input type="file" accept="image/*" onChange={handleFileSelect} className="hidden" disabled={isUploading} />
