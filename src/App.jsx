@@ -502,7 +502,6 @@ export function LandingPage() {
 
   const pinnedNews = newsData.filter(n => n.isPinned);
   const regularNews = newsData.filter(n => !n.isPinned);
-  const totalNewsPages = Math.ceil(regularNews.length / 4);
 
   const [activeService, setActiveService] = useState(null);
   const [activeSubMenu, setActiveSubMenu] = useState(null);
@@ -514,6 +513,16 @@ export function LandingPage() {
   };
 
   useScroller();
+
+  const [isDesktop, setIsDesktop] = useState(window.innerWidth >= 768);
+  useEffect(() => {
+    const handleResize = () => setIsDesktop(window.innerWidth >= 768);
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
+  
+  const itemsPerPage = isDesktop ? 2 : 4;
+  const totalNewsPages = Math.ceil(regularNews.length / itemsPerPage);
 
   // FIX: Bulletproof JS Marquee to entirely prevent CSS jumping when tab is inactive
   useEffect(() => {
@@ -1159,7 +1168,7 @@ export function LandingPage() {
             </div>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 xl:gap-10 items-stretch min-h-[450px] lg:min-h-[550px]">
+          <div className="grid grid-cols-1 lg:grid-cols-[4fr_6fr] gap-6 xl:gap-10 items-stretch min-h-[450px] lg:min-h-[350px]">
 
             {/* Pinned News */}
             <div className="relative overflow-hidden glass-card rounded-3xl shadow-xl group h-full flex flex-col">
@@ -1260,9 +1269,9 @@ export function LandingPage() {
                   animate={{ opacity: 1, scale: 1, y: 0 }}
                   exit={{ opacity: 0, scale: 0.95, y: -20 }}
                   transition={{ type: "spring", stiffness: 400, damping: 25 }}
-                  className="grid grid-cols-2 grid-rows-2 gap-4 md:gap-6 flex-grow"
+                  className="grid grid-cols-2 grid-rows-2 md:grid-rows-1 gap-4 md:gap-6 flex-grow"
                 >
-                  {regularNews.slice((currentNewsPage - 1) * 4, currentNewsPage * 4).map((news) => (
+                  {regularNews.slice((currentNewsPage - 1) * itemsPerPage, currentNewsPage * itemsPerPage).map((news) => (
                     <div key={news.id} className="glass-card rounded-2xl overflow-hidden shadow-md hover:shadow-lg transition-shadow flex flex-col group h-full cursor-pointer" onClick={() => openModal('news', news)}>
                       <div className="h-32 md:h-[110px] xl:h-[135px] relative overflow-hidden shrink-0">
                         <img src={getPhotoUrl(news.thumbnail)} alt={news.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
