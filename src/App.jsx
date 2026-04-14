@@ -1189,14 +1189,20 @@ export function LandingPage() {
                     <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/50 to-black/10 z-10"></div>
 
                     <div className="relative z-20 flex flex-col h-full p-5 md:p-8 text-white">
-                      <div className="mb-auto">
+                      <div className="mb-auto flex gap-2 flex-wrap">
                         <span className="bg-red-500 text-white text-xs font-bold px-3 py-1.5 rounded-full shadow-lg flex items-center gap-1.5 w-max">
                           <Pin className="w-3.5 h-3.5 fill-white" /> Sorotan
                         </span>
+                        {news.category.split(',').slice(0, 3).map((tag, idx) => (
+                          <span key={idx} className="bg-blue-500 text-white text-xs font-bold px-3 py-1.5 rounded-full shadow-lg border border-blue-400/50 backdrop-blur-sm bg-opacity-80 line-clamp-1">{tag.trim()}</span>
+                        ))}
+                        {news.category.split(',').length > 3 && (
+                          <span className="bg-black/30 text-white text-xs font-bold px-3 py-1.5 rounded-full shadow-lg backdrop-blur-sm">+{news.category.split(',').length - 3}</span>
+                        )}
                       </div>
 
                       <div className="mt-auto pt-10">
-                        <div className="text-xs md:text-sm font-bold text-blue-300 mb-2 uppercase tracking-wider">{news.category}</div>
+                        {/* category is rendered at top as tags */}
                         <h3 className="text-3xl md:text-4xl font-extrabold mb-3 md:mb-4 leading-snug">{news.title}</h3>
 
                         <p className="text-sm md:text-base text-gray-200 mb-10 md:mb-12 line-clamp-2 md:line-clamp-3 text-justify">
@@ -1258,12 +1264,19 @@ export function LandingPage() {
                 >
                   {regularNews.slice((currentNewsPage - 1) * 4, currentNewsPage * 4).map((news) => (
                     <div key={news.id} className="glass-card rounded-2xl overflow-hidden shadow-md hover:shadow-lg transition-shadow flex flex-col group h-full cursor-pointer" onClick={() => openModal('news', news)}>
-                      <div className="h-32 md:h-44 xl:h-52 relative overflow-hidden shrink-0">
+                      <div className="h-32 md:h-[110px] xl:h-[135px] relative overflow-hidden shrink-0">
                         <img src={getPhotoUrl(news.thumbnail)} alt={news.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
                       </div>
                       <div className="p-4 flex flex-col flex-grow justify-between">
                         <div>
-                          <div className="text-xs md:text-sm font-bold text-green-600 dark:text-green-400 mb-2 uppercase line-clamp-1 tracking-wide">{news.category}</div>
+                          <div className="text-[10px] md:text-xs font-bold text-green-600 dark:text-green-400 mb-2 flex gap-1 flex-wrap uppercase line-clamp-1 tracking-wide">
+                            {news.category.split(',').slice(0, 3).map((tag, idx) => (
+                              <span key={idx} className="bg-green-100 dark:bg-green-900/30 px-2 py-0.5 rounded">{tag.trim()}</span>
+                            ))}
+                            {news.category.split(',').length > 3 && (
+                              <span className="bg-gray-100 dark:bg-gray-800 px-2 py-0.5 rounded">+{news.category.split(',').length - 3}</span>
+                            )}
+                          </div>
                           <h3 className="text-base md:text-lg xl:text-xl font-extrabold mb-2 md:mb-3 leading-snug line-clamp-2 group-hover:text-green-600 dark:group-hover:text-green-400 transition-colors">{news.title}</h3>
                           <p className="text-xs md:text-sm text-gray-500 dark:text-gray-400 mb-4 md:mb-5 line-clamp-3 text-justify">
                             {news.content}
@@ -1610,7 +1623,11 @@ export function LandingPage() {
               {/* NEWS TYPE */}
               {modalState.type === 'news' && (
                 <div>
-                  <div className="mb-4 text-sm font-bold text-blue-600 dark:text-blue-400 uppercase">{modalState.data.category}</div>
+                  <div className="mb-4 text-sm font-bold text-blue-600 dark:text-blue-400 uppercase flex flex-wrap gap-2">
+                    {modalState.data.category.split(',').map((tag, idx) => (
+                       <span key={idx} className="bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400 px-3 py-1 rounded-md">{tag.trim()}</span>
+                    ))}
+                  </div>
                   <h2 className="text-2xl md:text-4xl font-extrabold mb-6 leading-tight">{modalState.data.title}</h2>
                   <img src={getPhotoUrl(modalState.data.thumbnail)} alt={modalState.data.title} className="w-full h-auto rounded-2xl mb-6 shadow-md" />
 

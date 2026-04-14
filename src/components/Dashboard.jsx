@@ -1060,18 +1060,18 @@ const RiwayatUsahaView = ({ user }) => {
         <table className="w-full text-left text-sm text-gray-600">
           <thead className="bg-gray-50 text-gray-500">
             <tr>
-              <th className="px-6 py-4">Nasabah</th><th className="px-6 py-4">Waktu Transaksi</th><th className="px-6 py-4">Tipe & Item</th>
+              <th className="px-6 py-4">Nama Lengkap</th><th className="px-6 py-4">Waktu Transaksi</th><th className="px-6 py-4">Tipe & Item</th>
               <th className="px-6 py-4">Vol</th><th className="px-6 py-4 underline">Nominal (Rp)</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-gray-100">
             {loading ? <tr><td colSpan="5" className="text-center p-6">Loading...</td></tr> : usaha.map((r, i) => (
               <tr key={i} className="hover:bg-gray-50">
-                <td className="px-6 py-4">{r['ID Akun']}</td>
+                <td className="px-6 py-4 font-semibold text-gray-700 text-sm">{r['Nama Lengkap']}</td>
                 <td className="px-6 py-4 whitespace-nowrap text-gray-500">{parseIndoDate(r['TimeStamp'] || r['Tanggal & Waktu'] || r['Tanggal'])}</td>
                 <td className="px-6 py-4 font-bold text-gray-800">{r['Nama Barang / Item'] || r['Nama Item']} <div className="font-normal text-xs text-gray-400">{r['Tipe Arus Kas']}</div></td>
                 <td className="px-6 py-4">{r['Jumlah Pembelian'] || r['Jml']} {r['Satuan Beli']}</td>
-                <td className="px-6 py-4 font-extrabold text-gray-900">{formatRupiahFull(r['Total Harga Transaksi'] || r['Total Transaksi (Kotor)'])}</td>
+                <td className="px-6 py-4 font-extrabold text-gray-900">{formatRupiahFull(r['Total Transaksi (Rp)'] || r['Total Harga Transaksi'] || r['Total Transaksi (Kotor)'] || 0)}</td>
               </tr>
             ))}
           </tbody>
