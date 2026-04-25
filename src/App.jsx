@@ -732,7 +732,8 @@ export function LandingPage() {
     setCurrentPinnedIndex((prev) => (prev + 1) % pinnedNews.length);
   };
 
-  const marqueeSponsors = [...sponsorsData, ...sponsorsData, ...sponsorsData, ...sponsorsData];
+  const visibleSponsors = sponsorsData.filter(s => s.id !== 3);
+  const marqueeSponsors = [...visibleSponsors, ...visibleSponsors, ...visibleSponsors, ...visibleSponsors, ...visibleSponsors, ...visibleSponsors];
 
   const renderLoginModal = () => (
     <div className="fixed inset-0 z-[120] flex items-center justify-center p-4">
