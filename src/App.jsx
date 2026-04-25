@@ -47,7 +47,6 @@ const sponsorsData = [
       { icon: '<Globe size={18} />', url: "https://tiktok.com/@hallo.abdi", label: "TikTok" },
       { icon: '<Globe size={18} />', url: "https://threads.com/@hallo.abdi/", label: "Threads" },
       { icon: '<Globe size={18} />', url: "https://patreon.com/halloabdi/", label: "Patreon" },
-      { icon: '<Facebook size={18} />', url: "https://facebook.com/MasAbdiA1/", label: "Facebook" },
     ]
   },
   {
