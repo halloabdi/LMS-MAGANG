@@ -11,6 +11,7 @@ import {
 import { motion, AnimatePresence } from 'framer-motion';
 import HitungIPTernak from './components/HitungIPTernak';
 import Dashboard from './components/Dashboard';
+import LogbookAgrinak from './landing-page';
 
 const GAS_URL = 'https://script.google.com/macros/s/AKfycbzaco-dXLF5q72ch6Ravny5dsZ19tH8Og-aDUoV2GJeHT_bUuOZ7-k9YbjKmfWR8K-B/exec';
 
@@ -519,7 +520,7 @@ export function LandingPage() {
     window.addEventListener('resize', handleResize);
     return () => window.removeEventListener('resize', handleResize);
   }, []);
-  
+
   const itemsPerPage = isDesktop ? 2 : 4;
   const totalNewsPages = Math.ceil(regularNews.length / itemsPerPage);
 
@@ -1634,7 +1635,7 @@ export function LandingPage() {
                 <div>
                   <div className="mb-4 text-sm font-bold text-blue-600 dark:text-blue-400 uppercase flex flex-wrap gap-2">
                     {modalState.data.category.split(',').map((tag, idx) => (
-                       <span key={idx} className="bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400 px-3 py-1 rounded-md">{tag.trim()}</span>
+                      <span key={idx} className="bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400 px-3 py-1 rounded-md">{tag.trim()}</span>
                     ))}
                   </div>
                   <h2 className="text-2xl md:text-4xl font-extrabold mb-6 leading-tight">{modalState.data.title}</h2>
@@ -1713,10 +1714,40 @@ export function LandingPage() {
 
 export default function AppRouter() {
   const [currentPath, setCurrentPath] = useState(window.location.pathname);
+  const [user, setUser] = useState(() => {
+    try {
+      const stored = localStorage.getItem('satuternak_user');
+      if (!stored) return null;
+      const parsed = JSON.parse(stored);
+      if (parsed && parsed.expiry && Date.now() > parsed.expiry) {
+        localStorage.removeItem('satuternak_user');
+        return null;
+      }
+      return parsed;
+    } catch (e) {
+      return null;
+    }
+  });
 
   useEffect(() => {
     const handleLocationChange = () => {
       setCurrentPath(window.location.pathname);
+      try {
+        const stored = localStorage.getItem('satuternak_user');
+        if (stored) {
+          const parsed = JSON.parse(stored);
+          if (parsed && parsed.expiry && Date.now() > parsed.expiry) {
+            localStorage.removeItem('satuternak_user');
+            setUser(null);
+          } else {
+            setUser(parsed);
+          }
+        } else {
+          setUser(null);
+        }
+      } catch (e) {
+        setUser(null);
+      }
     };
 
     window.addEventListener('popstate', handleLocationChange);
@@ -1725,9 +1756,16 @@ export default function AppRouter() {
     };
   }, []);
 
-  if (currentPath === '/Dashboard' || currentPath === '/dashboard') {
+  const handleLoginSuccess = (userData) => {
+    setUser(userData);
+    window.history.pushState({}, '', '/Dashboard');
+    setCurrentPath('/Dashboard');
+  };
+
+  const pathLower = currentPath.toLowerCase();
+  if ((pathLower === '/dashboard' || pathLower === '/dashboard/') && user) {
     return <Dashboard />;
   }
 
-  return <LandingPage />;
+  return <LogbookAgrinak onLoginSuccess={handleLoginSuccess} />;
 }
