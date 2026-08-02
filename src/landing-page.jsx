@@ -1238,7 +1238,7 @@ const GlobalStyle = () => (
     .la-footer-bottom { font-size: 12px; color: #8592A3; text-align: center; padding-top: 18px; border-top: 1px solid rgba(255,255,255,0.08); }
     @media (max-width: 640px) { .la-footer-grid { grid-template-columns: 1fr; } }
 
-    .la-social-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; min-width: 0; }
+    .la-social-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; min-width: 0; }
     .la-social {
       display: flex; align-items: center; justify-content: center; gap: 7px; min-width: 0;
       color: #fff; text-decoration: none; font-size: 13px; font-weight: 700;
