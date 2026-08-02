@@ -552,7 +552,7 @@ function LoginModal({ open, onClose, onLoginSuccess }) {
         try {
             const response = await fetch(GAS_URL, {
                 method: 'POST',
-                body: JSON.stringify({ action: 'login', emailOrUsername: nim, password: pwd })
+                body: JSON.stringify({ action: 'login', emailOrUsername: nim.trim(), password: pwd.trim() })
             });
 
             const resJson = await response.json();
