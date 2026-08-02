@@ -1267,7 +1267,7 @@ const GlobalStyle = () => (
 /* =========================================================
    App
 ========================================================= */
-export default function LogbookAgrinak() {
+export default function LogbookAgrinak({ onLoginSuccess }) {
     const [loginOpen, setLoginOpen] = useState(false);
     const [reportOpen, setReportOpen] = useState(false);
 
@@ -1290,7 +1290,7 @@ export default function LogbookAgrinak() {
             <About />
             <Monitoring />
             <Footer onReport={() => setReportOpen(true)} />
-            <LoginModal open={loginOpen} onClose={() => setLoginOpen(false)} />
+            <LoginModal open={loginOpen} onClose={() => setLoginOpen(false)} onLoginSuccess={onLoginSuccess} />
             <ReportModal open={reportOpen} onClose={() => setReportOpen(false)} />
         </div>
     );

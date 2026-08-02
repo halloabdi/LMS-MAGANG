@@ -121,14 +121,16 @@ export default function Dashboard() {
       setUser(JSON.parse(storedUser));
     } else {
       window.location.hash = '';
-      window.location.pathname = '/';
+      window.location.hash = '';
+      window.location.reload();
     }
   }, []);
 
   const handleLogout = () => {
     localStorage.removeItem('satuternak_user');
     window.location.hash = '';
-    window.location.pathname = '/';
+    window.location.hash = '';
+    window.location.reload();
   };
 
   if (!user) return <div className="min-h-screen bg-gray-50 flex justify-center items-center"><div className="animate-spin rounded-full h-8 w-8 border-b-2 border-green-500"></div></div>;

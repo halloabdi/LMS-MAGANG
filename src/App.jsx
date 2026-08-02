@@ -1713,7 +1713,11 @@ export function LandingPage() {
 }
 
 export default function AppRouter() {
-  const [currentPath, setCurrentPath] = useState(window.location.pathname);
+  const [currentPath, setCurrentPath] = useState(() => {
+    const path = window.location.pathname;
+    const hash = window.location.hash;
+    return hash ? hash.replace('#', '/') : path;
+  });
   const [user, setUser] = useState(() => {
     try {
       const stored = localStorage.getItem('satuternak_user');
@@ -1731,7 +1735,9 @@ export default function AppRouter() {
 
   useEffect(() => {
     const handleLocationChange = () => {
-      setCurrentPath(window.location.pathname);
+      const path = window.location.pathname;
+      const hash = window.location.hash;
+      setCurrentPath(hash ? hash.replace('#', '/') : path);
       try {
         const stored = localStorage.getItem('satuternak_user');
         if (stored) {
@@ -1758,12 +1764,13 @@ export default function AppRouter() {
 
   const handleLoginSuccess = (userData) => {
     setUser(userData);
-    window.history.pushState({}, '', '/Dashboard');
-    setCurrentPath('/Dashboard');
+    window.location.hash = 'dashboard';
+    setCurrentPath('/dashboard');
   };
 
   const pathLower = currentPath.toLowerCase();
-  if ((pathLower === '/dashboard' || pathLower === '/dashboard/') && user) {
+  // Also auto-redirect to dashboard if user is already logged in
+  if (user && (pathLower.includes('dashboard') || pathLower === '/' || pathLower.includes('lms-magang'))) {
     return <Dashboard />;
   }
 
