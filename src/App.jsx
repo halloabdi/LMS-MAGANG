@@ -13,7 +13,7 @@ import HitungIPTernak from './components/HitungIPTernak';
 import Dashboard from './components/Dashboard';
 import LogbookAgrinak from './landing-page';
 
-const GAS_URL = 'https://script.google.com/macros/s/AKfycbzaco-dXLF5q72ch6Ravny5dsZ19tH8Og-aDUoV2GJeHT_bUuOZ7-k9YbjKmfWR8K-B/exec';
+const GAS_URL = 'https://script.google.com/macros/s/AKfycbwHMzrbN2BPk2lc7GirQI-ZzKZszH-zLjGJdowqBa5nzJxD0jmulzw1JITK1rUjG3pi/exec';
 
 const getPhotoUrl = (url) => {
   if (!url) return '';
@@ -665,7 +665,7 @@ export function LandingPage() {
     try {
       const response = await fetch(GAS_URL, {
         method: 'POST',
-        body: JSON.stringify({ action: 'login', emailOrUsername: loginEmail, password: loginPassword })
+        body: JSON.stringify({ action: 'login', identifier: loginEmail, password: loginPassword })
       });
 
       const resJson = await response.json();

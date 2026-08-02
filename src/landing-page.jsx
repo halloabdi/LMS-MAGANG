@@ -532,7 +532,7 @@ function Monitoring() {
     );
 }
 
-const GAS_URL = 'https://script.google.com/macros/s/AKfycbzaco-dXLF5q72ch6Ravny5dsZ19tH8Og-aDUoV2GJeHT_bUuOZ7-k9YbjKmfWR8K-B/exec';
+const GAS_URL = 'https://script.google.com/macros/s/AKfycbwHMzrbN2BPk2lc7GirQI-ZzKZszH-zLjGJdowqBa5nzJxD0jmulzw1JITK1rUjG3pi/exec';
 
 function LoginModal({ open, onClose, onLoginSuccess }) {
     const [nim, setNim] = useState("");
@@ -552,7 +552,7 @@ function LoginModal({ open, onClose, onLoginSuccess }) {
         try {
             const response = await fetch(GAS_URL, {
                 method: 'POST',
-                body: JSON.stringify({ action: 'login', emailOrUsername: nim.trim(), password: pwd.trim() })
+                body: JSON.stringify({ action: 'login', identifier: nim.trim(), password: pwd.trim() })
             });
 
             const resJson = await response.json();
